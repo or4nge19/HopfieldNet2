@@ -582,7 +582,7 @@ def states_less : Finset (HopfieldNetwork R U).Pattern := {s' : State wθ | s' <
 open Fintype
 
 /--
-`num_of_states_less` returns the number of states less that come before a given state `s`.
+`num_of_states_less` returns the number of states that come before a given state `s`.
 --/
 def num_of_states_less := Fintype.card (states_less s)
 
