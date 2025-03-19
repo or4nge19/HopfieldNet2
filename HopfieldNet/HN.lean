@@ -455,9 +455,9 @@ def seqStates' {wθ : Params (HopfieldNetwork R U)} (s : State' wθ) (useq : ℕ
   := seqStates wθ s useq
 
 /--
-Defines a less-than relation between two states `s1` and `s2` based on their energy `E`
+Defines a ordering between two states `s1` and `s2` based on their energy `E`
 and the number of pluses.
-A state `s1` is less than `s2` if:
+A state `s1` is before `s2` if:
 - `s1` has lower energy than `s2`, or
 - `s1` has the same energy as `s2`, but more pluses.
 --/
@@ -472,7 +472,7 @@ lemma stateLt_antisym (s1 s2 : State' wθ) : stateLt s1 s2 → ¬stateLt s2 s1 :
 
 /--
 Defines a partial order on states. The relation `stateOrd` holds between two states `s1` and `s2`
-if `s1` is equal to `s2` or if `s1` is less than `s2` according to `stateLt`.
+if `s1` is equal to `s2` or if `s1` is before `s2` according to `stateLt`.
 -/
 def stateOrd (s1 s2 : State' wθ) : Prop := s1 = s2 ∨ stateLt s1 s2
 
@@ -575,14 +575,14 @@ instance : DecidablePred (fun s' => s' < s) := fun s' => by
   simp only; rw [stateLt_lt, stateLt]; exact instDecidableOr
 
 /--
-`states_less` is the set of states in a Hopfield Network that are less than a given state `s`.
+`states_less` is the set of patterns in a Hopfield Network that are less than a given state `s`.
 --/
 def states_less : Finset (HopfieldNetwork R U).State := {s' : State' wθ | s' < s}
 
 open Fintype
 
 /--
-`num_of_states_less` returns the number of states less than a given state `s`.
+`num_of_states_less` returns the number of states that come before a given state `s`.
 --/
 def num_of_states_less := Fintype.card (states_less s)
 
