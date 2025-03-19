@@ -48,7 +48,7 @@ def wθ : Params test where
   hw u v hv := by by_contra h; exact hv h
   hw' := by simp only [test]
 
-instance : Repr (NeuralNetwork.Pattern test) where
+instance : Repr (NeuralNetwork.State test) where
   reprPrec state _ :=
    ("acts: " ++ repr (state.act)) ++ ", outs: " ++
         repr (state.out) ++ ", nets: " ++ repr (state.net wθ)
@@ -56,25 +56,23 @@ instance : Repr (NeuralNetwork.Pattern test) where
 /--
 `test.extu` is the initial state for the `test` neural network with activations `[1, 0, 0]`.
 -/
-def test.extu : test.Pattern := {act := ![1,0,0], hp := fun u => trivial}
+def test.extu : test.State := {act := ![1,0,0], hp := fun u => trivial}
 
 lemma zero_if_not_mem_Ui : ∀ u : Fin 3,
   ¬ u ∈ ({0,1} : Finset (Fin 3)) → test.extu.act u = 0 := by decide
 
-/--
-If `u` is not in the input neurons `Ui`, then `test.extu.act u` is zero.
--/
+/--If `u` is not in the input neurons `Ui`, then `test.extu.act u` is zero.-/
 lemma test.onlyUi : test.extu.onlyUi := by {
   intros u hu
   apply zero_if_not_mem_Ui u
   simp only [Fin.isValue, mem_insert, mem_singleton, not_or]
   exact not_or.mp hu}
 
--- The workphase for the asynchronous update of the sequence of neurons u3 , u1 , u2 , u3 , u1 , u2 , u3
-#eval NeuralNetwork.Pattern.workPhase wθ test.extu test.onlyUi [2,0,1,2,0,1,2]
+/-The workphase for the asynchronous update of the sequence of neurons u3 , u1 , u2 , u3 , u1 , u2 , u3. -/
+#eval NeuralNetwork.State.workPhase wθ test.extu test.onlyUi [2,0,1,2,0,1,2]
 
--- The workphase for the asynchronous update of the sequence of neurons u3 , u2 , u1 , u3 , u2 , u1 , u3 ,
-#eval NeuralNetwork.Pattern.workPhase wθ test.extu test.onlyUi [2,1,0,2,1,0,2]
+/-The workphase for the asynchronous update of the sequence of neurons u3 , u2 , u1 , u3 , u2 , u1 , u3. -/
+#eval NeuralNetwork.State.workPhase wθ test.extu test.onlyUi [2,1,0,2,1,0,2]
 
 /-Hopfield Networks-/
 
@@ -89,10 +87,6 @@ def W1 : Matrix (Fin 4) (Fin 4) ℚ :=
 - `hw'`: Proof that the weights are zero on the diagonal.
 - `σ`: Always an empty vector.
 - `θ`: Always returns a list with a single 0.
-
-`extu` is the initial state of this network.
-- `act`: Starts as `[1, -1, -1, 1]`.
-- `hp`: Proof that the activations are valid.
 --/
 def HebbianParamsTest : Params (HopfieldNetwork ℚ (Fin 4)) where
   w := W1
@@ -112,14 +106,12 @@ def HebbianParamsTest : Params (HopfieldNetwork ℚ (Fin 4)) where
   θ u := ⟨#[0],by
     simp only [List.size_toArray, List.length_cons, List.length_nil, zero_add]⟩
 
-/--
-`extu` is the initial state for our `HebbianParamsTest` Hopfield network.
+/-- `extu` is the initial state for our `HebbianParamsTest` Hopfield network.
 - `act`: `[1, -1, -1, 1]` - initial activations.
-- `hp`: Proof that the activations are valid.
 
 This initializes the state for a Hopfield network test.
 --/
-def extu : State HebbianParamsTest where
+def extu : State' HebbianParamsTest where
   act := ![1,-1,-1,1]
   hp := by
     intros u
@@ -128,7 +120,7 @@ def extu : State HebbianParamsTest where
     revert u
     decide
 
-instance : Repr (HopfieldNetwork ℚ (Fin 4)).Pattern where
+instance : Repr (HopfieldNetwork ℚ (Fin 4)).State where
   reprPrec state _ := ("acts: " ++ repr (state.act))
 
 -- Computations
@@ -138,17 +130,17 @@ instance : Repr (HopfieldNetwork ℚ (Fin 4)).Pattern where
 
 -- def HN.hext : extu.onlyUi := by {intros u; tauto}
 
--- #eval NeuralNetwork.Pattern.workPhase HebbianParamsTest extu HN.hext [2,0,1,2,0,1,2]
+-- #eval NeuralNetwork.State.workPhase HebbianParamsTest extu HN.hext [2,0,1,2,0,1,2]
 
 
 /--
-`pattern_ofVec` converts a pattern vector from `Fin n` to `ℚ` into a `Pattern`
+`pattern_ofVec` converts a pattern vector from `Fin n` to `ℚ` into a `State`
 for a `HopfieldNetwork` with `n` neurons.
 It checks if all elements are either 1 or -1. If they are, it returns `some`
  pattern; otherwise, it returns `none`.
 --/
 def pattern_ofVec {n} [NeZero n] (pattern : Fin n → ℚ) :
-    Option (HopfieldNetwork ℚ (Fin n)).Pattern :=
+    Option (HopfieldNetwork ℚ (Fin n)).State :=
   if hp : ∀ i, pattern i = 1 ∨ pattern i = -1 then
     some {act := pattern, hp := by {
       intros u
@@ -172,9 +164,9 @@ def obviousFunction [Fintype α] (f : α → Option β) : Option (α → β) :=
 
 /--
 `patternToNet` converts a matrix `V` (a function from `Fin m` to `Fin n` to `ℚ`)
-into a function that maps each row to a `Pattern` for a `HopfieldNetwork` with `Fin n` neurons.
+into a function that maps each row to a `State` for a `HopfieldNetwork` with `Fin n` neurons.
 It checks if all elements of each row are either 1 or -1. If they are, it returns
-`some` function that maps each row to a `Pattern`; otherwise, it returns `none`.
+`some` function that maps each row to a `State`; otherwise, it returns `none`.
 
 Parameters:
 - `V`: A matrix represented as a function from `Fin m` to `Fin n` to `ℚ`.
@@ -183,10 +175,10 @@ Parameters:
 
 Returns:
 - An `Option` containing a function from `Fin m` to
-`HopfieldNetwork ℚ (Fin n)).Pattern`, or `none` if the conversion is not possible.
+`HopfieldNetwork ℚ (Fin n)).State`, or `none` if the conversion is not possible.
 --/
 def patternToNet (V : Fin m → Fin n → ℚ) [NeZero n] (hmn : m < n) :
-  Option (Fin m → (HopfieldNetwork ℚ (Fin n)).Pattern) :=
+  Option (Fin m → (HopfieldNetwork ℚ (Fin n)).State) :=
   obviousFunction (fun i => pattern_ofVec (V i))
 
 /--
