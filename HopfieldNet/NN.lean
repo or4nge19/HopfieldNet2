@@ -65,17 +65,17 @@ structure Params (NN : NeuralNetwork R U) where
 namespace NeuralNetwork
 
 /--
-`Pattern` represents a pattern in a neural network.
+`State` represents a state in a neural network.
 -/
-structure Pattern (NN : NeuralNetwork R U) where
+structure State (NN : NeuralNetwork R U) where
   /-- A function mapping each node to its activation value. -/
   act : U → R
   /-- A proof that the activations satisfy the required properties. -/
   hp : ∀ u : U, NN.pact (act u)
 
-namespace Pattern
+namespace State
 
-variable {NN : NeuralNetwork R U} (wσθ : Params NN) (s : NN.Pattern)
+variable {NN : NeuralNetwork R U} (wσθ : Params NN) (s : NN.State)
 
 /-- The output function of a node in the neural network. -/
 def out (u : U) : R := NN.fout u (s.act u)
@@ -91,11 +91,11 @@ def onlyUi : Prop := ∀ u : U, ¬ u ∈ NN.Ui → s.act u = 0
 variable [DecidableEq U]
 
 /--
-`Up` updates the activation of node `u` in the pattern.
+`Up` updates the activation of node `u` in the state.
 If `v` is `u`, it computes the new activation of `u`.
 Otherwise, it keeps the existing activation.
 -/
-def Up (u : U) : NeuralNetwork.Pattern NN :=
+def Up (u : U) : NeuralNetwork.State NN :=
   { act := fun v => if v = u then NN.fact u (s.net wσθ u) (wσθ.θ u) else s.act v, hp := by
       simp only
       intro v
@@ -107,22 +107,22 @@ def Up (u : U) : NeuralNetwork.Pattern NN :=
         exact fun u ↦ s.hp u
       · apply s.hp}
 
-/-- `workPhase` updates the initial pattern `extu` for each node in `uOrder` using `s.Up wσθ u`.
-It starts with `extu` and returns the final pattern after processing all nodes in `uOrder`. -/
-def workPhase (extu : NN.Pattern) (_ : extu.onlyUi) (uOrder : List U) : NN.Pattern :=
+/-- `workPhase` updates the initial state `extu` for each node in `uOrder` using `s.Up wσθ u`.
+It starts with `extu` and returns the final state after processing all nodes in `uOrder`. -/
+def workPhase (extu : NN.State) (_ : extu.onlyUi) (uOrder : List U) : NN.State :=
   uOrder.foldl (fun s u => s.Up wσθ u) extu
 
-/-- `seqStates` generates a sequence of patterns for the neural network.
-- For `n = 0`, it returns the initial pattern `s`.
-- For `n > 0`, it updates the pattern at `n - 1` using the node from `useq` at `n - 1`. -/
-def seqStates (useq : ℕ → U) : ℕ → NeuralNetwork.Pattern NN
+/-- `seqStates` generates a sequence of states for the neural network.
+- For `n = 0`, it returns the initial state `s`.
+- For `n > 0`, it updates the state at `n - 1` using the node from `useq` at `n - 1`. -/
+def seqStates (useq : ℕ → U) : ℕ → NeuralNetwork.State NN
   | 0 => s
   | n + 1 => .Up wσθ (seqStates useq n) (useq n)
 
 /-- `isStable` checks if the state `s` remains unchanged after applying `s.Up wσθ` to every node `u`. -/
 def isStable : Prop :=  ∀ (u : U), (s.Up wσθ u).act u = s.act u
 
-end Pattern
+end State
 
 end NeuralNetwork
 

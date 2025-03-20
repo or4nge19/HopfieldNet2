@@ -6,7 +6,7 @@ import HopfieldNet.test
 
 namespace HopfieldIsomorphism
 
-open SpinState HopfieldState NeuralNetwork Pattern
+open SpinState HopfieldState NeuralNetwork State
 
 variable {n : ℕ}
 variable (i j : Fin n)
@@ -20,7 +20,7 @@ def realToSpinState (r : ℝ) : SpinState :=
 
 /-- Convert a HopfieldState to a Pattern -/
 noncomputable
-def stateToPattern {n : ℕ} [Nonempty (Fin n)] (x : HopfieldState n) : NeuralNetwork.Pattern (HopfieldNetwork ℝ (Fin n)) :=
+def stateToPattern {n : ℕ} [Nonempty (Fin n)] (x : HopfieldState n) : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n)) :=
   { act := fun i => spinStateToReal (x i)
     hp := fun i => by
       cases h : x i
@@ -34,7 +34,7 @@ def stateToPattern {n : ℕ} [Nonempty (Fin n)] (x : HopfieldState n) : NeuralNe
 
 /-- Convert a Pattern to a HopfieldState -/
 noncomputable
-def patternToState {n : ℕ} [Nonempty (Fin n)] (p : NeuralNetwork.Pattern (HopfieldNetwork ℝ (Fin n))) : HopfieldState n :=
+def patternToState {n : ℕ} [Nonempty (Fin n)] (p : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) : HopfieldState n :=
   fun i => realToSpinState (p.act i)
 
 -- Proof that these conversions are inverses
@@ -59,14 +59,14 @@ lemma stateToPattern_patternToState {n : ℕ} [Nonempty (Fin n)] (x : HopfieldSt
 @[ext]
 -- The Pattern extensionality
 lemma Pattern.ext {R U : Type} [Zero R] {NN : NeuralNetwork R U}
-    {p₁ p₂ : NN.Pattern} (h : p₁.act = p₂.act) : p₁ = p₂ := by
+    {p₁ p₂ : NN.State} (h : p₁.act = p₂.act) : p₁ = p₂ := by
   cases p₁ with | mk act₁ hp₁ =>
   cases p₂ with | mk act₂ hp₂ =>
   simp only at h
   congr  -- Use congruence closure
 
 
-lemma patternToState_stateToPattern {n : ℕ} [Nonempty (Fin n)] (p : NeuralNetwork.Pattern (HopfieldNetwork ℝ (Fin n))) :
+lemma patternToState_stateToPattern {n : ℕ} [Nonempty (Fin n)] (p : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) :
   stateToPattern (patternToState p) = p := by
   -- Apply the Pattern.ext theorem
   apply Pattern.ext
