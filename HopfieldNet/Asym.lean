@@ -226,7 +226,7 @@ Parameters:
 Returns:
 - The potential value of the network
 -/
-noncomputable def potentialFunction (wθ : Params (AsymmetricHopfieldNetwork R U))
+def potentialFunction (wθ : Params (AsymmetricHopfieldNetwork R U))
     (s : State (AsymmetricHopfieldNetwork R U)) (k : ℕ) (useq : ℕ → U) : R :=
   ∑ i ∈ Finset.univ,
     ∑ j ∈ Finset.univ,
