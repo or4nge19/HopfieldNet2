@@ -160,7 +160,6 @@ theorem Array.mkArray_creates_valid_hopfield_params {n : ℕ} [Nonempty (Fin n)]
 
 /--
 In a Hopfield network, two neurons are adjacent if and only if they are different.
-This lemma proves that if two neurons are not adjacent, they must be the same neuron.
 This formalizes the fully connected nature of Hopfield networks.
 --/
 lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [LinearOrderedField R] [DecidableEq U]
@@ -170,3 +169,88 @@ lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [LinearOrderedField R] [De
   unfold HopfieldNetwork at h
   simp only [ne_eq] at h
   simp_all only [Decidable.not_not]
+
+/-- Perform a stochastic update on a Pattern representation -/
+noncomputable def patternStochasticUpdate
+  {n : ℕ} [Nonempty (Fin n)] (weights : Fin n → Fin n → ℝ) (h_diag_zero : ∀ i : Fin n, weights i i = 0)
+  (h_sym : ∀ i j : Fin n, weights i j = weights j i) (T : ℝ)
+  (pattern : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) (i : Fin n) :
+  PMF (NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) :=
+  let wθ : Params (HopfieldNetwork ℝ (Fin n)) := {
+    w := weights,
+    hw := fun u v h => by
+      -- For Hopfield networks, w(u,u) = 0 is always true
+      -- since self-connections are disallowed in a standard Hopfield network
+      -- Check if u = v (self-connection)
+      if h_eq : u = v then
+        -- For a self-connection, weights should be 0
+        rw [h_eq]
+        exact h_diag_zero v
+      else
+        -- For distinct neurons, we need to show weights u v = 0 when not adjacent
+        -- In a Hopfield network, all distinct neurons are adjacent
+        -- This is a contradiction since h proves they're not adjacent
+        have h_adj : (HopfieldNetwork ℝ (Fin n)).Adj u v := by
+          simp only [HopfieldNetwork]; simp only [ne_eq]
+          exact h_eq
+        contradiction
+    hw' := by
+      -- For Hopfield networks, we need to prove weight symmetry
+      unfold NeuralNetwork.pw
+      -- Apply the symmetry hypothesis directly
+      exact IsSymm.ext_iff.mpr fun i j ↦ h_sym j i
+    σ := fun u => Vector.mk (Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ1 u) (0 : ℝ)) (by simp [Array.mkArray_size]),
+    θ := fun u => Vector.mk (Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ2 u) (0 : ℝ)) (by simp [Array.mkArray_size])
+  }
+  NN.State.gibbsUpdateSingleNeuron pattern wθ T i
+
+noncomputable def NN.State.gibbsSamplingSteps
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (steps : ℕ)
+  (s : (HopfieldNetwork R U).State) : PMF ((HopfieldNetwork R U).State) :=
+  match steps with
+  | 0 => PMF.pure s
+  | steps+1 => PMF.bind (gibbsSamplingSteps wθ T steps s) $ λ s' =>
+                NN.State.gibbsSamplingStep wθ T s'
+
+noncomputable def NN.State.simulatedAnnealing
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U))
+  (initial_temp : ℝ) (cooling_rate : ℝ) (steps : ℕ)
+  (initial_state : (HopfieldNetwork R U).State) : PMF ((HopfieldNetwork R U).State) :=
+  -- Temperature schedule definition
+  let temp_schedule : ℕ → ℝ := λ step => initial_temp * Real.exp (-cooling_rate * step)
+
+  -- Recursive implementation with termination proof
+  let rec apply_steps (step : ℕ) (state : (HopfieldNetwork R U).State) :
+    PMF ((HopfieldNetwork R U).State) :=
+    if h : step ≥ steps then
+      PMF.pure state
+    else
+      PMF.bind (NN.State.gibbsSamplingStep wθ (temp_schedule step) state) (apply_steps (step+1))
+  termination_by steps - step
+  decreasing_by {
+    have : step < steps := by exact not_le.mp h
+    have : steps - (step + 1) < steps - step := by
+      rw [Nat.sub_succ]
+      simp_all only [ge_iff_le, not_le, Nat.pred_eq_sub_one, tsub_lt_self_iff, tsub_pos_iff_lt, Nat.lt_one_iff,
+        pos_of_gt, and_self]
+    exact this
+  }
+
+  apply_steps 0 initial_state
+
+noncomputable def NN.State.acceptanceProbability
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ)
+  (current : (HopfieldNetwork R U).State) (proposed : (HopfieldNetwork R U).State) : ℝ :=
+  let energy_diff := proposed.E wθ - current.E wθ
+  if energy_diff ≤ 0 then
+    1.0  -- Always accept if energy decreases
+  else
+    Real.exp (-energy_diff / T)  -- Accept with probability e^(-ΔE/T) if energy increases
+
+noncomputable def NN.State.partitionFunction
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ℝ :=
+  ∑ s : (HopfieldNetwork R U).State, Real.exp (-s.E wθ / T)
