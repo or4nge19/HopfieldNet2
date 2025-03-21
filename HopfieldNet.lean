@@ -4,6 +4,7 @@ import HopfieldNet.aux
 import HopfieldNet.NN
 import HopfieldNet.HN
 import HopfieldNet.Asym
+import HopfieldNet.Stochastic
 import HopfieldNet.test
 import HopfieldNet.SpinState.Basic
 import HopfieldNet.SpinState.StochasticUpdate
