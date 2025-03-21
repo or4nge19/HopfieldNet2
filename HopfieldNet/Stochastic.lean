@@ -16,6 +16,11 @@ def NeuralNetwork.StatePMF {R U : Type} [Zero R] (NN : NeuralNetwork R U) := PMF
 def NeuralNetwork.StochasticDynamics {R U : Type} [Zero R] (NN : NeuralNetwork R U) :=
   ∀ (T : ℝ), NN.State → NeuralNetwork.StatePMF NN
 
+/-- Creates a PMF for the Metropolis Hastings acceptance decision -/
+def metropolisDecision (p : ℝ) : PMF Bool :=
+  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by exact_mod_cast min_le_right p 1)
+
+
 /-- Gibbs sampler update for a single neuron in a Hopfield network --/
 noncomputable def NN.State.gibbsUpdateNeuron
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
@@ -254,3 +259,56 @@ noncomputable def NN.State.partitionFunction
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ℝ :=
   ∑ s : (HopfieldNetwork R U).State, Real.exp (-s.E wθ / T)
+
+/-- Metropolis acceptance decision as a probability mass function over Boolean outcomes --/
+def NN.State.metropolisDecision
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (p : ℝ) : PMF Bool :=
+  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by
+    exact_mod_cast min_le_right p 1)
+
+/-- Metropolis-Hastings single step for Hopfield networks --/
+noncomputable def NN.State.metropolisHastingsStep
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
+  : PMF ((HopfieldNetwork R U).State) :=
+  -- Uniform random selection of neuron
+  let neuron_pmf : PMF U :=
+    PMF.ofFintype (λ _ => (1 : ENNReal) / (Fintype.card U : ENNReal))
+      (by
+        rw [Finset.sum_const, Finset.card_univ]
+        rw [ENNReal.div_eq_inv_mul]
+        simp only [mul_one]
+        have h : (Fintype.card U : ENNReal) ≠ 0 := by
+          simp [Fintype.card_pos_iff.mpr inferInstance]
+        have h_top : (Fintype.card U : ENNReal) ≠ ⊤ := ENNReal.coe_ne_top
+        rw [← ENNReal.mul_inv_cancel h h_top]
+        simp_all only [ne_eq, Nat.cast_eq_zero, Fintype.card_ne_zero, not_false_eq_true, ENNReal.natCast_ne_top,
+          nsmul_eq_mul])
+
+  -- Create proposed state by flipping a randomly selected neuron
+  let propose : U → PMF ((HopfieldNetwork R U).State) := λ u =>
+    let flipped_state :=
+      if s.act u = 1 then  -- Assuming 1 and -1 as valid activation values
+        NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)
+      else
+        NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
+
+    let p := NN.State.acceptanceProbability wθ T s flipped_state
+
+    -- Make acceptance decision
+    PMF.bind (NN.State.metropolisDecision (R := R) (U := U) p) (λ accept =>
+      if accept then PMF.pure flipped_state else PMF.pure s)
+
+  -- Combine neuron selection with state proposal
+  PMF.bind neuron_pmf propose
+
+/-- Multiple steps of Metropolis-Hastings algorithm for Hopfield networks --/
+noncomputable def NN.State.metropolisHastingsSteps
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (steps : ℕ) (s : (HopfieldNetwork R U).State)
+  : PMF ((HopfieldNetwork R U).State) :=
+  match steps with
+  | 0 => PMF.pure s
+  | steps+1 => PMF.bind (metropolisHastingsSteps wθ T steps s) $ λ s' =>
+                NN.State.metropolisHastingsStep wθ T s'
