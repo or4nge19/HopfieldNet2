@@ -16,10 +16,12 @@ def NeuralNetwork.StatePMF {R U : Type} [Zero R] (NN : NeuralNetwork R U) := PMF
 def NeuralNetwork.StochasticDynamics {R U : Type} [Zero R] (NN : NeuralNetwork R U) :=
   ∀ (T : ℝ), NN.State → NeuralNetwork.StatePMF NN
 
-/-- Creates a PMF for the Metropolis Hastings acceptance decision -/
-def metropolisDecision (p : ℝ) : PMF Bool :=
-  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by exact_mod_cast min_le_right p 1)
-
+/-- Metropolis acceptance decision as a probability mass function over Boolean outcomes --/
+def NN.State.metropolisDecision
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (p : ℝ) : PMF Bool :=
+  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by
+    exact_mod_cast min_le_right p 1)
 
 /-- Gibbs sampler update for a single neuron in a Hopfield network --/
 noncomputable def NN.State.gibbsUpdateNeuron
@@ -260,13 +262,6 @@ noncomputable def NN.State.partitionFunction
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ℝ :=
   ∑ s : (HopfieldNetwork R U).State, Real.exp (-s.E wθ / T)
 
-/-- Metropolis acceptance decision as a probability mass function over Boolean outcomes --/
-def NN.State.metropolisDecision
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (p : ℝ) : PMF Bool :=
-  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by
-    exact_mod_cast min_le_right p 1)
-
 /-- Metropolis-Hastings single step for Hopfield networks --/
 noncomputable def NN.State.metropolisHastingsStep
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
@@ -312,3 +307,16 @@ noncomputable def NN.State.metropolisHastingsSteps
   | 0 => PMF.pure s
   | steps+1 => PMF.bind (metropolisHastingsSteps wθ T steps s) $ λ s' =>
                 NN.State.metropolisHastingsStep wθ T s'
+
+/-- The Boltzmann (Gibbs) distribution over neural network states --/
+def boltzmannDistribution {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ((HopfieldNetwork R U).State → ℝ) :=
+  λ s => Real.exp (-s.E wθ / T) / NN.State.partitionFunction wθ T
+
+/-- Total variation distance between probability distributions.
+Provides a metric to compare probability distributions --/
+noncomputable def total_variation_distance {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (μ ν : (HopfieldNetwork R U).State → ℝ) : ℝ :=
+  (1/2) * ∑ s : (HopfieldNetwork R U).State, |μ s - ν s|
