@@ -39,7 +39,7 @@ def test : NeuralNetwork ℚ (Fin 3) where
   hpact w _ _ σ θ _ pact u := pact u
 
 def wθ : Params test where
-  w := test.M
+  w := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
   θ u := ⟨#[1], by
     simp only [List.size_toArray, List.length_cons, List.length_nil, zero_add]
     unfold test
@@ -162,21 +162,13 @@ def obviousFunction [Fintype α] (f : α → Option β) : Option (α → β) :=
   else
     none
 
+
 /--
-`patternToNet` converts a matrix `V` (a function from `Fin m` to `Fin n` to `ℚ`)
-into a function that maps each row to a `State` for a `HopfieldNetwork` with `Fin n` neurons.
-It checks if all elements of each row are either 1 or -1. If they are, it returns
-`some` function that maps each row to a `State`; otherwise, it returns `none`.
+Converts a matrix of patterns `V` into Hopfield network states.
 
-Parameters:
-- `V`: A matrix represented as a function from `Fin m` to `Fin n` to `ℚ`.
-- `[NeZero n]`: Ensures that `n` is non-zero.
-- `hmn`: Proof that `m` is less than `n`.
-
-Returns:
-- An `Option` containing a function from `Fin m` to
-`HopfieldNetwork ℚ (Fin n)).State`, or `none` if the conversion is not possible.
---/
+Each row of `V` (a function `Fin m → Fin n → ℚ`) is mapped to a Hopfield network state
+if all elements are either `1` or `-1`. Returns `some` mapping if successful, otherwise `none`.
+-/
 def patternToNet (V : Fin m → Fin n → ℚ) [NeZero n] (hmn : m < n) :
   Option (Fin m → (HopfieldNetwork ℚ (Fin n)).State) :=
   obviousFunction (fun i => pattern_ofVec (V i))

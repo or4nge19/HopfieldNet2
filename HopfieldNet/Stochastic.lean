@@ -20,7 +20,6 @@ def NeuralNetwork.StochasticDynamics {R U : Type} [Zero R] (NN : NeuralNetwork R
 def metropolisDecision (p : ℝ) : PMF Bool :=
   PMF.bernoulli (ENNReal.ofReal (min p 1)) (by exact_mod_cast min_le_right p 1)
 
-
 /-- Gibbs sampler update for a single neuron in a Hopfield network --/
 noncomputable def NN.State.gibbsUpdateNeuron
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
@@ -240,8 +239,7 @@ noncomputable def NN.State.simulatedAnnealing
       rw [Nat.sub_succ]
       simp_all only [ge_iff_le, not_le, Nat.pred_eq_sub_one, tsub_lt_self_iff, tsub_pos_iff_lt, Nat.lt_one_iff,
         pos_of_gt, and_self]
-    exact this
-  }
+    exact this}
 
   apply_steps 0 initial_state
 

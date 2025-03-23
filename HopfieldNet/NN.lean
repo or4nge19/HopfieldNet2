@@ -21,12 +21,12 @@ It extends `Digraph U` and includes the network's architecture, activation funct
 structure NeuralNetwork (R U : Type) [Zero R] extends Digraph U where
   /-- Input nodes. -/
   (Ui Uo Uh : Set U)
-  /-- All nodes are either input, output, or hidden. -/
-  (hU : Set.univ = (Ui ∪ Uo ∪ Uh))
   /-- There is at least one input node. -/
   (hUi : Ui ≠ ∅)
   /-- There is at least one output node. -/
   (hUo : Uo ≠ ∅)
+  /-- All nodes are either input, output, or hidden. -/
+  (hU : Set.univ = (Ui ∪ Uo ∪ Uh))
   /-- Hidden nodes are not input or output nodes. -/
   (hhio : Uh ∩ (Ui ∪ Uo) = ∅)
   /-- Dimensions of input vectors for each node. -/
