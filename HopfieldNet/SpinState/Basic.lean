@@ -449,7 +449,7 @@ def NeuronSelector (n : ℕ) := HopfieldState n → Option (Fin n)
 A random update rule that uses a selector to choose which neuron to update.
 Returns None if no update is needed or possible.
 -/
-noncomputable def randomUpdate {α : Type*} [LinearOrderedField α] [Star α] [CharZero α]
+def randomUpdate {α : Type*} [LinearOrderedField α] [Star α] [CharZero α]
     {n : ℕ} (net : HopfieldNetwork α n) (selector : NeuronSelector n)
     (x : HopfieldState n) : Option (HopfieldState n) := do
   let i ← selector x

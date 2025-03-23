@@ -244,13 +244,6 @@ noncomputable def NN.State.acceptanceProbability
 noncomputable def NN.State.partitionFunction  : ℝ :=
   ∑ s : (HopfieldNetwork R U).State, Real.exp (-s.E wθ / T)
 
-/-- Metropolis acceptance decision as a probability mass function over Boolean outcomes --/
-def NN.State.metropolisDecision
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (p : ℝ) : PMF Bool :=
-  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by
-    exact_mod_cast min_le_right p 1)
-
 /-- Metropolis-Hastings single step for Hopfield networks --/
 noncomputable def NN.State.metropolisHastingsStep (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
@@ -293,3 +286,16 @@ noncomputable def NN.State.metropolisHastingsSteps
   | 0 => PMF.pure s
   | steps+1 => PMF.bind (metropolisHastingsSteps steps s) $ λ s' =>
                 NN.State.metropolisHastingsStep wθ T s'
+
+/-- The Boltzmann (Gibbs) distribution over neural network states --/
+noncomputable def boltzmannDistribution {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ((HopfieldNetwork R U).State → ℝ) :=
+  λ s => Real.exp (-s.E wθ / T) / NN.State.partitionFunction wθ T
+
+/-- Total variation distance between probability distributions.
+Provides a metric to compare probability distributions --/
+noncomputable def total_variation_distance {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (μ ν : (HopfieldNetwork R U).State → ℝ) : ℝ :=
+  (1/2) * ∑ s : (HopfieldNetwork R U).State, |μ s - ν s|
