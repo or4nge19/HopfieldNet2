@@ -179,9 +179,9 @@ lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [LinearOrderedField R] [De
 
 /-- Perform a stochastic update on a Pattern representation -/
 noncomputable def patternStochasticUpdate
-  {n : ℕ} [Nonempty (Fin n)] (weights : Fin n → Fin n → ℝ) (h_diag_zero : ∀ i : Fin n, weights i i = 0)
-  (h_sym : ∀ i j : Fin n, weights i j = weights j i) (T : ℝ)
-  (pattern : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) (i : Fin n) :
+  {n : ℕ} [Nonempty (Fin n)] (weights : Fin n → Fin n → ℝ) (h_diag_zero : ∀ u : Fin n, weights u u = 0)
+  (h_sym : ∀ u v : Fin n, weights u v = weights v u) (T : ℝ)
+  (pattern : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) (u : Fin n) :
   PMF (NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) :=
   let wθ : Params (HopfieldNetwork ℝ (Fin n)) := {
     w := weights,
@@ -205,11 +205,11 @@ noncomputable def patternStochasticUpdate
       -- For Hopfield networks, we need to prove weight symmetry
       unfold NeuralNetwork.pw
       -- Apply the symmetry hypothesis directly
-      exact IsSymm.ext_iff.mpr fun i j ↦ h_sym j i
+      exact IsSymm.ext_iff.mpr fun u v ↦ h_sym v u
     σ := fun u => Vector.mk (Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ1 u) (0 : ℝ)) (by simp [Array.mkArray_size]),
     θ := fun u => Vector.mk (Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ2 u) (0 : ℝ)) (by simp [Array.mkArray_size])
   }
-  NN.State.gibbsUpdateSingleNeuron pattern wθ T i
+  NN.State.gibbsUpdateSingleNeuron pattern wθ T u
 
 noncomputable def NN.State.gibbsSamplingSteps
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
