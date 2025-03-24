@@ -155,7 +155,7 @@ lemma Array.mkArray_get {α : Type} (n : ℕ) (a : α) (i : Nat) (h : i < n) :
   (Array.mkArray n a)[i]'(by rw [Array.mkArray_size]; exact h) = a :=
   Array.getElem_mkArray _ _ _
 
-theorem Array.mkArray_creates_valid_hopfield_params {n : ℕ} [Nonempty (Fin n)] :
+lemma Array.mkArray_creates_valid_hopfield_params {n : ℕ} [Nonempty (Fin n)] :
   ∀ (u : Fin n),
     let σ_u := Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ1 u) 0
     let θ_u := Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ2 u) 0
@@ -216,6 +216,8 @@ noncomputable def patternStochasticUpdate
   }
   NN.State.gibbsUpdateSingleNeuron pattern wθ T u
 
+
+/-- Given a Hopfield Network, performs multiple steps of Gibbs sampling.-/
 noncomputable def NN.State.gibbsSamplingSteps
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (steps : ℕ)
@@ -225,6 +227,10 @@ noncomputable def NN.State.gibbsSamplingSteps
   | steps+1 => PMF.bind (gibbsSamplingSteps wθ T steps s) $ λ s' =>
                 NN.State.gibbsSamplingStep wθ T s'
 
+/-- Simulated Annealing algorithm for Hopfield Networks.
+This function gradually decreases the temperature according to an exponential cooling schedule while
+performing Gibbs sampling steps to find a low-energy state of the network.
+-/
 noncomputable def NN.State.simulatedAnnealing
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U))
@@ -252,6 +258,19 @@ noncomputable def NN.State.simulatedAnnealing
 
   apply_steps 0 initial_state
 
+/--
+Calculates the acceptance probability for a proposed state transition in a Hopfield network
+using the Metropolis-Hastings algorithm.
+
+Given current and proposed states, this function determines the probability of accepting
+the transition based on:
+* The energy difference between states
+* The temperature parameter T
+
+The acceptance probability follows these rules:
+1. If energy decreases (ΔE ≤ 0), acceptance probability is 1
+2. If energy increases (ΔE > 0), acceptance probability is e^(-ΔE/T)
+-/
 noncomputable def NN.State.acceptanceProbability
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ)
@@ -262,6 +281,13 @@ noncomputable def NN.State.acceptanceProbability
   else
     Real.exp (-energy_diff / T)  -- Accept with probability e^(-ΔE/T) if energy increases
 
+/-- Computes the partition function Z(T) for a Hopfield Network at temperature T.
+For a given set of network parameters (weights and thresholds) and temperature,
+it calculates the sum of Boltzmann factors over all possible network states:
+
+Z(T) = ∑_s exp(-E(s)/T)
+
+-/
 noncomputable def NN.State.partitionFunction
   {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ℝ :=
