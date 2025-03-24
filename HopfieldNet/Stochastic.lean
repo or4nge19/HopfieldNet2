@@ -6,6 +6,7 @@ import Mathlib.Data.Vector.Basic
 
 set_option linter.unusedVariables false
 
+
 open Finset Matrix NeuralNetwork State
 
 /-- Probability Mass Function over Neural Network States --/
@@ -15,15 +16,18 @@ def NeuralNetwork.StatePMF {R U : Type} [Zero R] (NN : NeuralNetwork R U) := PMF
 def NeuralNetwork.StochasticDynamics {R U : Type} [Zero R] (NN : NeuralNetwork R U) :=
   ∀ (T : ℝ), NN.State → NeuralNetwork.StatePMF NN
 
-/-- Creates a PMF for the Metropolis Hastings acceptance decision -/
-def metropolisDecision (p : ℝ) : PMF Bool :=
-  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by exact_mod_cast min_le_right p 1)
-
-variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
+/-- Metropolis acceptance decision as a probability mass function over Boolean outcomes --/
+def NN.State.metropolisDecision
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (p : ℝ) : PMF Bool :=
+  PMF.bernoulli (ENNReal.ofReal (min p 1)) (by
+    exact_mod_cast min_le_right p 1)
 
 /-- Gibbs sampler update for a single neuron in a Hopfield network --/
-noncomputable def NN.State.gibbsUpdateNeuron (u : U) : PMF ((HopfieldNetwork R U).State) :=
+noncomputable def NN.State.gibbsUpdateNeuron
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State) (u : U)
+  : PMF ((HopfieldNetwork R U).State) :=
   -- Calculate local field and energy difference for flipping
   let h_u := s.net wθ u
   let ΔE := 2 * h_u * s.act u  -- Energy difference if neuron flips
@@ -60,7 +64,8 @@ noncomputable def NN.State.gibbsUpdateNeuron (u : U) : PMF ((HopfieldNetwork R U
     PMF.pure $ if should_flip then s.Up wθ u else s
 
 /-- Function to set a specific neuron state --/
-def NN.State.updateNeuron (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) : (HopfieldNetwork R U).State :=
+def NN.State.updateNeuron {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  (s : (HopfieldNetwork R U).State) (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) : (HopfieldNetwork R U).State :=
 { act := fun u' => if u' = u then val else s.act u',
   hp := by
     intro u'
@@ -71,7 +76,9 @@ def NN.State.updateNeuron (u : U) (val : R) (hval : (HopfieldNetwork R U).pact v
       exact s.hp u' }
 
 /-- Update a single neuron according to Gibbs sampling rule --/
-noncomputable def NN.State.gibbsUpdateSingleNeuron (u : U)
+noncomputable def NN.State.gibbsUpdateSingleNeuron
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Calculate local field for the neuron
   let local_field := s.net wθ u
@@ -113,7 +120,9 @@ noncomputable def NN.State.gibbsUpdateSingleNeuron (u : U)
 scoped[ENNReal] notation "ℝ≥0∞" => ENNReal
 
 /-- Complete Gibbs sampling step for Hopfield network --/
-noncomputable def NN.State.gibbsSamplingStep (s : (HopfieldNetwork R U).State)
+noncomputable def NN.State.gibbsSamplingStep
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Uniform random selection of neuron
   let neuron_pmf : PMF U :=
@@ -130,7 +139,7 @@ noncomputable def NN.State.gibbsSamplingStep (s : (HopfieldNetwork R U).State)
           nsmul_eq_mul])
 
   -- Bind neuron selection with conditional update
-  PMF.bind neuron_pmf $ λ u => NN.State.gibbsUpdateSingleNeuron wθ T s u
+  PMF.bind neuron_pmf $ λ u => NN.State.gibbsUpdateSingleNeuron s wθ T u
 
 instance : Coe ℝ ℝ := ⟨id⟩
 
@@ -171,7 +180,7 @@ lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [LinearOrderedField R] [De
 /-- Perform a stochastic update on a Pattern representation -/
 noncomputable def patternStochasticUpdate
   {n : ℕ} [Nonempty (Fin n)] (weights : Fin n → Fin n → ℝ) (h_diag_zero : ∀ i : Fin n, weights i i = 0)
-  (h_sym : ∀ i j : Fin n, weights i j = weights j i)
+  (h_sym : ∀ i j : Fin n, weights i j = weights j i) (T : ℝ)
   (pattern : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) (i : Fin n) :
   PMF (NeuralNetwork.State (HopfieldNetwork ℝ (Fin n))) :=
   let wθ : Params (HopfieldNetwork ℝ (Fin n)) := {
@@ -200,16 +209,20 @@ noncomputable def patternStochasticUpdate
     σ := fun u => Vector.mk (Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ1 u) (0 : ℝ)) (by simp [Array.mkArray_size]),
     θ := fun u => Vector.mk (Array.mkArray ((HopfieldNetwork ℝ (Fin n)).κ2 u) (0 : ℝ)) (by simp [Array.mkArray_size])
   }
-  NN.State.gibbsUpdateSingleNeuron wθ T pattern i
+  NN.State.gibbsUpdateSingleNeuron pattern wθ T i
 
-noncomputable def NN.State.gibbsSamplingSteps (steps : ℕ)
+noncomputable def NN.State.gibbsSamplingSteps
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (steps : ℕ)
   (s : (HopfieldNetwork R U).State) : PMF ((HopfieldNetwork R U).State) :=
   match steps with
   | 0 => PMF.pure s
-  | steps+1 => PMF.bind (gibbsSamplingSteps steps s) $ λ s' =>
+  | steps+1 => PMF.bind (gibbsSamplingSteps wθ T steps s) $ λ s' =>
                 NN.State.gibbsSamplingStep wθ T s'
 
 noncomputable def NN.State.simulatedAnnealing
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U))
   (initial_temp : ℝ) (cooling_rate : ℝ) (steps : ℕ)
   (initial_state : (HopfieldNetwork R U).State) : PMF ((HopfieldNetwork R U).State) :=
   -- Temperature schedule definition
@@ -229,11 +242,14 @@ noncomputable def NN.State.simulatedAnnealing
       rw [Nat.sub_succ]
       simp_all only [ge_iff_le, not_le, Nat.pred_eq_sub_one, tsub_lt_self_iff, tsub_pos_iff_lt, Nat.lt_one_iff,
         pos_of_gt, and_self]
-    exact this}
+    exact this
+  }
 
   apply_steps 0 initial_state
 
 noncomputable def NN.State.acceptanceProbability
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ)
   (current : (HopfieldNetwork R U).State) (proposed : (HopfieldNetwork R U).State) : ℝ :=
   let energy_diff := proposed.E wθ - current.E wθ
   if energy_diff ≤ 0 then
@@ -241,11 +257,15 @@ noncomputable def NN.State.acceptanceProbability
   else
     Real.exp (-energy_diff / T)  -- Accept with probability e^(-ΔE/T) if energy increases
 
-noncomputable def NN.State.partitionFunction  : ℝ :=
+noncomputable def NN.State.partitionFunction
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ℝ :=
   ∑ s : (HopfieldNetwork R U).State, Real.exp (-s.E wθ / T)
 
 /-- Metropolis-Hastings single step for Hopfield networks --/
-noncomputable def NN.State.metropolisHastingsStep (s : (HopfieldNetwork R U).State)
+noncomputable def NN.State.metropolisHastingsStep
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Uniform random selection of neuron
   let neuron_pmf : PMF U :=
@@ -280,11 +300,12 @@ noncomputable def NN.State.metropolisHastingsStep (s : (HopfieldNetwork R U).Sta
 
 /-- Multiple steps of Metropolis-Hastings algorithm for Hopfield networks --/
 noncomputable def NN.State.metropolisHastingsSteps
-  (steps : ℕ) (s : (HopfieldNetwork R U).State)
+  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (steps : ℕ) (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
   match steps with
   | 0 => PMF.pure s
-  | steps+1 => PMF.bind (metropolisHastingsSteps steps s) $ λ s' =>
+  | steps+1 => PMF.bind (metropolisHastingsSteps wθ T steps s) $ λ s' =>
                 NN.State.metropolisHastingsStep wθ T s'
 
 /-- The Boltzmann (Gibbs) distribution over neural network states --/
