@@ -1,8 +1,3 @@
-/-
-Copyright (c) 2025 Matteo Cipollina. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Matteo Cipollina;
--/
 
 import HopfieldNet.HN
 import Mathlib.LinearAlgebra.Matrix.PosDef
@@ -36,6 +31,14 @@ open Finset Matrix NeuralNetwork State
 
 variable {R U : Type} [LinearOrderedField R] [StarRing R] [DecidableEq U] [Fintype U] [Nonempty U]
 
+/-- A matrix `A : Matrix n n α` is "antisymmetric" if `Aᵀ = -A`. -/
+def Matrix.IsAntisymm [Neg α] (A : Matrix n n α) : Prop := Aᵀ = -A
+
+theorem Matrix.IsAntisymm.ext_iff [Neg α] {A : Matrix n n α} :
+  A.IsAntisymm ↔ ∀ i j, A j i = -A i j := by
+  simp [Matrix.IsAntisymm, Matrix.ext_iff]
+  exact Eq.congr_right rfl
+
 /--
 `AsymmetricHopfieldNetwork` defines a Hopfield network with asymmetric weights.
 Unlike standard Hopfield networks where weights must be symmetric,
@@ -67,11 +70,12 @@ abbrev AsymmetricHopfieldNetwork (R U : Type) [LinearOrderedField R] [DecidableE
   /- A proof that the output set is not equal to the empty set. -/
   hUo := Ne.symm Set.empty_ne_univ
   /- The weights can be decomposed into antisymmetric and positive definite parts -/
-  pw w := ∃ (A S : Matrix U U R),
-            (∀ i j, A i j = -A j i) ∧        -- A is antisymmetric
-            (Matrix.PosDef S) ∧              -- S is positive definite
-            w = A + S ∧                      -- Decomposition of the weight matrix
-            (∀ i, w i i ≥ 0)                 -- Non-negative diagonal
+  pw := fun w =>
+    ∃ (A S : Matrix U U R),
+            A.IsAntisymm ∧                   -- A is antisymmetric
+            Matrix.PosDef S ∧               -- S is positive definite
+            w = A + S ∧                     -- Decomposition of the weight matrix
+            (∀ i, w i i ≥ 0)                -- Non-negative diagonal
   /- κ₁ is 0 for every neuron. -/
   κ1 _ := 0
   /- κ₂ is 1 for every neuron. -/
@@ -100,10 +104,11 @@ Parameters:
 Returns:
 - A pair (A, S) where A is antisymmetric, S is positive definite, and w = A + S
 -/
-noncomputable def getAsymmetricDecomposition (wθ : Params (AsymmetricHopfieldNetwork R U)) :
-    (Matrix U U R) × (Matrix U U R) :=
-  let A := Exists.choose wθ.hw'
-  let S := Exists.choose (Exists.choose_spec wθ.hw')
+-- First, define the function if it isn't already defined
+def getAsymmetricDecompositionComputable (wθ : Params (AsymmetricHopfieldNetwork R U)) :
+    Matrix U U R × Matrix U U R :=
+  let A := (1/2) • (wθ.w - wθ.w.transpose)
+  let S := (1/2) • (wθ.w + wθ.w.transpose)
   (A, S)
 
 /--
@@ -372,7 +377,7 @@ Returns:
 def mkAsymmetricParams (w : Matrix U U R) (θ : U → Vector R 1) [Nonempty U]
     (hw : ∀ u v, ¬ (AsymmetricHopfieldNetwork R U).Adj u v → w u v = 0)
     (hasym : ∃ (A S : Matrix U U R),
-      (∀ i j, A i j = -A j i) ∧        -- A is antisymmetric
+      A.IsAntisymm ∧        -- A is antisymmetric
       (Matrix.PosDef S) ∧              -- S is positive definite
       w = A + S ∧                      -- Decomposition of the weight matrix
       (∀ i, w i i ≥ 0)) : Params (AsymmetricHopfieldNetwork R U) where
@@ -400,13 +405,13 @@ Parameters:
 - s: The initial state
 - useq: A sequence of neurons to update
 - hf: A proof that the update sequence is fair
-- N: The maximum number of iterations (defaults to 10 times the network size)
+- N: The maximum number of iterations (defaults to 10 times the network size -
+  for different AHNs, different N values might be needed,)
 
 Returns:
 - The state after N iterations, with no guarantee of stability
 -/
-
-def stabilizeAsym (wθ : Params (AsymmetricHopfieldNetwork R U))
+def iterateAsym (wθ : Params (AsymmetricHopfieldNetwork R U))
     (s : State (AsymmetricHopfieldNetwork R U)) [Nonempty U] (useq : ℕ → U) (_hf : fair useq)
     (N : ℕ := Fintype.card U * 10) : State (AsymmetricHopfieldNetwork R U) :=
   seqStatesAsym wθ s useq N
