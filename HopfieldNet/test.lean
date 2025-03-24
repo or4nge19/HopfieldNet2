@@ -169,7 +169,7 @@ Converts a matrix of patterns `V` into Hopfield network states.
 Each row of `V` (a function `Fin m → Fin n → ℚ`) is mapped to a Hopfield network state
 if all elements are either `1` or `-1`. Returns `some` mapping if successful, otherwise `none`.
 -/
-def patternToNet (V : Fin m → Fin n → ℚ) [NeZero n] (hmn : m < n) :
+def patternsOfVecs (V : Fin m → Fin n → ℚ) [NeZero n] (hmn : m < n) :
   Option (Fin m → (HopfieldNetwork ℚ (Fin n)).State) :=
   obviousFunction (fun i => pattern_ofVec (V i))
 
@@ -210,7 +210,7 @@ It converts the patterns `ps` into a network using Hebbian learning if possible.
 If not, it defaults to `ZeroParams_4`.
 --/
 def test_params : Params (HopfieldNetwork ℚ (Fin 4)) :=
-  match (patternToNet ps (by simp only [Nat.succ_eq_add_one, zero_add,
+  match (patternsOfVecs ps (by simp only [Nat.succ_eq_add_one, zero_add,
     Nat.reduceAdd, Nat.reduceLT])) with
   | some patterns => Hebbian patterns
   | none => ZeroParams_4
