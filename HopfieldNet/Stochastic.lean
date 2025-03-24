@@ -321,7 +321,7 @@ noncomputable def boltzmannDistribution {R U : Type}
 
 /-- Total variation distance between probability distributions.
 Provides a metric to compare probability distributions --/
-noncomputable def total_variation_distance {R U : Type}
+noncomputable def totalVariationDistance {R U : Type}
   [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (μ ν : (HopfieldNetwork R U).State → ℝ) : ℝ :=
   (1/2) * ∑ s : (HopfieldNetwork R U).State, |μ s - ν s|
