@@ -8,7 +8,7 @@ Below is a brief overview of the key files:
 - **`Asym.lean`** – Formalization of asymmetric Hopfield networks.  
 - **`HN.lean`** – Formalization of symmetric Hopfield networks.  
 - **`NN.lean`** – Formalization of General neural networks.  
-- **`Stochastic.lean`** – Formalization of stochastic theory of Hopfield networks.  
+- **`Stochastic.lean`** – Formalization of stochastic theory for Hopfield networks.  
 - **`aux.lean`** – Auxiliary lemmas.  
 - **`test.lean`** – Computations and implementation of the Hebbian learning algorithm.  
 
