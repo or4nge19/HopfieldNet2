@@ -5,12 +5,12 @@ This repository contains Lean formalizations related to Hopfield Networks writte
 
 Below is a brief overview of the key files:
 
-- **`Asym.lean`** – Formalization of asymmetric Hopfield networks.  
-- **`HN.lean`** – Formalization of symmetric Hopfield networks.  
-- **`NN.lean`** – Formalization of General neural networks.  
-- **`Stochastic.lean`** – Formalization of stochastic theory for Hopfield networks.  
-- **`aux.lean`** – Auxiliary lemmas.  
-- **`test.lean`** – Computations and implementation of the Hebbian learning algorithm.  
+- **`HopfieldNet/Asym.lean`** – Formalization of asymmetric Hopfield networks.  
+- **`HopfieldNet/HN.lean`** – Formalization of symmetric Hopfield networks.  
+- **`HopfieldNet/NN.lean`** – Formalization of general neural networks.  
+- **`HopfieldNet/Stochastic.lean`** – Formalization of stochastic theory for Hopfield networks.  
+- **`HopfieldNet/aux.lean`** – Auxiliary lemmas.  
+- **`HopfieldNet/test.lean`** – Computations and implementation of the Hebbian learning algorithm.  
 
 For more details, see the individual files.
 
