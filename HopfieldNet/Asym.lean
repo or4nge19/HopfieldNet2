@@ -43,7 +43,8 @@ variable {R U : Type} [LinearOrderedField R] [StarRing R] [DecidableEq U] [Finty
 /-- A matrix `A : Matrix n n α` is "antisymmetric" if `Aᵀ = -A`. -/
 def Matrix.IsAntisymm [Neg α] (A : Matrix n n α) : Prop := Aᵀ = -A
 
-theorem Matrix.IsAntisymm.ext_iff [Neg α] {A : Matrix n n α} :
+@[simp]
+lemma Matrix.IsAntisymm.ext_iff [Neg α] {A : Matrix n n α} :
   A.IsAntisymm ↔ ∀ i j, A j i = -A i j := by
   simp [Matrix.IsAntisymm, Matrix.ext_iff]
   exact Eq.congr_right rfl
@@ -113,8 +114,8 @@ Parameters:
 Returns:
 - A pair (A, S) where A is antisymmetric, S is positive definite, and w = A + S
 -/
--- First, define the function if it isn't already defined
-def getAsymmetricDecompositionComputable (wθ : Params (AsymmetricHopfieldNetwork R U)) :
+def getAsymmetricDecomposition (wθ : Params (AsymmetricHopfieldNetwork R U))
+    (hw' : ∃ (A S : Matrix U U R), A.IsAntisymm ∧ Matrix.PosDef S ∧ wθ.w = A + S ∧ (∀ i, wθ.w i i ≥ 0)) :
     Matrix U U R × Matrix U U R :=
   let A := (1/2) • (wθ.w - wθ.w.transpose)
   let S := (1/2) • (wθ.w + wθ.w.transpose)
@@ -251,6 +252,7 @@ def potentialFunction (wθ : Params (AsymmetricHopfieldNetwork R U))
       s.act j
 
 -- Lemma: potentialFunction is bounded
+@[simp]
 lemma potential_function_bounded (wθ : Params (AsymmetricHopfieldNetwork R U))
     (s : State (AsymmetricHopfieldNetwork R U)) (k : ℕ) (useq : ℕ → U) :
   ∃ (lowerBound upperBound : R), lowerBound ≤ potentialFunction wθ s k useq ∧ potentialFunction wθ s k useq ≤ upperBound := by
@@ -328,6 +330,7 @@ lemma potential_function_bounded (wθ : Params (AsymmetricHopfieldNetwork R U))
       _ = |wθ.w i j| := by ring
 
 -- Lemma for updatedActValue in terms of localFieldAsym
+@[simp]
 lemma updatedActValue_eq (wθ : Params (AsymmetricHopfieldNetwork R U))
     (s : State (AsymmetricHopfieldNetwork R U)) (i : U) :
   updatedActValue wθ s i = if localFieldAsym wθ s i > 0 then 1 else -1 := by
@@ -340,6 +343,7 @@ lemma updatedActValue_eq (wθ : Params (AsymmetricHopfieldNetwork R U))
     simp [h]
 
 -- Helper Lemma: localFieldAsym after an update
+@[simp]
 lemma localFieldAsym_update (wθ : Params (AsymmetricHopfieldNetwork R U))
     (s : State (AsymmetricHopfieldNetwork R U)) (i : U) :
     localFieldAsym wθ (updateStateAsym wθ s i) i =
@@ -359,6 +363,7 @@ lemma localFieldAsym_update (wθ : Params (AsymmetricHopfieldNetwork R U))
     rw [h_update]
 
 -- Helper Lemma: Expressing s'_j in terms of s_j and updatedActValue
+@[simp]
 lemma s'_eq_s_update (wθ : Params (AsymmetricHopfieldNetwork R U))
     (s : State (AsymmetricHopfieldNetwork R U)) (i j : U) :
   let s' := updateStateAsym wθ s i
