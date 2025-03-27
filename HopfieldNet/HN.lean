@@ -16,10 +16,6 @@ variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U]
 
 /--
 `HNfnet` computes the weighted sum of predictions for all elements in `U`, excluding `u`.
-
-- `u`: The element to exclude.
-- `wu`: A function giving weights for each element in `U`.
-- `pred`: A function giving prediction values for each element in `U`.
 -/
 abbrev HNfnet (u : U) (wu : U → R) (pred : U → R) : R := ∑ v ∈ {v | v ≠ u}, wu v * pred v
 
