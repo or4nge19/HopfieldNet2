@@ -15,7 +15,7 @@ set_option linter.unusedVariables false
 /-
 # Stochastic Hopfield Network Implementation
 
-This file defines and proves properties related to a stochastic Hopfield network in Lean 4.
+This file defines and proves properties related to a stochastic Hopfield network.
 It includes definitions for states, neural network parameters, energy computations,
 and stochastic updates using both Gibbs sampling and Metropolis-Hastings algorithms.
 Additionally, it provides several helper lemmas to support proofs of correctness, such as:
