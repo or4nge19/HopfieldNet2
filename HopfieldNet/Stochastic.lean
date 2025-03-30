@@ -12,6 +12,37 @@ import Mathlib.Data.Vector.Basic
 
 set_option linter.unusedVariables false
 
+/-
+# Stochastic Hopfield Network Implementation
+
+This file defines and proves properties related to a stochastic Hopfield network in Lean 4.
+It includes definitions for states, neural network parameters, energy computations,
+and stochastic updates using both Gibbs sampling and Metropolis-Hastings algorithms.
+Additionally, it provides several helper lemmas to support proofs of correctness, such as:
+
+- A lemma (`State.ext`) for state extensionality ensuring that if two states match in their
+  activation values for all neurons, they are the same state.
+- Instances (e.g., `decidableEqState`) to establish decidability of equality for network states
+  under certain conditions.
+- Lemmas (`energy_decomposition`, `weight_symmetry`, `energy_sum_split`) connecting the local
+  parameters (weights, biases) to the global energy function.
+- Functions (`StatePMF`, `StochasticDynamics`) representing probability measures over states.
+- Key stochastic update operations, including a single-neuron Gibbs update
+  (`gibbsUpdateNeuron`, `gibbsUpdateSingleNeuron`) and full-network sampling steps
+  (`gibbsSamplingStep`, `gibbsSamplingSteps`) that iterate these updates.
+- Definitions (`metropolisDecision`, `metropolisHastingsStep`, `metropolisHastingsSteps`) for
+  implementing a Metropolis-Hastings update rule in a Hopfield network.
+- A simulated annealing procedure (`simulatedAnnealing`) that adaptively lowers the temperature
+  to guide the network into a low-energy configuration.
+- Various lemmas (such as `single_site_difference`, `updateNeuron_preserves`, and
+  `gibbs_probs_sum_one`) ensuring correctness and consistency of the update schemes.
+- Utility definitions and proofs, including creation of valid parameters (`mkArray_creates_valid_hopfield_params`),
+  verification of adjacency (`all_nodes_adjacent`), total variation distance
+  (`total_variation_distance`), partition function (`partitionFunction`), and more.
+
+Overall, this module provides a self-contained framework for working with and proving properties of
+Hopfield networks under stochastic dynamics within Lean 4.
+-/
 open Finset Matrix NeuralNetwork State
 
 /-- Extensionality lemma for neural network states --/
@@ -42,8 +73,6 @@ lemma energy_decomposition {R U : Type}
   rw [← @add_neg_eq_iff_eq_add]
   exact add_neg_eq_of_eq_add rfl
 
-
-
 /-- Weight matrix is symmetric in a Hopfield network --/
 @[simp]
 lemma weight_symmetry {R U : Type}
@@ -69,11 +98,6 @@ instance updateNeuronDecEq {R U : Type} [LinearOrderedField R] [DecidableEq U] [
   intro s₁ s₂
   apply decidable_of_iff (∀ u, s₁.act u = s₂.act u)
   · exact ⟨fun h ↦ State.ext h, fun h u ↦ by rw [h]⟩
-
-section Stochastic
-set_option linter.unusedVariables false
-
-open Finset Matrix NeuralNetwork State
 
 /-- Probability Mass Function over Neural Network States --/
 def NeuralNetwork.StatePMF {R U : Type} [Zero R] (NN : NeuralNetwork R U) := PMF (NN.State)
@@ -380,7 +404,6 @@ noncomputable def NN.State.metropolisHastingsStep
         rw [← ENNReal.mul_inv_cancel h h_top]
         simp_all only [ne_eq, Nat.cast_eq_zero, Fintype.card_ne_zero, not_false_eq_true, ENNReal.natCast_ne_top,
           nsmul_eq_mul])
-
   -- Create proposed state by flipping a randomly selected neuron
   let propose : U → PMF ((HopfieldNetwork R U).State) := λ u =>
     let flipped_state :=
@@ -388,9 +411,7 @@ noncomputable def NN.State.metropolisHastingsStep
         NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)
       else
         NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
-
     let p := NN.State.acceptanceProbability wθ T s flipped_state
-
     -- Make acceptance decision
     PMF.bind (NN.State.metropolisDecision (R := R) (U := U) p) (λ accept =>
       if accept then PMF.pure flipped_state else PMF.pure s)
@@ -442,7 +463,6 @@ lemma single_site_difference {R U : Type}
   -- Decompose the hypothesis into non-equality and the existence statement
   obtain ⟨s_neq, hu_all⟩ := h
   obtain ⟨u, hu⟩ := hu_all
-
   -- Show that states must differ at u
   have diff_at_u : s.act u ≠ s'.act u := by {
     by_contra h_eq
@@ -451,12 +471,10 @@ lemma single_site_difference {R U : Type}
       intro v
       by_cases hv : v = u
       { rw [hv, h_eq]}
-      { exact hu v hv }
-    }
+      { exact hu v hv }}
     -- This implies s = s', which contradicts s ≠ s'
     have s_eq : s = s' := State.ext all_same
-    exact s_neq s_eq
-  }
+    exact s_neq s_eq}
   use u
   constructor
   { exact diff_at_u }
@@ -466,8 +484,7 @@ lemma single_site_difference {R U : Type}
     have eq_v : s.act v = s'.act v := by {
       by_cases hv : v = u
       { rw [hv]; exact hu u fun a ↦ h_diff (hu v h_v) }
-      { exact hu v hv }
-    }
+      { exact hu v hv }}
     exact h_diff eq_v }
 
 /-- States that are equal at all sites are equal --/
@@ -500,16 +517,16 @@ lemma gibbs_probs_sum_one {R U : Type}
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
   let norm_probs := λ b => probs b / total
-
   ∑ b : Bool, norm_probs b = 1 := by
   intro local_field probs total norm_probs
-
   have h_sum : ∑ b : Bool, probs b / total = (probs true + probs false) / total := by
     simp only [Fintype.sum_bool]
     exact ENNReal.div_add_div_same
-
   rw [h_sum]
-
+  -- Now we have (probs true + probs false) / total, which equals total / total
+  have h_total_eq : probs true + probs false = total := by rfl
+  rw [h_total_eq]
+  -- Show total is not zero
   have h_total_ne_zero : total ≠ 0 := by
     simp only [total, probs, ne_eq]
     intro h_zero
@@ -522,10 +539,9 @@ lemma gibbs_probs_sum_one {R U : Type}
     have h_sum_zero : ENNReal.ofReal (Real.exp (local_field * 1 / T)) +
                      ENNReal.ofReal (Real.exp (local_field * (-1) / T)) = 0 := h_zero
     exact h1.ne' (add_eq_zero.mp h_sum_zero).1
-
-  have h_total_ne_top : total ≠ ⊤ := by
-    simp [total, probs]
-
+  -- Show total is not infinity
+  have h_total_ne_top : total ≠ ⊤ := by simp [total, probs]
+  -- Division of a value by itself equals 1
   exact ENNReal.div_self h_total_ne_zero h_total_ne_top
 
 /-- The function that maps boolean values to states in Gibbs sampling --/
@@ -545,27 +561,21 @@ lemma gibbs_total_positive {R U : Type}
   let probs : Bool → ENNReal := fun b =>
     let new_act_val := if b then 1 else -1
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
-
   probs true + probs false ≠ 0 := by
   intro probs
   simp only [ne_eq]
   intro h_zero
-
   have h1 : ENNReal.ofReal (Real.exp (local_field * 1 / T)) > 0 := by
     apply ENNReal.ofReal_pos.mpr
     apply Real.exp_pos
-
   have h2 : ENNReal.ofReal (Real.exp (local_field * (-1) / T)) > 0 := by
     apply ENNReal.ofReal_pos.mpr
     apply Real.exp_pos
-
   have h_sum_zero : ENNReal.ofReal (Real.exp (local_field * 1 / T)) +
                    ENNReal.ofReal (Real.exp (local_field * (-1) / T)) = 0 := h_zero
-
   have h_both_zero : ENNReal.ofReal (Real.exp (local_field * 1 / T)) = 0 ∧
                     ENNReal.ofReal (Real.exp (local_field * (-1) / T)) = 0 :=
     add_eq_zero.mp h_sum_zero
-
   exact h1.ne' h_both_zero.1
 
 /-- The total normalization constant for Gibbs sampling is not infinity --/
@@ -576,7 +586,6 @@ lemma gibbs_total_not_top {R U : Type}
   let probs : Bool → ENNReal := fun b =>
     let new_act_val := if b then 1 else -1
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
-
   probs true + probs false ≠ ⊤ := by
   intro probs
   simp [probs]
@@ -588,7 +597,6 @@ lemma pmf_map_pos_implies_preimage {α β : Type} [Fintype α] [DecidableEq β]
   ∃ x : α, p x > 0 ∧ f x = y := by
   intro h_pos
   simp only [PMF.map_apply] at h_pos
-
   have h_eqn : (∑' (a : α), if y = f a then (PMF.ofFintype p h_pmf) a else 0) =
                ∑ a ∈ filter (fun a ↦ f a = y) univ, p a := by
     -- First handle the if-then-else structure
@@ -599,10 +607,8 @@ lemma pmf_map_pos_implies_preimage {α β : Type} [Fintype α] [DecidableEq β]
       by_cases h : f a = y
       · simp [h]
       · simp [h, Ne.symm h]
-
     -- Now apply the filter sum lemma
     rw [h1]
-
     -- For finite types, tsum can be converted to a sum over the universe
     have h2 : (∑' (a : α), if f a = y then (PMF.ofFintype p h_pmf) a else 0) =
               ∑ a ∈ filter (fun a ↦ f a = y) univ, (PMF.ofFintype p h_pmf) a := by
@@ -610,19 +616,15 @@ lemma pmf_map_pos_implies_preimage {α β : Type} [Fintype α] [DecidableEq β]
       have tsum_eq_sum : (∑' (a : α), if f a = y then (PMF.ofFintype p h_pmf) a else 0) =
                          (∑ a ∈ univ, if f a = y then (PMF.ofFintype p h_pmf) a else 0) := by
         exact tsum_fintype fun b ↦ if f b = y then (PMF.ofFintype p h_pmf) b else 0
-
       -- Then use a sum_filter property
       rw [tsum_eq_sum]
       exact Eq.symm (sum_filter (fun a ↦ f a = y) ⇑(PMF.ofFintype p h_pmf))
-
     rw [h2]
-
     -- Convert PMF.ofFintype back to p
     apply Finset.sum_congr rfl
     intro a ha
     simp only [mem_filter, mem_univ, true_and] at ha
     simp [PMF.ofFintype_apply]
-
   simp_all only [PMF.ofFintype_apply, tsum_eq_filter_sum, gt_iff_lt, filter_sum_pos_iff_exists_pos,
     pmf_map_pos_iff_exists_pos]
 
@@ -635,17 +637,14 @@ lemma gibbsUpdate_exists_bool {R U : Type}
   (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 →
   ∃ b : Bool, s_next = gibbs_bool_to_state_map s v b := by
   intro h_prob_pos
-
   let local_field := s.net wθ v
   let probs : Bool → ENNReal := fun b =>
     let new_act_val := if b then 1 else -1
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
   let norm_probs := λ b => probs b / total
-
   -- Extract mapping structure from PMF.map
   unfold NN.State.gibbsUpdateSingleNeuron at h_prob_pos
-
   -- Use our helper lemmas
   have h_total_ne_zero := @gibbs_total_positive R U _ _ _ _ _ local_field T
   have h_total_ne_top := @gibbs_total_not_top R U _ _ _ _ _ local_field T
@@ -653,7 +652,6 @@ lemma gibbsUpdate_exists_bool {R U : Type}
 
   -- Apply the preimage lemma
   unfold gibbs_bool_to_state_map
-
   -- Apply pmf_map_pos_implies_preimage to get the preimage
   have ⟨b, h_prob_b, h_map_b⟩ := pmf_map_pos_implies_preimage h_sum_one
     (λ b => if b then
@@ -661,7 +659,6 @@ lemma gibbsUpdate_exists_bool {R U : Type}
     else
       NN.State.updateNeuron s v (-1) (by exact AffineMap.lineMap_eq_lineMap_iff.mp rfl))
     s_next h_prob_pos
-
   -- Use the preimage to construct our result
   use b
   exact id (Eq.symm h_map_b)
@@ -677,10 +674,8 @@ lemma gibbsUpdate_possible_states {R U : Type}
   s_next = NN.State.updateNeuron s v 1 (by exact mul_self_eq_mul_self_iff.mp rfl) ∨
   s_next = NN.State.updateNeuron s v (-1) (by exact AffineMap.lineMap_eq_lineMap_iff.mp rfl) := by
   intro h_prob_pos
-
   -- Use the helper lemma to get the boolean
   obtain ⟨b, h_eq⟩ := gibbsUpdate_exists_bool wθ T s v s_next h_prob_pos
-
   -- Do case analysis on the boolean to determine which state we have
   cases b with
   | false =>
@@ -703,10 +698,8 @@ lemma gibbsUpdate_preserves_other_neurons {R U : Type}
   ∀ s_next, (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 →
     s_next.act w = s.act w := by
   intro s_next h_prob_pos
-
   -- Use the helper lemma to determine the structure of s_next
   have h_structure := gibbsUpdate_possible_states wθ T s v s_next h_prob_pos
-
   -- Handle both possible cases
   cases h_structure with
   | inl h_pos =>
@@ -717,7 +710,6 @@ lemma gibbsUpdate_preserves_other_neurons {R U : Type}
     -- If s_next has v = -1, then all other neurons remain unchanged
     rw [h_neg]
     exact updateNeuron_preserves s v w (-1) (by exact AffineMap.lineMap_eq_lineMap_iff.mp rfl) h_neq
-
 
 /-- For states differing at only one site, that site must be u --/
 @[simp]
@@ -770,17 +762,14 @@ lemma pmf_binary_norm_sum_one
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
   let norm_probs := λ b => probs b / total
-
   ∑ b : Bool, norm_probs b = 1 := by
   intro probs total norm_probs
   -- Convert sum over normalized probabilities
   have h_sum : ∑ b : Bool, probs b / total = (probs true + probs false) / total := by
     simp only [Fintype.sum_bool]
     exact ENNReal.div_add_div_same
-
   -- Show the sum equals 1
   rw [h_sum]
-
   -- Show total is positive (not zero)
   have h_total_ne_zero : total ≠ 0 := by
     simp only [total, probs, ne_eq]
@@ -797,11 +786,9 @@ lemma pmf_binary_norm_sum_one
                       ENNReal.ofReal (Real.exp (local_field * (-1) / T)) = 0 := by
       exact add_eq_zero.mp h_sum_zero
     exact h1.ne' h_both_zero.1
-
   -- Show total is not top
   have h_total_ne_top : total ≠ ⊤ := by
     simp [total, probs]
-
   -- Division by self is 1
   exact ENNReal.div_self h_total_ne_zero h_total_ne_top
 
@@ -834,7 +821,6 @@ lemma different_activation_different_state {R U : Type}
     (NN.State.updateNeuron s u 1 (by exact Or.inl rfl)).act u =
     (NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)).act u := by
     congr
-
   unfold NN.State.updateNeuron at h_values
   simp at h_values
   have : (1 : R) ≠ -1 := by
@@ -889,7 +875,6 @@ lemma bool_update_eq_iff {R U : Type}
       cases h_cases
       trivial
       -- This is an impossible case since b = false can't satisfy b = true ∧ val = 1
-
   · -- Case: b = true
     simp only [↓reduceIte, update_neuron_eq_iff, true_and, Bool.true_eq_false, false_and, or_false]
     constructor
@@ -903,7 +888,6 @@ lemma bool_update_eq_iff {R U : Type}
       · -- Case: b = true ∧ val = 1
         exact rfl
 
-
 /-- When filtering a PMF with binary support to states matching a given state's update,
     the result reduces to a singleton if the update site matches --/
 @[simp]
@@ -914,26 +898,22 @@ lemma pmf_filter_update_neuron {R U : Type}
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
     if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
     else NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)
-
   filter (fun b => f b = NN.State.updateNeuron s u val hval) univ =
     if val = 1 then {true} else
     if val = -1 then {false} else ∅ := by
   intro f
-
   -- Apply our boolean matching lemma to the filter condition
   -- First establish the filter condition for all booleans
   have filter_cond : ∀ b, f b = NN.State.updateNeuron s u val hval ↔
     (b = true ∧ val = 1) ∨ (b = false ∧ val = -1) := by
     intro b
     exact bool_update_eq_iff s u b val hval
-
   -- Now use cases on the possible values
   by_cases h1 : val = 1
   · -- Case val = 1
     simp only [h1]
     ext b
     simp only [mem_filter, mem_univ, true_and, mem_singleton]
-
     -- Directly apply the bool_update_eq_iff lemma
     rw [@bool_update_eq_iff]
     simp [h1]
@@ -948,7 +928,6 @@ lemma pmf_filter_update_neuron {R U : Type}
       simp only [h1, h2]
       ext b
       simp only [mem_filter, mem_univ, true_and, mem_singleton]
-
       -- Directly apply the bool_update_eq_iff lemma
       rw [@bool_update_eq_iff]
       simp [h1, h2]
@@ -965,11 +944,9 @@ lemma pmf_filter_update_neuron {R U : Type}
       simp only [h1, h2]
       ext b
       simp only [mem_filter, mem_univ, true_and]
-
       -- Apply bool_update_eq_iff to reduce the filter condition
       rw [@bool_update_eq_iff]
       simp [h1, h2]
-
 
 /-- The normalization factor in Gibbs sampling is the sum of Boltzmann factors for both possible states --/
 @[simp]
@@ -980,7 +957,6 @@ lemma gibbs_normalization_factor {R U : Type}
     let new_act_val := if b then 1 else -1
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
-
   total = ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T)) := by
   intro probs total
   simp only [probs, total]
@@ -997,7 +973,6 @@ lemma gibbs_prob_true {R U : Type}
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
   let norm_probs := λ b => probs b / total
-
   norm_probs true = ENNReal.ofReal (Real.exp (local_field / T)) /
     (ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))) := by
   intro probs total norm_probs
@@ -1018,7 +993,6 @@ lemma gibbs_prob_false {R U : Type}
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
   let norm_probs := λ b => probs b / total
-
   norm_probs false = ENNReal.ofReal (Real.exp (-local_field / T)) /
     (ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))) := by
   intro probs total norm_probs
@@ -1042,7 +1016,6 @@ lemma pmf_map_binary_state {R U : Type}
   PMF.map f (PMF.ofFintype p h_sum) (f b) = p b := by
   intro f
   simp only [PMF.map_apply]
-
   -- Show that f is injective (maps false and true to different states)
   have h_inj : ∀ b₁ b₂ : Bool, b₁ ≠ b₂ → f b₁ ≠ f b₂ := by
     intro b₁ b₂ hneq
@@ -1066,7 +1039,6 @@ lemma pmf_map_binary_state {R U : Type}
         norm_num
       exact (update_neuron_eq_iff s u 1 (-1) (by exact Or.inl rfl) (by exact Or.inr rfl)).not.mpr h_values_diff
     · contradiction
-
   -- For a filtered sum over Bool, there's only one element that maps to f b, and that's b itself
   have h_unique : ∀ b' : Bool, f b' = f b ↔ b' = b := by
     intro b'
@@ -1088,13 +1060,11 @@ lemma pmf_map_binary_state {R U : Type}
       · -- Direction: b' = b → f b' = f b
         intro h_eq
         contradiction
-
   -- Convert tsum to a sum over elements satisfying the filter condition
   have h_filter : (∑' (b' : Bool), if f b = f b' then (PMF.ofFintype p h_sum) b' else 0) =
                  (PMF.ofFintype p h_sum) b := by
     -- Convert tsum to a finite sum over Bool
     rw [tsum_fintype]
-
     -- We'll use the fact that f is injective, so f b = f b' iff b = b'
     have h_iff : ∀ b' : Bool, f b = f b' ↔ b = b' := by
       intro b'
@@ -1109,7 +1079,6 @@ lemma pmf_map_binary_state {R U : Type}
       · -- Direction: b = b' → f b = f b'
         intro h_eq
         rw [h_eq]
-
     -- Using this characterization, we can simplify the sum
     have h_eq : ∑ b' : Bool, ite (f b = f b') ((PMF.ofFintype p h_sum) b') 0 =
                 ∑ b' : Bool, ite (b = b') ((PMF.ofFintype p h_sum) b') 0 := by
@@ -1118,19 +1087,14 @@ lemma pmf_map_binary_state {R U : Type}
       -- Check if the conditions are equivalent
       have hcond : (f b = f b') ↔ (b = b') := h_iff b'
       simp only [hcond]
-
     -- Apply the equality
     rw [h_eq]
-
     -- Sum with if condition based on equality is just the value at the equal element
     simp [h_eq, Finset.sum_ite_eq]
-
   -- Apply our filtered sum result
   rw [@tsum_bool]
-
   -- PMF.ofFintype applies p to each element
   simp only [PMF.ofFintype_apply]
-
   -- Case analysis on b
   cases b
   · -- Case: b = false
@@ -1138,14 +1102,12 @@ lemma pmf_map_binary_state {R U : Type}
     have h_true_neq : f false ≠ f true := by
       apply h_inj
       simp only [ne_eq, Bool.false_eq_true, not_false_eq_true]
-
     simp only [h_false_eq, h_true_neq, if_true, if_false, add_zero]
   · -- Case: b = true
     have h_true_eq : f true = f true := rfl
     have h_false_neq : f true ≠ f false := by
       apply h_inj
       simp only [ne_eq, Bool.true_eq_false, not_false_eq_true]
-
     simp only [h_true_eq, h_false_neq, if_true, if_false, zero_add]
 
 /-- A specialized version of the previous lemma for the case where the state is an update with new_val = 1 --/
@@ -1156,7 +1118,6 @@ lemma pmf_map_update_one {R U : Type}
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
     if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
     else NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)
-
   PMF.map f (PMF.ofFintype p h_sum) (NN.State.updateNeuron s u 1 (by exact Or.inl rfl)) = p true := by
   intro f
   apply pmf_map_binary_state s u true p h_sum
@@ -1169,7 +1130,6 @@ lemma pmf_map_update_neg_one {R U : Type}
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
     if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
     else NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)
-
   PMF.map f (PMF.ofFintype p h_sum) (NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)) = p false := by
   intro f
   apply pmf_map_binary_state s u false p h_sum
@@ -1182,20 +1142,16 @@ lemma ENNReal.div_eq_ofReal_div {a b : ℝ} (ha : 0 ≤ a) (hb : 0 < b) :
   ENNReal.ofReal a / ENNReal.ofReal b = ENNReal.ofReal (a / b) := by
   -- The ENNReal.ofReal function preserves ordering and arithmetic operations
   -- when dealing with finite, non-negative real numbers
-
   -- b > 0 ensures division is well-defined in both domains
   have hb_ne_zero : ENNReal.ofReal b ≠ 0 := by
     simp only [ne_eq, ofReal_eq_zero, not_le]
     exact hb
-
   -- b > 0 ensures ENNReal.ofReal b ≠ ∞
   have hb_ne_top : ENNReal.ofReal b ≠ ⊤ := ENNReal.ofReal_ne_top
-
   -- Apply the division definition for ENNReal
   have h_div : ENNReal.toReal (ENNReal.ofReal a / ENNReal.ofReal b) =
                ENNReal.toReal (ENNReal.ofReal a) / ENNReal.toReal (ENNReal.ofReal b) := by
     exact toReal_div (ENNReal.ofReal a) (ENNReal.ofReal b)
-
   rw [ofReal_div_of_pos hb]
 
 /-- Expresses a ratio of exponentials in terms of the sigmoid function format.
@@ -1208,16 +1164,13 @@ lemma exp_ratio_to_sigmoid (x : ℝ) :
     -- Expand the right-hand side first
     have rhs_expanded : Real.exp x * (1 + Real.exp (-2 * x)) = Real.exp x + Real.exp x * Real.exp (-2 * x) := by
       rw [mul_add, mul_one]
-
     -- Show that Real.exp x * Real.exp (-2 * x) = Real.exp (-x)
     have exp_identity : Real.exp x * Real.exp (-2 * x) = Real.exp (-x) := by
       rw [← Real.exp_add]
       congr
       ring
-
     -- Combine the results
     rw [rhs_expanded, exp_identity]
-
   -- Substitute and simplify
   rw [h_denom, div_mul_eq_div_div]
   have h_exp_ne_zero : Real.exp x ≠ 0 := by exact ne_of_gt (Real.exp_pos x)
@@ -1231,17 +1184,13 @@ lemma local_field_eq_weighted_sum {R U : Type}
   s.net wθ u = ∑ v ∈ univ.erase u, wθ.w u v * s.act v := by
   -- Unfold the definition of net
   unfold NeuralNetwork.State.net
-
   -- Use properties of HopfieldNetwork fnet
   have h_not_adj_self : ¬(HopfieldNetwork R U).Adj u u := by simp [HopfieldNetwork]
-
   -- For Hopfield networks, fnet is defined as sum over v ≠ u
   -- Unfold the definition of fnet for Hopfield networks
   unfold NeuralNetwork.fnet HopfieldNetwork
-
   -- Use the definition of adjacency in Hopfield networks: v ≠ u
   simp only [ne_eq]
-
   -- Show that the filtered sum is equal to sum over univ.erase u
   have sum_filter_eq : ∑ v ∈ filter (fun v => v ≠ u) univ, wθ.w u v * s.act v =
                        ∑ v ∈ univ.erase u, wθ.w u v * s.act v := by
@@ -1252,7 +1201,6 @@ lemma local_field_eq_weighted_sum {R U : Type}
     · -- Functions are equal on the sets
       intro v _
       rw [@OrderedCommSemiring.mul_comm]
-
   exact sum_filter_eq
 
 /-- Converts the ratio of Boltzmann factors to ENNReal sigmoid form.
@@ -1262,14 +1210,13 @@ lemma ENNReal_exp_ratio_to_sigmoid (x : ℝ) :
   ENNReal.ofReal (Real.exp x) /
   (ENNReal.ofReal (Real.exp x) + ENNReal.ofReal (Real.exp (-x))) =
   ENNReal.ofReal (1 / (1 + Real.exp (-2 * x))) := by
-  -- We need to ensure the division is well-defined in both ENNReal and ℝ
+  -- Ensure the division is well-defined in both ENNReal and ℝ
   have num_pos : 0 ≤ Real.exp x := le_of_lt (Real.exp_pos x)
   have denom_pos : 0 < Real.exp x + Real.exp (-x) := by
     apply add_pos
     · exact Real.exp_pos x
     · exact Real.exp_pos (-x)
-
-  -- First convert the ENNReal division to ofReal of a real division
+  -- Convert the ENNReal division to ofReal of a real division
   have h1 : ENNReal.ofReal (Real.exp x) /
             (ENNReal.ofReal (Real.exp x) + ENNReal.ofReal (Real.exp (-x))) =
             ENNReal.ofReal (Real.exp x / (Real.exp x + Real.exp (-x))) := by
@@ -1284,25 +1231,20 @@ lemma ENNReal_exp_ratio_to_sigmoid (x : ℝ) :
         simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
         exact h_exp_pos
       exact h_ofreal_pos h1.1
-
     have denom_ne_top : ENNReal.ofReal (Real.exp x) + ENNReal.ofReal (Real.exp (-x)) ≠ ⊤ := by
       exact ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ENNReal.ofReal_ne_top⟩
-
-    -- First combine the sum in denominator using ofReal_add
+    -- Combine the sum in denominator using ofReal_add
     have h_sum : ENNReal.ofReal (Real.exp x) + ENNReal.ofReal (Real.exp (-x)) =
                  ENNReal.ofReal (Real.exp x + Real.exp (-x)) := by
       -- Both exponentials are non-negative
       have exp_neg_pos : 0 ≤ Real.exp (-x) := le_of_lt (Real.exp_pos (-x))
       exact Eq.symm (ENNReal.ofReal_add num_pos exp_neg_pos)
-
     rw [h_sum]
-
     -- Now we can apply ENNReal.div_eq_ofReal_div
     apply ENNReal.div_eq_ofReal_div
     · exact num_pos
     · exact denom_pos
-
-  -- Now use the real-valued identity for the ratio of exponentials
+  -- Use the real-valued identity for the ratio of exponentials
   have h2 : Real.exp x / (Real.exp x + Real.exp (-x)) = 1 / (1 + Real.exp (-2 * x)) := by
     -- Normalize the denominator
     have h_denom : Real.exp x + Real.exp (-x) = Real.exp x * (1 + Real.exp (-2 * x)) := by
@@ -1314,13 +1256,10 @@ lemma ENNReal_exp_ratio_to_sigmoid (x : ℝ) :
       calc Real.exp x + Real.exp (-x)
           = Real.exp x + Real.exp x * Real.exp (-2 * x) := by rw [h_exp_diff]
         _ = Real.exp x * (1 + Real.exp (-2 * x)) := by rw [mul_add, mul_one]
-
     -- Substitute the normalized denominator and simplify
     rw [h_denom, div_mul_eq_div_div]
     have h_exp_ne_zero : Real.exp x ≠ 0 := by exact ne_of_gt (Real.exp_pos x)
     field_simp
-
-  -- Combine the two results
   rw [h1, h2]
 
 @[simp]
@@ -1341,27 +1280,21 @@ lemma gibbs_prob_positive {R U : Type}
     let new_act_val := if b then 1 else -1
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
-
   ENNReal.ofReal (Real.exp (local_field / T)) / total =
     ENNReal.ofReal (1 / (1 + Real.exp (-2 * local_field / T))) := by
   intro probs total
-
-  -- First show that total equals the sum of exponentials
+  -- Show that total equals the sum of exponentials
   have h_total : total = ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T)) := by
     simp [total, probs]
-
   -- Rewrite using this equality
   rw [h_total]
-
   -- Handle temperature scaling explicitly
   have h_temp : ∀ x, Real.exp (x / T) = Real.exp (x * (1/T)) := by
     intro x
     congr
     field_simp
-
   rw [h_temp local_field, h_temp (-local_field)]
-
-  -- Now apply the sigmoid transformation with properly scaled argument
+  -- Apply the sigmoid transformation with properly scaled argument
   -- Apply the sigmoid transformation directly and handle the format differences
   have h_direct :
     ENNReal.ofReal (Real.exp (local_field * (1 / T))) /
@@ -1369,24 +1302,17 @@ lemma gibbs_prob_positive {R U : Type}
     ENNReal.ofReal (1 / (1 + Real.exp (-2 * local_field / T))) := by
     -- Start with the standard sigmoid transformation
     have h := ENNReal_exp_ratio_to_sigmoid (local_field * (1 / T))
-
     -- Show that the right-hand side expressions are equivalent
     have h_rhs : -2 * (local_field * (1 / T)) = -2 * local_field / T := by
       field_simp
-
-    -- Rewrite the right-hand side to match our goal format
     rw [h_rhs] at h
-
     -- Show that the negation inside exp is equivalent
     have neg_equiv : ENNReal.ofReal (Real.exp (-(local_field * (1 / T)))) =
                     ENNReal.ofReal (Real.exp (-local_field * (1 / T))) := by
       congr; ring
-
     -- Rewrite the left side of h to match our goal format
     rw [neg_equiv] at h
     exact h
-
-  -- Apply the direct proof
   exact h_direct
 
 /-- The probability of setting a neuron to -1 under Gibbs sampling --/
@@ -1398,56 +1324,39 @@ lemma gibbs_prob_negative {R U : Type}
     let new_act_val := if b then 1 else -1
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
   let total := probs true + probs false
-
   ENNReal.ofReal (Real.exp (-local_field / T)) / total =
   ENNReal.ofReal (1 / (1 + Real.exp (2 * local_field / T))) := by
   intro probs total
-
-  -- First show that total equals the sum of exponentials
+  -- Show that total equals the sum of exponentials
   have h_total : total = ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T)) := by
     simp [total, probs]
-
   -- Rewrite using this equality
   rw [h_total]
-
-  -- We need to directly prove the desired result
-  -- First express our goal in terms of the basic sigmoid formula
+  -- Express our goal in terms of the basic sigmoid formula
   have h_basic := ENNReal_exp_ratio_to_sigmoid (-local_field / T)
-
   -- Simplify the expressions in h_basic
   have h_neg2_neg : -2 * (-local_field / T) = 2 * local_field / T := by ring
   have h_neg_neg : -(-local_field / T) = local_field / T := by ring
-
   -- Rewrite the components of h_basic with our simplifications
   have h_ratio_final : ENNReal.ofReal (Real.exp (-local_field / T)) /
                        (ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))) =
                        ENNReal.ofReal (1 / (1 + Real.exp (2 * local_field / T))) := by
     -- Start with the basic transformation
     have h := ENNReal_exp_ratio_to_sigmoid (-local_field / T)
-
     -- Match the desired forms in the numerator and denominator
     have h_exp_neg_neg : ENNReal.ofReal (Real.exp (-(-local_field / T))) =
                          ENNReal.ofReal (Real.exp (local_field / T)) := by congr
-
-    -- Rewrite h to use the correct term
     rw [h_exp_neg_neg] at h
-
     -- Switch the order of terms in the denominator to match our goal
     have h_comm : ENNReal.ofReal (Real.exp (-local_field / T)) + ENNReal.ofReal (Real.exp (local_field / T)) =
                   ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T)) := by
       rw [add_comm]
-
     -- Update the right side to use 2*local_field/T
     rw [h_neg2_neg] at h
-
-    -- Apply the commutativity of addition to match exactly
     rw [h_comm] at h
     exact h
-
-  -- Apply our final result
   exact h_ratio_final
 
--- First, define a lemma about mapping Boolean values to updated states
 @[simp]
 lemma gibbs_bool_to_state_map_positive {R U : Type}
   [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
@@ -1462,9 +1371,9 @@ lemma gibbs_bool_to_state_map_positive {R U : Type}
   · rw [h_v]
     exact ite_congr rfl (fun a ↦ h_val) (congrFun rfl)
   · simp only [h_v, if_neg]
-    rfl
+    exact rfl
 
--- Similar lemma for negative case
+@[simp]
 lemma gibbs_bool_to_state_map_negative {R U : Type}
   [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) :
@@ -1491,24 +1400,18 @@ lemma gibbs_prob_positive_case {R U : Type}
                              ENNReal.ofReal (Real.exp (local_field / T)) / Z
                            else
                              ENNReal.ofReal (Real.exp (-local_field / T)) / Z
-
   (PMF.map (gibbs_bool_to_state_map s u) (PMF.ofFintype norm_probs (by
     -- Prove that the probability mass sums to 1
     have h_sum : ∑ b : Bool, norm_probs b = norm_probs true + norm_probs false := by
       exact Fintype.sum_bool (λ b => norm_probs b)
     rw [h_sum]
     simp only [norm_probs]
-
     -- Express sum of normalized probabilities in terms of Z
     have h_ratio_sum : ENNReal.ofReal (Real.exp (local_field / T)) / Z +
                        ENNReal.ofReal (Real.exp (-local_field / T)) / Z =
                        (ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))) / Z := by
       exact ENNReal.div_add_div_same
-
-    -- Simplify the if expressions in the sum first
     simp only [Bool.false_eq_true]
-
-    -- Simplify the if-then-else expressions first
     have h_if_true : (if True then ENNReal.ofReal (Real.exp (local_field / T)) / Z
                       else ENNReal.ofReal (Real.exp (-local_field / T)) / Z) =
                      ENNReal.ofReal (Real.exp (local_field / T)) / Z := by simp
@@ -1516,13 +1419,8 @@ lemma gibbs_prob_positive_case {R U : Type}
     have h_if_false : (if False then ENNReal.ofReal (Real.exp (local_field / T)) / Z
                        else ENNReal.ofReal (Real.exp (-local_field / T)) / Z) =
                       ENNReal.ofReal (Real.exp (-local_field / T)) / Z := by simp
-
     rw [h_if_true, h_if_false]
-
-    -- Now we can rewrite using our ratio sum lemma
     rw [h_ratio_sum]
-
-    -- Z divided by itself equals 1
     have h_Z_ne_zero : Z ≠ 0 := by
       simp [Z]
       intro h
@@ -1530,16 +1428,14 @@ lemma gibbs_prob_positive_case {R U : Type}
         apply ENNReal.ofReal_pos.mpr
         apply Real.exp_pos
       exact Real.exp_pos (-Coe.coe local_field / T)
-
     have h_Z_ne_top : Z ≠ ⊤ := by simp [Z]
-
     exact ENNReal.div_self h_Z_ne_zero h_Z_ne_top
   ))) (NN.State.updateNeuron s u 1 (by exact Or.inl rfl)) = norm_probs true := by
   intro
-  -- Use pmf_map_update_one lemma which directly gives us the result
   apply pmf_map_update_one
 
 -- Lemma for the probability calculation in the negative case
+@[simp]
 lemma gibbs_prob_negative_case {R U : Type}
   [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
@@ -1549,29 +1445,23 @@ lemma gibbs_prob_negative_case {R U : Type}
                              ENNReal.ofReal (Real.exp (local_field / T)) / Z
                            else
                              ENNReal.ofReal (Real.exp (-local_field / T)) / Z
-
   (PMF.map (gibbs_bool_to_state_map s u) (PMF.ofFintype norm_probs (by
     -- Prove that the probability mass sums to 1
     have h_sum : ∑ b : Bool, norm_probs b = norm_probs true + norm_probs false := by
       exact Fintype.sum_bool (λ b => norm_probs b)
     rw [h_sum]
     simp only [norm_probs]
-
     -- Express sum of normalized probabilities in terms of Z
     have h_ratio_sum : ENNReal.ofReal (Real.exp (local_field / T)) / Z +
                        ENNReal.ofReal (Real.exp (-local_field / T)) / Z =
                        (ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))) / Z := by
       exact ENNReal.div_add_div_same
-
     -- Simplify the if expressions in the sum first
     simp only [Bool.false_eq_true]
-
     -- Simplify the if-then-else expressions first
     simp [ite_true, ite_false]
-
     -- Now we can rewrite using our ratio sum lemma
     rw [h_ratio_sum]
-
     -- Z divided by itself equals 1
     have h_Z_ne_zero : Z ≠ 0 := by
       simp only [Z, ne_eq, add_eq_zero]
@@ -1583,16 +1473,188 @@ lemma gibbs_prob_negative_case {R U : Type}
         apply ENNReal.ofReal_pos.mpr
         apply Real.exp_pos
       exact (not_and_or.mpr (Or.inl h_exp_pos.ne')) h
-
     have h_Z_ne_top : Z ≠ ⊤ := by
       simp [Z]
-
-    exact ENNReal.div_self h_Z_ne_zero h_Z_ne_top
-  )))
+    exact ENNReal.div_self h_Z_ne_zero h_Z_ne_top)))
     (NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)) = norm_probs false := by
   intro
-  -- Use pmf_map_update_neg_one lemma which directly gives us the result
   apply pmf_map_update_neg_one
+
+/-- PMF map from boolean values to updated states preserves probability structure --/
+@[simp]
+lemma gibbsUpdate_pmf_structure {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
+  let local_field := s.net wθ u
+  let probs : Bool → ENNReal := fun b =>
+    let new_act_val := if b then 1 else -1
+    ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
+  let total := probs true + probs false
+  let norm_probs := λ b => probs b / total
+  ∀ b : Bool, (PMF.map (gibbs_bool_to_state_map s u) (PMF.ofFintype norm_probs (by
+    -- Prove that the probability mass sums to 1
+    have h_sum : ∑ b : Bool, norm_probs b = norm_probs true + norm_probs false := by
+      exact Fintype.sum_bool (λ b => norm_probs b)
+    rw [h_sum]
+    -- Show that the sum of normalized probabilities equals 1
+    have h_ratio_sum : probs true / total + probs false / total =
+                      (probs true + probs false) / total := by
+      exact ENNReal.div_add_div_same
+    rw [h_ratio_sum]
+    -- Total divided by itself equals 1
+    have h_total_ne_zero : total ≠ 0 := by
+      simp only [total, probs, ne_eq, add_eq_zero]
+      intro h
+      have h_exp_pos : ENNReal.ofReal (Real.exp (local_field * 1 / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      have h_exp_neg_pos : ENNReal.ofReal (Real.exp (local_field * (-1) / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      exact (not_and_or.mpr (Or.inl h_exp_pos.ne')) h
+    have h_total_ne_top : total ≠ ⊤ := by simp [total, probs]
+    exact ENNReal.div_self h_total_ne_zero h_total_ne_top
+  ))) (gibbs_bool_to_state_map s u b) = norm_probs b := by
+  -- Proof that shows the mapping preserves probabilities
+  intro local_field probs total norm_probs b_bool
+  -- Use pmf_map_binary_state lemma which directly relates the PMF after mapping to original PMF
+  exact pmf_map_binary_state s u b_bool (fun b => norm_probs b) (by
+    -- Prove that norm_probs sums to 1
+    have h_sum : ∑ b : Bool, norm_probs b = norm_probs true + norm_probs false := by
+      exact Fintype.sum_bool (λ b => norm_probs b)
+    rw [h_sum]
+    have h_ratio_sum : probs true / total + probs false / total =
+                      (probs true + probs false) / total := by
+      exact ENNReal.div_add_div_same
+    rw [h_ratio_sum]
+    have h_total_ne_zero : total ≠ 0 := by
+      simp only [total, probs, ne_eq, add_eq_zero]
+      intro h
+      have h_exp_pos : ENNReal.ofReal (Real.exp (local_field * 1 / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      have h_exp_neg_pos : ENNReal.ofReal (Real.exp (local_field * (-1) / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      exact (not_and_or.mpr (Or.inl h_exp_pos.ne')) h
+    have h_total_ne_top : total ≠ ⊤ := by simp [total, probs]
+    exact ENNReal.div_self h_total_ne_zero h_total_ne_top)
+
+/-- The probability of updating a neuron to 1 using Gibbs sampling --/
+@[simp]
+lemma gibbsUpdate_prob_positive {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
+  let local_field := s.net wθ u
+  let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
+  (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u 1 (by exact Or.inl rfl)) =
+    ENNReal.ofReal (Real.exp (local_field / T)) / Z := by
+  intro local_field Z
+  unfold NN.State.gibbsUpdateSingleNeuron
+  -- Define the probabilities and normalization factor
+  let probs : Bool → ENNReal := fun b =>
+    let new_act_val := if b then 1 else -1
+    ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
+  let total := probs true + probs false
+  -- Show that total equals Z (with different representations)
+  have h_total_eq_Z : total = Z := by
+    simp [total, probs, Z]
+  -- Apply pmf_map_update_one to get the probability
+  have h_result := pmf_map_update_one s u (fun b => probs b / total) (by
+    -- Prove that normalized probabilities sum to 1
+    have h_sum : ∑ b : Bool, probs b / total = (probs true + probs false) / total := by
+      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false, not_false_eq_true,sum_insert, sum_singleton, total, probs, Z]
+      exact
+        ENNReal.div_add_div_same
+    rw [h_sum]
+    -- Show total is not zero
+    have h_total_ne_zero : total ≠ 0 := by
+      simp only [total, probs, ne_eq, add_eq_zero]
+      intro h
+      have h_exp_pos : ENNReal.ofReal (Real.exp (local_field * 1 / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      have h_exp_neg_pos : ENNReal.ofReal (Real.exp (local_field * (-1) / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      exact (not_and_or.mpr (Or.inl h_exp_pos.ne')) h
+    -- Show total is not infinity
+    have h_total_ne_top : total ≠ ⊤ := by simp [total, probs]
+    -- Division of a value by itself equals 1
+    exact ENNReal.div_self h_total_ne_zero h_total_ne_top)
+  -- Compute the probability for the true case and simplify
+  rw [h_result]
+  simp only [probs, mul_one_div]
+  rw [h_total_eq_Z]
+  simp only [if_true, mul_one]
+
+/-- The probability of updating a neuron to -1 using Gibbs sampling --/
+@[simp]
+lemma gibbsUpdate_prob_negative {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
+  let local_field := s.net wθ u
+  let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
+  (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)) =
+    ENNReal.ofReal (Real.exp (-local_field / T)) / Z := by
+  intro local_field Z
+  unfold NN.State.gibbsUpdateSingleNeuron
+  -- Define the probabilities and normalization factor
+  let probs : Bool → ENNReal := fun b =>
+    let new_act_val := if b then 1 else -1
+    ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
+  let total := probs true + probs false
+  -- Show that total equals Z (with different representations)
+  have h_total_eq_Z : total = Z := by
+    simp [total, probs, Z]
+  -- Apply pmf_map_update_neg_one to get the probability
+  have h_result := pmf_map_update_neg_one s u (fun b => probs b / total) (by
+    -- Prove that normalized probabilities sum to 1
+    have h_sum : ∑ b : Bool, probs b / total = (probs true + probs false) / total := by
+      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false, not_false_eq_true, sum_insert, sum_singleton, total, probs, Z]
+      exact ENNReal.div_add_div_same
+    rw [h_sum]
+    -- Show total is not zero
+    have h_total_ne_zero : total ≠ 0 := by
+      simp only [total, probs, ne_eq, add_eq_zero]
+      intro h
+      have h_exp_pos : ENNReal.ofReal (Real.exp (local_field * 1 / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      have h_exp_neg_pos : ENNReal.ofReal (Real.exp (local_field * (-1) / T)) > 0 := by
+        apply ENNReal.ofReal_pos.mpr
+        apply Real.exp_pos
+      exact (not_and_or.mpr (Or.inl h_exp_pos.ne')) h
+    -- Show total is not infinity
+    have h_total_ne_top : total ≠ ⊤ := by simp [total, probs]
+    -- Division of a value by itself equals 1
+    exact ENNReal.div_self h_total_ne_zero h_total_ne_top)
+  -- Compute the probability for the false case and simplify
+  rw [h_result]
+  simp only [probs, one_div_neg_one_eq_neg_one, one_div_neg_one_eq_neg_one]
+  rw [h_total_eq_Z]
+  simp only [Bool.false_eq_true, ↓reduceIte, mul_neg, mul_one, probs, Z, total]
+
+/-- In a Hopfield network, activation values can only be 1 or -1.
+This lemma proves that if a value satisfies the network's activation predicate
+and is not equal to 1, then it must equal -1. --/
+@[simp]
+lemma hopfield_value_dichotomy {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  (val : R) (hval : (HopfieldNetwork R U).pact val) :
+  val ≠ 1 → val = -1 := by
+  intro h_not_one
+  -- Unfold the definition of HopfieldNetwork.pact
+  unfold HopfieldNetwork at hval
+  simp only at hval
+  -- hval is now val = 1 ∨ val = -1
+  cases hval with
+  | inl h_eq_one =>
+    -- This case contradicts our assumption that val ≠ 1
+    contradiction
+  | inr h_eq_neg_one =>
+    -- In this case, val = -1, which is what we want to prove
+    exact h_eq_neg_one
 
 /-- Computes the probability of updating a neuron to a specific value using Gibbs sampling.
 
@@ -1601,24 +1663,197 @@ This lemma expresses the probability as a ratio of Boltzmann factors, showing th
 - If new_val = -1: probability = exp(-local_field/T)/Z
 where Z is the normalization constant (partition function).
 --/
+@[simp]
 lemma gibbs_update_single_neuron_prob {R U : Type}
   [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   (u : U) (new_val : R) (hval : (HopfieldNetwork R U).pact new_val) :
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
-
   (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u new_val hval) =
     if new_val = 1 then
       ENNReal.ofReal (Real.exp (local_field / T)) / Z
     else
       ENNReal.ofReal (Real.exp (-local_field / T)) / Z := by
-    sorry
+  intro local_field Z
+  by_cases h_val : new_val = 1
+  · -- Case: new_val = 1
+    rw [if_pos h_val]
+    have h_update_equiv := gibbs_bool_to_state_map_positive s u new_val hval h_val
+    rw [h_update_equiv]
+    exact gibbsUpdate_prob_positive s wθ T u
+  · -- Case: new_val ≠ 1
+    rw [if_neg h_val]
+    have h_neg_val : new_val = -1 := by exact hopfield_value_dichotomy new_val hval h_val
+    have h_update_equiv := gibbs_bool_to_state_map_negative s u new_val hval h_neg_val
+    rw [h_update_equiv]
+    exact gibbsUpdate_prob_negative s wθ T u
 
-/-- Multi-site transitions have zero probability --/
-lemma gibbs_multi_site_transition {R U : Type}
+/-- When states differ at exactly one site, the later state can be expressed as
+    an update of the first state at that site --/
+@[simp]
+lemma single_site_transition_as_update {R U : Type}
   [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) :
-  (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
-  gibbsTransitionProb wθ T s s' = 0 := by
-  sorry
+  (s s' : (HopfieldNetwork R U).State) (u : U)
+  (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
+  s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) := by
+  apply State.ext
+  intro v
+  by_cases hv : v = u
+  · rw [hv]
+    unfold NN.State.updateNeuron
+    exact Eq.symm (if_pos rfl)
+  · unfold NN.State.updateNeuron
+    rw [← h v hv]
+    exact Eq.symm (if_neg hv)
+
+/-- The probability of selecting a specific neuron in the uniform distribution is 1/|U| --/
+@[simp]
+lemma uniform_neuron_selection_prob {U : Type} [Fintype U] [Nonempty U] (u : U) :
+  let p := λ _ => (1 : ENNReal) / (Fintype.card U : ENNReal)
+  let neuron_pmf := PMF.ofFintype p (by
+    -- Prove that the sum equals 1
+    rw [Finset.sum_const, Finset.card_univ]
+    rw [ENNReal.div_eq_inv_mul]
+    simp only [mul_one]
+    -- Show (Fintype.card U) ≠ 0 and ≠ ⊤
+    have h_card_ne_zero : (Fintype.card U : ENNReal) ≠ 0 := by
+      simp only [ne_eq, Nat.cast_eq_zero]
+      exact Fintype.card_ne_zero
+    have h_card_ne_top : (Fintype.card U : ENNReal) ≠ ⊤ := ENNReal.natCast_ne_top (Fintype.card U)
+    -- Use the property that n * (1/n) = 1 for n ≠ 0, n ≠ ∞
+    rw [← ENNReal.mul_inv_cancel h_card_ne_zero h_card_ne_top]
+    simp only [nsmul_eq_mul])
+  neuron_pmf u = (1 : ENNReal) / (Fintype.card U : ENNReal) := by
+  intro p neuron_pmf
+  simp [neuron_pmf, PMF.ofFintype_apply]
+  simp_all only [one_div, p, neuron_pmf]
+
+/-- When states differ at site u, the probability of transitioning to s' by updating
+    any other site v is zero --/
+@[simp]
+lemma gibbs_update_zero_other_sites {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
+  (u v : U) (h : ∀ w : U, w ≠ u → s.act w = s'.act w) (h_diff : s.act u ≠ s'.act u) :
+  v ≠ u → (NN.State.gibbsUpdateSingleNeuron s wθ T v) s' = 0 := by
+  intro hv
+  -- Establish that updating v can't produce a state differing at u
+  have h_preserves : ∀ s_next, (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 →
+    s_next.act u = s.act u := by
+    exact fun s_next a ↦ gibbsUpdate_preserves_other_neurons wθ T s v u (id (Ne.symm hv)) s_next a
+  -- Show that s' can't be in the support because it differs at u
+  have h_act_diff : s'.act u ≠ s.act u := by
+    exact Ne.symm h_diff
+  -- Since updating v preserves the activation at u, but s' differs at u,
+  -- s' cannot be produced by updating v, so its probability is 0
+  by_contra h_pos
+  push_neg at h_pos
+  have h_pos_gt_zero : (NN.State.gibbsUpdateSingleNeuron s wθ T v) s' > 0 := by
+    exact (PMF.apply_pos_iff (NN.State.gibbsUpdateSingleNeuron s wθ T v) s').mpr h_pos
+  have h_s'_u_eq_s_u := h_preserves s' h_pos_gt_zero
+  contradiction
+
+/-- When calculating the transition probability sum, only the term for the
+    differing site contributes --/
+@[simp]
+lemma gibbs_transition_sum_simplification {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
+  (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) (h_diff : s.act u ≠ s'.act u) :
+  let neuron_pmf : PMF U := PMF.ofFintype
+    (λ _ => (1 : ENNReal) / (Fintype.card U : ENNReal))
+    (by
+      -- Prove that sum equals 1
+      simp only [one_div, sum_const, card_univ, nsmul_eq_mul]
+      -- Convert to showing that card * inv card = 1
+      have h_card_ne_zero : (Fintype.card U : ENNReal) ≠ 0 := by
+        simp only [ne_eq, Nat.cast_eq_zero]
+        exact Fintype.card_ne_zero
+      have h_card_ne_top : (Fintype.card U : ENNReal) ≠ ⊤ := ENNReal.natCast_ne_top (Fintype.card U)
+      rw [← ENNReal.mul_inv_cancel h_card_ne_zero h_card_ne_top])
+  let update_prob (v : U) : ENNReal := (NN.State.gibbsUpdateSingleNeuron s wθ T v) s'
+  ∑ v ∈ Finset.univ, neuron_pmf v * update_prob v = neuron_pmf u * update_prob u := by
+  intro neuron_pmf update_prob
+  -- Use the fact that update_prob v = 0 for all v ≠ u
+  have h_zero : ∀ v ∈ Finset.univ, v ≠ u → update_prob v = 0 := by
+    intro v _ hv
+    exact gibbs_update_zero_other_sites wθ T s s' u v h h_diff hv
+  -- Apply sum_eq_single with our condition
+  apply Finset.sum_eq_single u
+  · -- Case: v ∈ s, v ≠ a
+    intro v hv hvu
+    rw [h_zero v hv hvu]
+    simp only [mul_zero]
+  · -- Case: a ∉ s
+    intro hu
+    exfalso
+    apply hu
+    simp [Finset.mem_univ]
+
+/-- When states differ at exactly one site, the later state can be expressed as
+    an update of the first state at that site --/
+@[simp]
+lemma single_site_difference_as_update {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (s s' : (HopfieldNetwork R U).State) (u : U)
+  (h_diff_at_u : s.act u ≠ s'.act u)
+  (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
+  s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) := by
+  apply State.ext
+  intro v
+  by_cases hv : v = u
+  · -- Case: at site u
+    rw [hv]
+    unfold NN.State.updateNeuron
+    simp only [if_pos rfl]
+    exact rfl
+  · -- Case: at other sites
+    unfold NN.State.updateNeuron
+    simp only [if_neg hv]
+    exact Eq.symm (h_same_elsewhere v hv)
+
+@[simp]
+lemma gibbs_update_preserves_other_sites {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
+  (v u : U) (hvu : v ≠ u) :
+  ∀ s_next, (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 → s_next.act u = s.act u := by
+  intro s_next h_pos
+  -- Use the fact that s_next must be an update of s at neuron v
+  have h_supp : s_next ∈ PMF.support (NN.State.gibbsUpdateSingleNeuron s wθ T v) := by
+    exact (PMF.apply_pos_iff (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next).mp h_pos
+  -- Show that any state in the support must be an update of s at site v
+  -- Use the helper lemma to determine the structure of s_next
+  have h_structure := gibbsUpdate_possible_states wθ T s v s_next h_pos
+  -- Handle both possible cases
+  cases h_structure with
+  | inl h_pos =>
+    -- Case s_next = updateNeuron s v 1
+    rw [h_pos]
+    exact updateNeuron_preserves s v u 1 (mul_self_eq_mul_self_iff.mp rfl) (id (Ne.symm hvu))
+  | inr h_neg =>
+    -- Case s_next = updateNeuron s v (-1)
+    rw [h_neg]
+    exact
+      updateNeuron_preserves s v u (-1) (AffineMap.lineMap_eq_lineMap_iff.mp rfl) (id (Ne.symm hvu))
+
+@[simp]
+lemma uniform_neuron_prob {U : Type} [Fintype U] [Nonempty U] [Inv ℕ] (u : U) :
+  (1 : ENNReal) / (Fintype.card U : ENNReal) =
+  PMF.ofFintype (λ _ : U => (1 : ENNReal) / (Fintype.card U : ENNReal))
+    (by
+      rw [Finset.sum_const, Finset.card_univ]
+      simp only [nsmul_eq_mul]
+      have h_card_ne_zero : (Fintype.card U : ENNReal) ≠ 0 := by
+        simp only [ne_eq, Nat.cast_eq_zero]
+        exact Fintype.card_ne_zero
+      have h_card_ne_top : (Fintype.card U : ENNReal) ≠ ⊤ := ENNReal.natCast_ne_top _
+      rw [ENNReal.div_eq_inv_mul]
+      rw [mul_comm]
+      rw [← ENNReal.mul_inv_cancel h_card_ne_zero h_card_ne_top]
+      rw [ENNReal.inv_mul_cancel_left h_card_ne_zero h_card_ne_top]
+      simp_all only [ne_eq, Nat.cast_eq_zero, Fintype.card_ne_zero, not_false_eq_true, ENNReal.natCast_ne_top]
+      rw [mul_comm]
+    ) u := by
+  simp [PMF.ofFintype_apply]
