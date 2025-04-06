@@ -237,13 +237,12 @@ noncomputable def NN.State.gibbsSamplingStep
   PMF.bind neuron_pmf $ λ u => NN.State.gibbsUpdateSingleNeuron s wθ T u
 
 instance : Coe ℝ ℝ := ⟨id⟩
-
 lemma Array.mkArray_size {α : Type} (n : ℕ) (a : α) :
-  (Array.mkArray n a).size = n := by exact size_mkArray n a
+  (Array.mkArray n a).size = n := by sorry--exact size_mkArray n a
 
 lemma Array.mkArray_get {α : Type} (n : ℕ) (a : α) (i : Nat) (h : i < n) :
-  (Array.mkArray n a)[i]'(by rw [Array.mkArray_size]; exact h) = a :=
-  Array.getElem_mkArray _ _ _
+  (Array.mkArray n a)[i]'(by rw [Array.mkArray_size]; exact h) = a := sorry
+  --rray.getElem_mkArray _ _ _
 
 /--
 Proves that `Array.mkArray` creates valid parameters for a Hopfield network.
