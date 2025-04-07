@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2025.4.6)  6 APR 2025 20:44
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2025.4.6)  7 APR 2025 13:44
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -702,23 +702,26 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 32.
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
 
-] (./content.tex)
-(/home/michail/HopfieldNet/blueprint/print/print.aux)
+] (./content.tex
+Chapter 1.
+) [1
+
+] (/home/michail/HopfieldNet/blueprint/print/print.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
  ***********
 Package rerunfilecheck Info: File `print.out' has not changed.
-(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
+(rerunfilecheck)             Checksum: 4D47AFB7107A54A21B0D2C438B3C2BD0;103.
  ) 
 Here is how much of TeX's memory you used:
- 16705 strings out of 476846
- 305428 string characters out of 5803825
+ 16719 strings out of 476846
+ 305711 string characters out of 5803825
  1917627 words of memory out of 5000000
- 38446 multiletter control sequences out of 15000+600000
- 561611 words of font info for 63 fonts, out of 8000000 for 9000
+ 38456 multiletter control sequences out of 15000+600000
+ 561635 words of font info for 66 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  90i,6n,114p,542b,353s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on /home/michail/HopfieldNet/blueprint/print/print.pdf (1 page).
-
+Output written on /home/michail/HopfieldNet/blueprint/print/print.pdf (2 pages)
+.

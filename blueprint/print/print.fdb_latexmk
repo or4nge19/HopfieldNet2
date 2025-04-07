@@ -1,8 +1,8 @@
 # Fdb version 4
-["pdflatex"] 1743965074.71083 "print.tex" "/home/michail/HopfieldNet/blueprint/print/print.pdf" "print" 1743965075.35861 0
+["pdflatex"] 1744026268.47748 "print.tex" "/home/michail/HopfieldNet/blueprint/print/print.pdf" "print" 1744026269.08247 0
   "/etc/texmf/web2c/texmf.cnf" 1725269715.58345 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/michail/HopfieldNet/blueprint/print/print.aux" 1743965075.29538 128 852fc3e86949e4a73cd552c13992dc37 "pdflatex"
-  "/home/michail/HopfieldNet/blueprint/print/print.out" 1743965075.10137 0 d41d8cd98f00b204e9800998ecf8427e "pdflatex"
+  "/home/michail/HopfieldNet/blueprint/print/print.aux" 1744026269.0226 336 120b2136ce5086c1dd6c8e7d8ef5e6ce "pdflatex"
+  "/home/michail/HopfieldNet/blueprint/print/print.out" 1744026269.0236 103 4d47afb7107a54a21b0d2c438b3c2bd0 "pdflatex"
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
@@ -83,7 +83,7 @@
   "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/web2c/xetex/xelatex.fmt" 1743964917 9087048 8e27674ad95d63935323e08af867785b ""
-  "content.tex" 1743949991.96755 363 d68ec385ab7b5b65ef8d18eff416b83d ""
+  "content.tex" 1743975537.84528 410 22b8549dddf1e8d097239ba7af5c7ea7 ""
   "macros/common.tex" 1743949991.97655 820 60fafcc3aa944a5e60030581a943ef6b ""
   "macros/print.tex" 1743949991.98255 1101 87627b2ec24fef68edc71c13f43f7bab ""
   "print.tex" 1743949991.99955 1124 3ea411a72ef15a29d7e68b3e890c9942 ""
