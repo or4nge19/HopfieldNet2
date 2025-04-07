@@ -3,6 +3,11 @@
 ## Description
 This repository contains Lean formalizations related to Hopfield Networks written in the *Lean theorem prover* language.
 
+[Main web page](https://mkaratarakis.github.io/HopfieldNet/) for this project.
+[Web blueprint](https://mkaratarakis.github.io/HopfieldNet/blueprint/), containing a human-readable version of the project.
+[Dependency graph](https://mkaratarakis.github.io/HopfieldNet/blueprint/dep_graph_document.html) of the theorems in the projects.
+[PDF form of blueprint](https://mkaratarakis.github.io/HopfieldNet/blueprint.pdf), a downloadable, human-readable version of the database stored as a single file.
+
 Below is a brief overview of the key files:
 
 - **`Asym.lean`** – Formalization of asymmetric Hopfield networks.  
@@ -10,7 +15,7 @@ Below is a brief overview of the key files:
 - **`NN.lean`** – Formalization of General neural networks.  
 - **`Stochastic.lean`** – Formalization of stochastic algorithms.  
 - **`aux.lean`** – Auxiliary lemmas.  
-- **`test.lean`** – Computations and implementation of the Hebbian learning algorithm.  
+- **`test.lean`** – Computations and implementation of the Hebbian learning algorithm.
 
 For more details, see the individual files.
 
