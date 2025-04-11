@@ -97,7 +97,7 @@ Otherwise, it keeps the existing activation.
 -/
 def Up (u : U) : NeuralNetwork.State NN :=
   { act := fun v => if v = u then NN.fact u (s.net wσθ u) (wσθ.θ u) else s.act v, hp := by
-      simp only
+      --simp only
       intro v
       split
       · apply NN.hpact
