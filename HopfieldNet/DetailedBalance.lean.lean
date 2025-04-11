@@ -93,11 +93,8 @@ lemma gibbs_single_site_transition_prob {R U : Type}
   gibbsTransitionProb wθ T s s' =
   ENNReal.toReal (((1 : ENNReal) / (Fintype.card U : ENNReal)) *
   (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u))) := by
-  -- Unfold the definition and apply bind_apply
   unfold gibbsTransitionProb
   rw [NN.State.gibbsSamplingStep]
   rw [PMF.bind_apply]
-  -- Use the gibbs_single_site_tsum lemma to simplify the sum
   have h_eq := gibbs_single_site_tsum wθ T s s' u h_diff_at_u h_same_elsewhere
-  -- Apply ENNReal.toReal to both sides
   exact congrArg ENNReal.toReal h_eq
