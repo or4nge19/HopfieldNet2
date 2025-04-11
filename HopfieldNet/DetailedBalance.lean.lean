@@ -1,10 +1,6 @@
-import HopfieldNet.HN
 import HopfieldNet.Stochastic
-import Mathlib.Probability.ProbabilityMassFunction.Basic
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Mathlib.LinearAlgebra.Matrix.PosDef
-import Mathlib.Data.Vector.Basic
-import Mathlib
+import Mathlib.Analysis.Normed.Field.Instances
+import Mathlib.Topology.Metrizable.CompletelyMetrizable
 
 
 open Finset Matrix NeuralNetwork State
