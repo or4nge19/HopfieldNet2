@@ -121,35 +121,28 @@ noncomputable def NN.State.gibbsUpdateNeuron
   -- Calculate local field and energy difference for flipping
   let h_u := s.net wθ u
   let ΔE := 2 * h_u * s.act u  -- Energy difference if neuron flips
-
   -- Metropolis-Hastings acceptance probability
   let p_flip := ENNReal.ofReal (Real.exp (-(↑ΔE) / T)) / (1 + ENNReal.ofReal (Real.exp (-(↑ΔE) / T)))
-
   -- Return distribution over possible states after update
   let p_flip_le_one : p_flip ≤ 1 := by
     -- Since p_flip = a/(1+a) where a is non-negative,
     -- and a/(1+a) ≤ 1 for all a ≥ 0
     simp [p_flip]
     let a := ENNReal.ofReal (Real.exp (-(↑ΔE) / T))
-
     have h_a_nonneg : 0 ≤ a := by exact zero_le a
-
     have h_denom_ne_zero : 1 + a ≠ 0 := by
       intro h
       have h1 : 0 ≤ 1 + a := by exact zero_le (1 + a)
       have h2 : 1 + a = 0 := h
       simp_all only [zero_le, add_eq_zero, one_ne_zero, ENNReal.ofReal_eq_zero, false_and, a, ΔE, h_u, p_flip]
-
     have h_sum_ne_top : (1 + a) ≠ ⊤ := by
       apply ENNReal.add_ne_top.2
       constructor
       · exact ENNReal.one_ne_top
       · apply ENNReal.ofReal_ne_top
-
     rw [ENNReal.div_le_iff h_denom_ne_zero h_sum_ne_top]
     simp
     exact le_add_self
-
   PMF.bind (PMF.bernoulli p_flip p_flip_le_one) $ λ should_flip =>
     PMF.pure $ if should_flip then s.Up wθ u else s
 
@@ -172,16 +165,13 @@ noncomputable def NN.State.gibbsUpdateSingleNeuron
   : PMF ((HopfieldNetwork R U).State) :=
   -- Calculate local field for the neuron
   let local_field := s.net wθ u
-
   -- Calculate probabilities based on Boltzmann distribution
   let probs : Bool → ENNReal := fun b =>
     let new_act_val := if b then 1 else -1
     ENNReal.ofReal (Real.exp (local_field * new_act_val / T))
-
   -- Create PMF with normalized probabilities
   let total : ENNReal := probs true + probs false
   let norm_probs : Bool → ENNReal := λ b => probs b / total
-
   -- Convert Bool to State
   (PMF.map (λ b => if b then
               NN.State.updateNeuron s u 1 (by exact mul_self_eq_mul_self_iff.mp rfl)
@@ -195,11 +185,8 @@ noncomputable def NN.State.gibbsUpdateSingleNeuron
         have h := ENNReal.ofReal_pos.mpr h_exp_pos
         simp_all only [mul_one, ENNReal.ofReal_pos, mul_ite, mul_neg, ↓reduceIte, Bool.false_eq_true, ne_eq,
           ENNReal.inv_eq_top, add_eq_zero, ENNReal.ofReal_eq_zero, not_and, not_le, isEmpty_Prop, IsEmpty.forall_iff,
-          local_field, total, probs]
-      }
-      have h_total_ne_top : total ≠ ⊤ := by {
-        simp [probs, total]
-      }
+          local_field, total, probs]}
+      have h_total_ne_top : total ≠ ⊤ := by {simp [probs, total]}
       have h_sum : Finset.sum Finset.univ norm_probs = 1 := by
         calc Finset.sum Finset.univ norm_probs
           = (probs true)/total + (probs false)/total := by exact Fintype.sum_bool fun b ↦ probs b / total
@@ -247,13 +234,11 @@ lemma Array.mkArray_get {α : Type} (n : ℕ) (a : α) (i : Nat) (h : i < n) :
 
 /--
 Proves that `Array.mkArray` creates valid parameters for a Hopfield network.
-
 Given a vertex `u` in a Hopfield network with `n` nodes, this lemma establishes that:
 1. The array `σ_u` has size equal to `κ1 u`
 2. The array `θ_u` has size equal to `κ2 u`
 3. All elements in `σ_u` are initialized to 0
 4. All elements in `θ_u` are initialized to 0
-
 where `κ1` and `κ2` are dimension functions defined in the `HopfieldNetwork` structure.
 -/
 lemma Array.mkArray_creates_valid_hopfield_params {n : ℕ} [Nonempty (Fin n)] :
@@ -296,7 +281,7 @@ noncomputable def patternStochasticUpdate
     w := weights,
     hw := fun u v h => by
       -- For Hopfield networks, w(u,u) = 0 is always true
-      -- since self-connections are disallowed in a standard Hopfield network
+      -- since self-connections are disallowed 
       -- Check if u = v (self-connection)
       if h_eq : u = v then
         -- For a self-connection, weights should be 0
@@ -649,7 +634,6 @@ lemma gibbsUpdate_exists_bool {R U : Type}
   have h_total_ne_zero := @gibbs_total_positive R U _ _ _ _ _ local_field T
   have h_total_ne_top := @gibbs_total_not_top R U _ _ _ _ _ local_field T
   have h_sum_one := @gibbs_probs_sum_one R U _ _ _ _ _ s wθ T v
-
   -- Apply the preimage lemma
   unfold gibbs_bool_to_state_map
   -- Apply pmf_map_pos_implies_preimage to get the preimage
@@ -1012,7 +996,6 @@ lemma pmf_map_binary_state {R U : Type}
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
     if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
     else NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)
-
   PMF.map f (PMF.ofFintype p h_sum) (f b) = p b := by
   intro f
   simp only [PMF.map_apply]
@@ -1857,3 +1840,21 @@ lemma uniform_neuron_prob {U : Type} [Fintype U] [Nonempty U] [Inv ℕ] (u : U) 
       rw [mul_comm]
     ) u := by
   simp [PMF.ofFintype_apply]
+
+/-- Uniform neuron selection gives a valid PMF --/
+lemma uniform_neuron_selection_prob_valid {U : Type} [Fintype U] [Nonempty U] [Inv ℕ]:
+  let p := λ (_ : U) => (1 : ENNReal) / (Fintype.card U : ENNReal)
+  ∑ a ∈ Finset.univ, p a = 1 := by
+  intro p
+  rw [Finset.sum_const, Finset.card_univ]
+  have h_card_pos : 0 < Fintype.card U := Fintype.card_pos_iff.mpr inferInstance
+  have h_card_ne_zero : (Fintype.card U : ENNReal) ≠ 0 := by
+    simp only [ne_eq, Nat.cast_eq_zero]
+    exact ne_of_gt h_card_pos
+  have h_card_top : (Fintype.card U : ENNReal) ≠ ⊤ := ENNReal.natCast_ne_top (Fintype.card U)
+  rw [ENNReal.div_eq_inv_mul]
+  rw [nsmul_eq_mul]
+  -- Simplify the expression
+  simp only [mul_one]
+  -- Use ENNReal.mul_inv_cancel to show n * (1/n) = 1
+  rw [ENNReal.mul_inv_cancel h_card_ne_zero h_card_top]
