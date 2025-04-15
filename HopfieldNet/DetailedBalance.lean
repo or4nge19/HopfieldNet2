@@ -580,3 +580,11 @@ lemma gibbs_multi_site_transition {R U : Type}
     gibbsSamplingStep_prob_zero_if_multi_site wθ T s s' h_multi_site
   rw [h_step_prob_zero]
   exact rfl
+  -- Unfold the definition and apply bind_apply
+  unfold gibbsTransitionProb
+  rw [NN.State.gibbsSamplingStep]
+  rw [PMF.bind_apply]
+  -- Use the gibbs_single_site_tsum lemma to simplify the sum
+  have h_eq := gibbs_single_site_tsum wθ T s s' u h_diff_at_u h_same_elsewhere
+  -- Apply ENNReal.toReal to both sides
+  exact congrArg ENNReal.toReal h_eq
