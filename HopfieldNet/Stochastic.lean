@@ -1474,7 +1474,6 @@ lemma gibbs_transition_sum_simplification {R U : Type}
     exfalso
     apply hu
     simp only [mem_univ]
-#lint
 
 /-- When states differ at exactly one site, the later state can be expressed as
     an update of the first state at that site --/
