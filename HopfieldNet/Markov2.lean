@@ -16,20 +16,20 @@ import Mathlib.MeasureTheory.MeasurableSpace.Defs
 /-!
 # Markov Chain Framework
 
-The framework provides:
+The framework aims to provide:
 
 1. Transition kernels for Gibbs sampling and Metropolis-Hastings algorithms
-2. Detailed balance conditions that ensure convergence to stationary distributions
-3. Ergodicity properties for Markov chains
-4. Convergence rates and mixing time analysis
-5. Direct connection to the Boltzmann distribution as stationary distribution
+2. Detailed balance conditions that ensure convergence to stationary distributions (TODO)
+3. Ergodicity properties for Markov chains (TODO)
+4. Convergence rates and mixing time analysis (TODO)
+5. Direct connection to the Boltzmann distribution as stationary distribution (TODO)
 
 ## Main definitions
 
 * `stochasticHopfieldMarkovProcess`: A Markov process on Hopfield network states
 * `gibbsTransitionKernel`: The transition kernel for Gibbs sampling
-* `DetailedBalance`: The detailed balance condition for reversible Markov chains
-* `mixingTime`: The time needed to approach the stationary distribution
+* `DetailedBalance`: The detailed balance condition for reversible Markov chains (TODO)
+* `mixingTime`: The time needed to approach the stationary distribution (TODO)
 
 ## Implementation notes
 
@@ -195,3 +195,93 @@ noncomputable def boltzmannDistribution (wθ : Params (HopfieldNetwork R U)) (T 
   let countMeasure : Measure (hnet.State) := MeasureTheory.Measure.count
   -- Ensure the temperature is positive when constructing the distribution
   Measure.withDensity countMeasure (fun s => densityFn s / partitionFn)
+
+/-- The unnormalized Boltzmann density function -/
+noncomputable def boltzmannDensityFn (wθ : Params (HopfieldNetwork R U)) (T : ℝ)
+    (s : (HopfieldNetwork R U).State) : ENNReal :=
+  ENNReal.ofReal (Real.exp (-(Coe.coe (NeuralNetwork.State.E wθ s) : ℝ) / T))
+
+/-- The Boltzmann partition function (normalizing constant) -/
+noncomputable def boltzmannPartitionFn (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ENNReal :=
+  ∑ s, boltzmannDensityFn wθ T s
+
+/-- The Boltzmann distribution measure of the universe equals the integral of density/partition -/
+lemma boltzmannDistribution_measure_univ (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T > 0) :
+  boltzmannDistribution wθ T hT Set.univ =
+  ∫⁻ s in Set.univ, (boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) ∂Measure.count := by
+  unfold boltzmannDistribution
+  rw [withDensity_apply _ MeasurableSet.univ]
+  apply lintegral_congr
+  intro s
+  simp only [boltzmannDensityFn, Set.mem_univ, forall_const]
+  have h_exp_pos : Real.exp (-Coe.coe (NeuralNetwork.State.E wθ s) / T) ≥ 0 := Real.exp_nonneg _
+  have h_max : Real.exp (-Coe.coe (NeuralNetwork.State.E wθ s) / T) ⊔ 0 = Real.exp (-Coe.coe (NeuralNetwork.State.E wθ s) / T) := by
+    exact max_eq_left h_exp_pos
+  congr
+  · ext x
+    simp only [boltzmannDensityFn]
+    have h_exp_pos_x : Real.exp (-Coe.coe (NeuralNetwork.State.E wθ x) / T) ≥ 0 := Real.exp_nonneg _
+    have h_max_x : Real.exp (-Coe.coe (NeuralNetwork.State.E wθ x) / T) ⊔ 0 = Real.exp (-Coe.coe (NeuralNetwork.State.E wθ x) / T) := by
+      exact max_eq_left h_exp_pos_x
+    exact congrArg ENNReal.ofReal h_max_x
+
+/-- The Boltzmann partition function is positive -/
+lemma boltzmannPartitionFn_pos [IsOrderedCancelAddMonoid ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T > 0) :
+  boltzmannPartitionFn wθ T > 0 := by
+  simp only [boltzmannPartitionFn]
+  apply Finset.sum_pos
+  · intro s _
+    simp only [boltzmannDensityFn]
+    exact ENNReal.ofReal_pos.mpr (Real.exp_pos _)
+  · exact Finset.univ_nonempty
+
+/-- The integral over the universe equals the sum over all states -/
+lemma boltzmannDistribution_integral_eq_sum (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T > 0) :
+  ∫⁻ s in Set.univ, (boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) ∂Measure.count =
+  ∑ s, (boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) := by
+  rw [Measure.restrict_univ, MeasureTheory.lintegral_count]
+  exact tsum_fintype (fun s => boltzmannDensityFn wθ T s / boltzmannPartitionFn wθ T)
+
+/-- Division can be distributed over the sum in the Boltzmann distribution -/
+lemma boltzmannDistribution_div_sum [IsOrderedCancelAddMonoid ENNReal] [IsOrderedCancelAddMonoid ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T > 0) :
+  ∑ s, (boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) =
+  (∑ s, boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) := by
+  have h_pos := boltzmannPartitionFn_pos wθ T hT
+  have h_nonzero : boltzmannPartitionFn wθ T ≠ 0 := ne_of_gt h_pos
+  have h_rewrite : ∀ x, boltzmannDensityFn wθ T x / boltzmannPartitionFn wθ T =
+                        boltzmannDensityFn wθ T x * (1 / boltzmannPartitionFn wθ T) := by
+    intro x
+    simp only [one_div]
+    exact rfl
+  simp_rw [h_rewrite]
+  have h_factor : ∑ x, boltzmannDensityFn wθ T x * (1 / boltzmannPartitionFn wθ T) =
+                  (1 / boltzmannPartitionFn wθ T) * ∑ x, boltzmannDensityFn wθ T x := by
+    rw [← Finset.sum_mul]
+    exact CommMonoid.mul_comm (∑ i, boltzmannDensityFn wθ T i) (1 / boltzmannPartitionFn wθ T)
+  rw [h_factor]
+  simp only [one_div]
+  exact Eq.symm ENNReal.div_eq_inv_mul
+
+/-- The sum of Boltzmann probabilities equals 1 -/
+lemma boltzmannDistribution_sum_one [IsOrderedCancelAddMonoid ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T > 0) :
+  (∑ s, boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) = 1 := by
+  unfold boltzmannPartitionFn
+  have h_pos := boltzmannPartitionFn_pos wθ T hT
+  have h_nonzero : (∑ s, boltzmannDensityFn wθ T s) ≠ 0 := ne_of_gt h_pos
+
+  have h_fin : (∑ s, boltzmannDensityFn wθ T s) ≠ ∞ := by
+    simpa using Finset.sum_lt_top' Finset.univ fun _ _ => ENNReal.ofReal_lt_top _
+
+  exact ENNReal.div_self h_nonzero h_fin
+
+theorem boltzmannDistribution_isProbability [IsOrderedCancelAddMonoid ENNReal] {R U : Type}
+  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [DivisionSemiring ((HopfieldNetwork R U).State → ENNReal)]
+  [IsOrderedCancelAddMonoid ENNReal] [DivisionSemiring ENNReal]
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T > 0) :
+  IsProbabilityMeasure (boltzmannDistribution wθ T hT) := by
+  apply IsProbabilityMeasure.mk
+  rw [boltzmannDistribution_measure_univ wθ T hT]
+  rw [boltzmannDistribution_integral_eq_sum wθ T hT]
+  rw [boltzmannDistribution_div_sum wθ T hT]
+  exact boltzmannDistribution_sum_one wθ T hT
