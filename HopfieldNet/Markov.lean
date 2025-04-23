@@ -58,10 +58,12 @@ A `StationaryDistribution` for a transition kernel is a measure that remains
 invariant under the action of the kernel.
 -/
 structure StationaryDistribution {α : Type*} [MeasurableSpace α] (K : Kernel α α) where
+  /-- The probability measure that is stationary with respect to the kernel K. -/
   measure : Measure α
+  /-- Proof that the measure is a probability measure (sums to 1). -/
   isProbability : IsProbabilityMeasure measure
+  /-- Proof that the measure is invariant under the kernel K. -/
   isStationary : ∀ s, MeasurableSet s → (measure.bind K) s = measure s
-
 /--
 The detailed balance condition for a Markov kernel with respect to a measure.
 This condition is crucial for proving convergence to the stationary distribution.
@@ -109,7 +111,7 @@ section HopfieldMarkovChain
 variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
 
 instance : Nonempty ((HopfieldNetwork R U).State) := by
-  -- Construct a default state where all neurons have activation -1
+  -- We construct a default state where all neurons have activation -1
   let defaultState : (HopfieldNetwork R U).State := {
     act := fun _ => -1,
     hp := fun _ => Or.inr rfl
@@ -126,6 +128,10 @@ noncomputable instance [Fintype (U → R)] : Fintype ((HopfieldNetwork R U).Stat
       rfl)
 
 
+/--
+The Gibbs transition kernel for Hopfield networks. This defines the probability transition
+from one state to another using Gibbs sampling at temperature T.
+-/
 noncomputable def gibbsTransitionKernel [Countable ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) :
     Kernel ((HopfieldNetwork R U).State) ((HopfieldNetwork R U).State) := {
       toFun := fun state => (NN.State.gibbsSamplingStep wθ T state).toMeasure,
@@ -136,9 +142,11 @@ noncomputable def gibbsTransitionKernel [Countable ENNReal] (wθ : Params (Hopfi
         intro x
         exact hs
     }
+
 /--
-The Markov process induced by Gibbs sampling on a Hopfield network.
-This formalizes the stochastic dynamics of the network.
+The stochastic Hopfield Markov process, which models the evolution of Hopfield network states
+over discrete time steps using Gibbs sampling at fixed temperature.
+In this simplified model, the transition kernel is time-homogeneous (same for all steps).
 -/
 noncomputable def stochasticHopfieldMarkovProcess [Countable ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) :
     ℕ → Kernel ((HopfieldNetwork R U).State) ((HopfieldNetwork R U).State) :=
@@ -186,14 +194,11 @@ noncomputable def boltzmannDistribution (wθ : Params (HopfieldNetwork R U)) (T 
   let hnet := HopfieldNetwork R U
   let densityFn : hnet.State → ENNReal := fun s =>
     let energy : R := NeuralNetwork.State.E wθ s
-    -- Use temperature T with proof it's positive (hT)
     let r : ℝ := Real.exp (-(Coe.coe energy : ℝ) / T)
     have h : 0 ≤ r := Real.exp_nonneg _
-    -- Use the fact that r is non-negative to ensure we get a valid ENNReal
-    ENNReal.ofReal (max r 0) -- max with 0 uses the fact that h : 0 ≤ r
+    ENNReal.ofReal (max r 0)
   let partitionFn : ENNReal := ∑ s : hnet.State, densityFn s
   let countMeasure : Measure (hnet.State) := MeasureTheory.Measure.count
-  -- Ensure the temperature is positive when constructing the distribution
   Measure.withDensity countMeasure (fun s => densityFn s / partitionFn)
 
 /-- The unnormalized Boltzmann density function -/
@@ -270,10 +275,15 @@ lemma boltzmannDistribution_sum_one [IsOrderedCancelAddMonoid ENNReal] (wθ : Pa
   have h_nonzero : (∑ s, boltzmannDensityFn wθ T s) ≠ 0 := ne_of_gt h_pos
 
   have h_fin : (∑ s, boltzmannDensityFn wθ T s) ≠ ∞ := by
-    simpa using Finset.sum_lt_top' Finset.univ fun _ _ => ENNReal.ofReal_lt_top _
+    refine sum_ne_top.mpr ?_
+    intro s _
+    exact Ne.symm (ne_of_beq_false rfl)
 
   exact ENNReal.div_self h_nonzero h_fin
 
+/--
+Proves that the Boltzmann distribution for a Hopfield network forms a valid probability measure.
+-/
 theorem boltzmannDistribution_isProbability [IsOrderedCancelAddMonoid ENNReal] {R U : Type}
   [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   [DivisionSemiring ((HopfieldNetwork R U).State → ENNReal)]
