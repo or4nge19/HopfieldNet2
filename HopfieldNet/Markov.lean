@@ -6,24 +6,12 @@ import Mathlib.Probability.Kernel.Defs
 /-!
 # Markov Chain Framework
 
-The framework aims to provide:
-
-1. Transition kernels for Gibbs sampling and Metropolis-Hastings algorithms
-2. Detailed balance conditions that ensure convergence to stationary distributions (TODO)
-3. Ergodicity properties for Markov chains (TODO)
-4. Convergence rates and mixing time analysis (TODO)
-5. Direct connection to the Boltzmann distribution as stationary distribution (TODO)
-
 ## Main definitions
 
 * `stochasticHopfieldMarkovProcess`: A Markov process on Hopfield network states
 * `gibbsTransitionKernel`: The transition kernel for Gibbs sampling
 * `DetailedBalance`: The detailed balance condition for reversible Markov chains (TODO)
 * `mixingTime`: The time needed to approach the stationary distribution (TODO)
-
-## Implementation notes
-
-TODO
 
 -/
 
@@ -101,7 +89,6 @@ section HopfieldMarkovChain
 variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
 
 instance : Nonempty ((HopfieldNetwork R U).State) := by
-  -- We construct a default state where all neurons have activation -1
   let defaultState : (HopfieldNetwork R U).State := {
     act := fun _ => -1,
     hp := fun _ => Or.inr rfl
