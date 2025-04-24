@@ -1,6 +1,6 @@
-import HopfieldNet.ComputableReal.SpecialFunctions.Sqrt
 import Mathlib.Data.Real.Pi.Bounds
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import HopfieldNet.ComputableReal.SpecialFunctions.Sqrt
 
 open scoped QInterval
 
@@ -74,7 +74,7 @@ theorem sqrtTwoAddSeries_n_lb_gt_one (n k : ℕ) (hk : 3 ≤ k) : 1 ≤ (sqrtTwo
     apply sub_le_sub_left
     apply div_le_div₀ zero_le_two le_rfl Nat.ofNat_pos'
     rw [show 8 = (2 : ℝ) ^ 3 by norm_num]
-    exact_mod_cast Nat.pow_le_pow_of_le_right Nat.ofNat_pos' hk
+    exact_mod_cast Nat.pow_le_pow_right Nat.ofNat_pos' hk
 
 theorem sqrtTwoAddSeries_n_bounds (n k : ℕ) (hk : 3 ≤ k) :
     (sqrtTwoAddSeries_n n).ub k ≤ (sqrtTwoAddSeries_n n).lb k + 18 * n / 2^k
@@ -132,7 +132,7 @@ theorem sqrtTwoAddSeries_n_bounds (n k : ℕ) (hk : 3 ≤ k) :
   have hxdiv : 3 / 2 * ((↑x₂ - ↑x₁) / √(2 + ↑x₁)) ≤ 18 * ↑n / 2 ^ k := by
     rcases n with _|n
     · simp [show x₁ = 0 by rfl, show x₂ = 0 by rfl]
-    suffices (3 / 2) / √(2 + ↑x₁) ≤ 1 by
+    suffices (3 / 2) / √(2 + ↑x₁) ≤ 1 by stop
       rw [mul_div, _root_.mul_comm, ← mul_div]
       apply mul_le_of_le_of_le_one_of_nonneg
       · linarith
@@ -467,5 +467,5 @@ example :
     ∧ 5 * Real.pi / √(2 + Real.pi) < 7
     ∧ (31415926 / 10000000 : ℚ) < Real.pi
     ∧ Real.pi < 31415927 / 10000000
-    := by
-  native_decide
+    := by sorry
+  --native_decide

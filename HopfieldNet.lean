@@ -9,3 +9,13 @@ import HopfieldNet.DetailedBalance
 import HopfieldNet.test
 import HopfieldNet.SpinState.Basic
 import HopfieldNet.SpinState.StochasticUpdate
+import HopfieldNet.ComputableReal.aux_lemmas
+import HopfieldNet.ComputableReal.ComputableReal
+import HopfieldNet.ComputableReal.ComputableRSeq
+import HopfieldNet.ComputableReal.examples
+import HopfieldNet.ComputableReal.IsComputable
+import HopfieldNet.ComputableReal.IsComputableC
+import HopfieldNet.ComputableReal.SpecialFunctions.Basic
+import HopfieldNet.ComputableReal.SpecialFunctions.Exp
+import HopfieldNet.ComputableReal.SpecialFunctions.Pi
+import HopfieldNet.ComputableReal.SpecialFunctions.Sqrt

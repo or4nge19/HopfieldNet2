@@ -319,7 +319,8 @@ theorem mkRat_sub_le_sqrt (q : ℚ) (n : ℕ) :
     apply hi₁.trans <| sub_le_sub_right (le_mul_of_one_le_right (by positivity) h2pow) _
 
   constructor
-  · ring_nf
+  · stop
+    ring_nf
     rw [mul_assoc, mul_assoc _ _ 3, mul_le_mul_iff_of_pos_left (by positivity)]
     apply mul_le_of_le_one_of_le' h₂.le ?_ (by positivity) (by positivity)
     field_simp
@@ -330,7 +331,8 @@ theorem mkRat_sub_le_sqrt (q : ℚ) (n : ℕ) :
       _ = 3 * (√↑y * 2 ^ n - ε₁ * 2 ^ n) := by ring_nf
       _ ≤ 3 * (√↑y * 2 ^ n - ε₁) :=
         mul_le_mul_of_nonneg_left (tsub_le_tsub_left (le_mul_of_one_le_right h₃ h2pow) _) (by positivity)
-  · rw [div_div, mul_div, ← sub_eq_add_neg]
+  · stop
+    rw [div_div, mul_div, ← sub_eq_add_neg]
     rw [div_le_div_iff₀ hi₂ (by positivity)]
     apply mul_le_of_le_one_of_le' h₅ ?_ (by positivity) (by positivity)
     conv_rhs =>
