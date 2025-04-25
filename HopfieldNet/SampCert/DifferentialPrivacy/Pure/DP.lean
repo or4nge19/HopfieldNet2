@@ -122,7 +122,7 @@ lemma pure_ApproximateDP [Countable U] {m : Mechanism T U} :
   intro δ _ ε' HDP
   rw [ApproximateDP]
   apply ApproximateDP_of_DP
-  have R1 : degrade δ ε' = ε' := by simp
+  have R1 : degrade δ ε' = ε' := by stop simp
   rw [R1] at HDP
   trivial
 

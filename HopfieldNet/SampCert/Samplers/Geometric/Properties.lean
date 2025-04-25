@@ -30,7 +30,7 @@ lemma ite_test (a b : ℕ) (x y : ENNReal) :
   split ; any_goals { trivial }
 
 lemma trial_one_minus :
-  trial false = 1 - trial true := by
+  trial false = 1 - trial true := by stop
   by_contra h
   rw [← trial_spec] at h
   rw [ENNReal.add_sub_cancel_right] at h
@@ -40,7 +40,7 @@ lemma trial_one_minus :
     simp at trial_spec
 
 lemma trial_le_1 (i : ℕ) :
-  trial true ^ i ≤ 1 := by
+  trial true ^ i ≤ 1 := by stop
   induction i
   · simp
   · rename_i i IH
@@ -62,7 +62,7 @@ lemma trial_le_1 (i : ℕ) :
 A geometric series from a trial result (namely, with ratio less than 1) is finite.
 -/
 theorem trial_sum_ne_top :
-  (∑' (n : ℕ), trial true ^ n) ≠ ⊤ := by
+  (∑' (n : ℕ), trial true ^ n) ≠ ⊤ := by stop
   rw [ENNReal.tsum_geometric]
   rw [ENNReal.inv_ne_top]
   by_contra h
@@ -71,7 +71,7 @@ theorem trial_sum_ne_top :
   contradiction
 
 lemma trial_sum_ne_top' :
-  ∑' (n : ℕ), trial true ^ n * trial true ≠ ⊤ := by
+  ∑' (n : ℕ), trial true ^ n * trial true ≠ ⊤ := by stop
   have A := trial_sum_ne_top trial trial_spec'
   rw [ENNReal.tsum_eq_add_tsum_ite 0] at A
   simp [ite_test, tsum_shift'_1, pow_add] at A
@@ -132,7 +132,7 @@ Evaluation for an unrolling of ``probGeometric`` on a ``(false, -)`` state
 -/
 @[simp]
 theorem geometric_monotone_counter (fuel n : ℕ) (st : Bool × ℕ) (h1 : st ≠ (false,n)) (h2 : st.2 ≥ n) :
-  probWhileCut geoLoopCond (geoLoopBody trial) fuel st (false, n) = 0 := by
+  probWhileCut geoLoopCond (geoLoopBody trial) fuel st (false, n) = 0 := by stop
   revert st
   induction fuel
   · simp
@@ -388,7 +388,7 @@ theorem probGeometric_apply (n : ℕ) :
 -/
 @[simp]
 theorem probGeometric_normalizes :
-  (∑' n : ℕ, probGeometric trial n) = 1 := by
+  (∑' n : ℕ, probGeometric trial n) = 1 := by stop
   simp only [probGeometric_apply]
   rw [tsum_shift'_1]
   simp only [add_tsub_cancel_right]
@@ -426,7 +426,7 @@ theorem probGeometric_normalizes :
 ``probGeometric`` is a proper distribution on ``[1, ∞) ⊂ ℕ``.
 -/
 theorem probGeometric_normalizes' :
-  (∑' n : ℕ, probGeometric trial (n + 1)) = 1 := by
+  (∑' n : ℕ, probGeometric trial (n + 1)) = 1 := by stop
   have A := probGeometric_normalizes trial trial_spec trial_spec'
   rw [ENNReal.tsum_eq_add_tsum_ite 0] at A
   simp only [probGeometric_apply, ↓reduceIte, zero_add] at A

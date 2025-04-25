@@ -63,7 +63,7 @@ theorem probUntilCut_apply_unsat (body : SLang T) (cond : T → Bool) (fuel : �
 -/
 @[simp]
 theorem probUntil_apply_unsat (body : SLang T) (cond : T → Bool) (x : T) (h : ¬ cond x) :
-  probUntil (body : SLang T) (cond : T → Bool) x = 0 := by
+  probUntil (body : SLang T) (cond : T → Bool) x = 0 := by stop
   simp only [probUntil, Bind.bind, Bool.not_eq_true, bind_apply, probWhile]
   simp only [ENNReal.tsum_eq_zero]
   simp only [_root_.mul_eq_zero]
@@ -209,7 +209,7 @@ lemma probUntilCut_convergence (body : SLang T) (cond : T → Bool) (x : T) :
 Truncated ``until`` term is monotone in the maximum number of steps.
 -/
 theorem probUntilCut_monotone (body : SLang T) (cond : T → Bool) (x : T) :
-  ∀ (a : T), Monotone fun i => body a * probWhileCut (fun v => decide (cond v = false)) (fun _ => body) i a x := by
+  ∀ (a : T), Monotone fun i => body a * probWhileCut (fun v => decide (cond v = false)) (fun _ => body) i a x := by stop
   intro a
   have A := @probWhileCut_monotonic T (fun v => decide (cond v = false)) (fun _ => body) a x
   exact Monotone.const_mul' A (body a)

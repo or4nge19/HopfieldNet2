@@ -23,7 +23,8 @@ variable {T} [Preorder T]
 /--
 The ``probWhile`` program is monotonic in terms of the number of unrollings.
 -/
-theorem probWhileCut_monotonic (cond : T → Bool) (body : T → SLang T) (init : T) (x : T) :
+theorem probWhileCut_monotonic (cond : T → Bool) (body : T → SLang T)
+  (init : T) (x : T) :
   Monotone (fun n : Nat => probWhileCut cond body n init x) := by
   apply monotone_nat_of_le_succ
   intro n
