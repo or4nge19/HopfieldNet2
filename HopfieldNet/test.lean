@@ -197,7 +197,8 @@ def ZeroParams_4 : Params (HopfieldNetwork ℚ (Fin 4)) where
     simp only
     decide}
   σ u := Vector.mkEmpty 0
-  θ u := ⟨#[0], by {simp only [List.size_toArray, List.length_cons, List.length_nil, zero_add]}⟩
+  θ u := ⟨#[0], by {simp only [List.size_toArray, List.length_cons,
+    List.length_nil, zero_add]}⟩
 
 /--
 `ps` are two patterns represented by a 2x4 matrix of rational numbers.
