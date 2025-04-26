@@ -1,190 +1,252 @@
 /-
-Copyright (c) 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright (c) 2024 Michail Karatarakis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Jean-Baptiste Tristan
+Authors: Michail Karatarakis
 -/
-import HopfieldNet.SampCert
-import HopfieldNet.SampCert.SLang
-import HopfieldNet.SampCert.Samplers.Gaussian.Properties
+import HopfieldNet.HN
 
-open SLang Std Int Array PMF
+set_option linter.unusedVariables false
+set_option maxHeartbeats 500000
 
-structure IntHistogram where
-  repr : Array ℕ
-  min : ℤ
-  size : ℕ
-  deriving Repr, DecidableEq
+open Mathlib Finset
 
-def IntHistogram.index (hist : IntHistogram) (i : ℤ) : ℤ := Id.run do
-  if i - hist.min < 0 then
-    panic! "IntHistogram.get!: index lower than min"
-  i + hist.min
+/-- A 3x3 matrix of rational numbers. --/
+def test.M : Matrix (Fin 3) (Fin 3) ℚ := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
 
-def histToSTring (hist : IntHistogram) : String  := Id.run do
-  let mut str := ""
-  for i in [:hist.repr.size] do
-    str := str ++ s!"({hist.index i},{hist.repr.get! i})  "
-  return str
+def test : NeuralNetwork ℚ (Fin 3) where
+  Adj := test.M.Adj
+  Ui := {0,1}
+  Uo := {2}
+  hU := by
+     ext x
+     simp only [Set.mem_univ, Fin.isValue, Set.union_singleton,
+       Set.union_empty, Set.mem_insert_iff,
+       Set.mem_singleton_iff, true_iff]
+     revert x
+     decide
+  Uh := ∅
+  hUi := Ne.symm (Set.ne_insert_of_not_mem {1} fun a ↦ a)
+  hUo := Set.singleton_ne_empty 2
+  hhio := by
+    simp only [Fin.isValue, Set.union_singleton, Set.empty_inter]
+  pw W := True
+  κ1 u := 0
+  κ2 u := 1
+  fnet u w pred σ := ∑ v, w v * pred v
+  fact u input θ := if input ≥ θ.get 0 then 1 else 0
+  fout u act := act
+  pact u := True
+  hpact w _ _ σ θ _ pact u := pact u
 
-instance : ToString IntHistogram where
-  toString := histToSTring
+def wθ : Params test where
+  w := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
+  θ u := ⟨#[1], by
+    simp only [List.size_toArray, List.length_cons, List.length_nil, zero_add]
+    unfold test
+    simp only⟩
+  σ _ := Vector.mkEmpty 0
+  hw u v hv := by by_contra h; exact hv h
+  hw' := by simp only [test]
 
+instance : Repr (NeuralNetwork.State test) where
+  reprPrec state _ :=
+   ("acts: " ++ repr (state.act)) ++ ", outs: " ++
+        repr (state.out) ++ ", nets: " ++ repr (state.net wθ)
+
+/--
+`test.extu` is the initial state for the `test` neural network with activations `[1, 0, 0]`.
+-/
+def test.extu : test.State := {act := ![1,0,0], hp := fun u => trivial}
+
+lemma zero_if_not_mem_Ui : ∀ u : Fin 3,
+  ¬ u ∈ ({0,1} : Finset (Fin 3)) → test.extu.act u = 0 := by decide
+
+/--If `u` is not in the input neurons `Ui`, then `test.extu.act u` is zero.-/
+lemma test.onlyUi : test.extu.onlyUi := by {
+  intros u hu
+  apply zero_if_not_mem_Ui u
+  simp only [Fin.isValue, mem_insert, mem_singleton, not_or]
+  exact not_or.mp hu}
+
+/-The workphase for the asynchronous update of the sequence of neurons u3 , u1 , u2 , u3 , u1 , u2 , u3. -/
+#eval NeuralNetwork.State.workPhase wθ test.extu test.onlyUi [2,0,1,2,0,1,2]
+
+/-The workphase for the asynchronous update of the sequence of neurons u3 , u2 , u1 , u3 , u2 , u1 , u3. -/
+#eval NeuralNetwork.State.workPhase wθ test.extu test.onlyUi [2,1,0,2,1,0,2]
+
+/-Hopfield Networks-/
+
+/-- A 4x4 matrix of rational numbers. --/
+def W1 : Matrix (Fin 4) (Fin 4) ℚ :=
+  Matrix.of ![![0,1,-1,-1], ![1,0,-1,-1], ![-1,-1,0,1], ![-1,-1,1,0]]
+
+/--
+`HebbianParamsTest` defines a Hopfield Network with 4 neurons and rational weights.
+- `w`: The weight matrix `W1`.
+- `hw`: Proof that the weights are symmetric.
+- `hw'`: Proof that the weights are zero on the diagonal.
+- `σ`: Always an empty vector.
+- `θ`: Always returns a list with a single 0.
+--/
+def HebbianParamsTest : Params (HopfieldNetwork ℚ (Fin 4)) where
+  w := W1
+  hw u v huv := by
+    unfold HopfieldNetwork at huv
+    simp only [ne_eq, Decidable.not_not] at huv
+    rw [huv]
+    revert v v
+    simp only [forall_eq']
+    revert u u
+    decide
+  hw' := by {
+    unfold HopfieldNetwork
+    simp only
+    decide}
+  σ := fun u => Vector.mkEmpty 0
+  θ u := ⟨#[0],by
+    simp only [List.size_toArray, List.length_cons, List.length_nil, zero_add]⟩
+
+/-- `extu` is the initial state for our `HebbianParamsTest` Hopfield network.
+- `act`: `[1, -1, -1, 1]` - initial activations.
+
+This initializes the state for a Hopfield network test.
+--/
+def extu : State' HebbianParamsTest where
+  act := ![1,-1,-1,1]
+  hp := by
+    intros u
+    unfold HopfieldNetwork
+    simp only
+    revert u
+    decide
+
+instance : Repr (HopfieldNetwork ℚ (Fin 4)).State where
+  reprPrec state _ := ("acts: " ++ repr (state.act))
+
+-- Computations
+
+-- lemma zero_if_not_mem_Ui' : ∀ u : Fin 4,
+--     ¬ u ∈ ({0,1,2,3} : Finset (Fin 4)) → extu.act u = 0 := by {decide}
+
+-- def HN.hext : extu.onlyUi := by {intros u; tauto}
+
+-- #eval NeuralNetwork.State.workPhase HebbianParamsTest extu HN.hext [2,0,1,2,0,1,2]
 
 
 /--
-  sample `numSamples` times from `dist` into an array and keep track
-  of the minimum and maximum sample value
--/
-def sample (dist : PMF ℤ) (numSamples : ℕ) : IO ((Array ℤ) × ℤ × ℤ) := do
-  if numSamples < 2 then
-    panic! "sample: 2 samples at least required"
-  let mut samples : Array ℤ := mkArray numSamples 0
-  let s₁ : ℤ ← run <| dist
-  samples := samples.set! 0 s₁
-  let s₂ : ℤ ← run <| dist
-  samples := samples.set! 1 s₂
-  let mut min : ℤ := s₁
-  let mut max : ℤ := s₂
-  if s₂ < s₁ then
-    min := s₂
-    max := s₁
-  for i in [2:numSamples] do
-    let s : ℤ ← run <| dist
-    samples := samples.set! i s
-    if s < min then
-      min := s
-    else if s > max then
-      max := s
-  return (samples,min,max)
+`pattern_ofVec` converts a pattern vector from `Fin n` to `ℚ` into a `State`
+for a `HopfieldNetwork` with `n` neurons.
+It checks if all elements are either 1 or -1. If they are, it returns `some`
+ pattern; otherwise, it returns `none`.
+--/
+def pattern_ofVec {n} [NeZero n] (pattern : Fin n → ℚ) :
+    Option (HopfieldNetwork ℚ (Fin n)).State :=
+  if hp : ∀ i, pattern i = 1 ∨ pattern i = -1 then
+    some {act := pattern, hp := by {
+      intros u
+      unfold HopfieldNetwork
+      simp only
+      apply hp
+      }}
+  else
+    none
 
 /--
-  compute histogram of `samples`
--/
-def histogram (samples : Array ℤ) (min max : ℤ) : IO IntHistogram := do
-  if max < min then
-    panic! "histogram: max less than min"
-  let mut hist : Array ℕ := mkArray (1 + max - min).toNat 0
-  for v in samples do
-    let idx := v - min
-    if idx < 0 then
-      panic! "histogram: index less than 0"
-    hist := hist.set! idx.toNat (hist.get! idx.toNat + 1)
-  return { repr := hist, min := min, size := samples.size }
+`obviousFunction` tries to convert a function `f` from `α` to `Option β` into a regular function
+from `α` to `β`. If `f` returns `some` for every input, it returns `some` function that extracts
+these values. Otherwise, it returns `none`.
+--/
+def obviousFunction [Fintype α] (f : α → Option β) : Option (α → β) :=
+  if h : ∀ x, (f x).isSome then
+    some (fun a => (f a).get (h a))
+  else
+    none
 
-def estimateMean (hist : IntHistogram) : IO Float := do
-  let mut acc : Float := 0
-  for i in [:hist.repr.size] do
-    acc := acc + Float.ofInt (hist.repr.get! i) * Float.ofInt (hist.index i)
-  return acc / (hist.size).toFloat
 
 /--
-  Moment estimate, unadjusted
+Converts a matrix of patterns `V` into Hopfield network states.
+
+Each row of `V` (a function `Fin m → Fin n → ℚ`) is mapped to a Hopfield network state
+if all elements are either `1` or `-1`. Returns `some` mapping if successful, otherwise `none`.
 -/
-def estimateMoment (hist : IntHistogram) (mean : Float) (moment : ℕ) : IO Float := do
-  if moment < 2 then
-    panic! "estimateMoment: moment must be at least 2"
-  let mut acc : Float := 0
-  for i in [:hist.repr.size] do
-    for _ in [:hist.repr.get! i] do
-      acc := acc + (Float.ofInt (hist.index i) - mean)^moment.toFloat
-  return acc / (hist.size).toFloat
-
-def estimateVariance (hist : IntHistogram) (mean : Float) : IO Float := do
-  estimateMoment hist mean 2
-
-def estimateSkewness (hist : IntHistogram) (mean : Float) (variance : Float) : IO Float := do
-  let μ₃ ← estimateMoment hist mean 3
-  return μ₃ / (variance^(1.5))
-
-def estimateKurtosis (hist : IntHistogram) (mean : Float) (variance : Float) : IO Float := do
-  let μ₃ ← estimateMoment hist mean 4
-  return μ₃ / (variance^2)
+def patternsOfVecs (V : Fin m → Fin n → ℚ) [NeZero n] (hmn : m < n) :
+  Option (Fin m → (HopfieldNetwork ℚ (Fin n)).State) :=
+  obviousFunction (fun i => pattern_ofVec (V i))
 
 /--
-  Not ideal to reuse IntHistogram for the CDF
-  Warning: unnormalized
--/
-def estimateCDF (hist : IntHistogram) : IO IntHistogram := do
-  if hist.size = 0 then
-    panic! "estimateCDF: empty histogram"
-  let mut cdf : Array ℕ := mkArray hist.repr.size 0
-  cdf := cdf.set! 0 <| hist.repr.get! 0
-  for i in [1:cdf.size] do
-    cdf := cdf.set! i <| cdf.get! (i - 1) + hist.repr.get! i
-  return { repr := cdf, min := hist.min, size := hist.size }
+`ZeroParams_4` defines a simple Hopfield Network with 4 neurons.
 
-def evalUnnormalizedGaussianPDF (x : ℤ) (num den : ℕ+) : IO Float := do
-  return Float.exp <| (- (Float.ofInt x)^2) / (2 * ((num : ℕ).toFloat^2 / (den : ℕ).toFloat^2))
+- `w`: A 4x4 weight matrix filled with zeros.
+- `hw`: Proof that the weight matrix is symmetric.
+- `hw'`: Proof that the weight matrix has zeros on the diagonal.
+- `σ`: An empty vector for each neuron.
+- `θ`: A threshold of 0 for each neuron, with proof that the list has length 1.
+--/
+def ZeroParams_4 : Params (HopfieldNetwork ℚ (Fin 4)) where
+  w :=  (Matrix.of ![![0,0,0,0], ![0,0,0,0], ![0,0,0,0], ![0,0,0,0]])
+  hw u v huv := by {
+    unfold HopfieldNetwork at huv
+    simp only [ne_eq, Decidable.not_not] at huv
+    rw [huv]
+    revert v v
+    simp only [forall_eq']
+    revert u u
+    decide}
+  hw' := by {
+    unfold HopfieldNetwork
+    simp only
+    decide}
+  σ u := Vector.mkEmpty 0
+  θ u := ⟨#[0], by {simp only [List.size_toArray, List.length_cons,
+    List.length_nil, zero_add]}⟩
 
-def sumTo (bound : ℤ) (tob : ℤ) (num den : ℕ+) : IO Float := do
-  let mut acc : Float := 0
-  let dist := Int.natAbs (tob - bound)
-  for x in [:dist + 1] do
-    let mass ← evalUnnormalizedGaussianPDF (x + bound) num den
-    acc := acc + mass
-  return acc
+/--
+`ps` are two patterns represented by a 2x4 matrix of rational numbers.
+--/
+def ps : Fin 2 → Fin 4 → ℚ := ![![1,1,-1,-1], ![-1,1,-1,1]]
 
-def approxNormalizerGaussianPDF (num den : ℕ+) (bound : ℤ) : IO Float := do
-  sumTo (-bound) bound num den
+/--
+`test_params` sets up a `HopfieldNetwork` with 4 neurons.
+It converts the patterns `ps` into a network using Hebbian learning if possible.
+If not, it defaults to `ZeroParams_4`.
+--/
+def test_params : Params (HopfieldNetwork ℚ (Fin 4)) :=
+  match (patternsOfVecs ps (by simp only [Nat.succ_eq_add_one, zero_add,
+    Nat.reduceAdd, Nat.reduceLT])) with
+  | some patterns => Hebbian patterns
+  | none => ZeroParams_4
 
-def KolmogorovDistance (hist : IntHistogram) (num den : ℕ+) : IO Float := do
-  let mut max : Float := 0
-  let bound : ℕ := 50 * num^2 -- We should do better when Init has rationals
-  let norm : Float ← approxNormalizerGaussianPDF num den bound
-  for i in [:hist.repr.size] do
-    let sample := hist.index i
-    let refCDFUnnormed ← sumTo (- bound) sample num den
-    let refCDF := refCDFUnnormed / norm
-    let estCDF : Float := (Float.ofNat (hist.repr.get! i)) / (Float.ofInt hist.size)
-    let d := (refCDF - estCDF).abs
-    if max < d then
-      max := d
-  return max
+/--
+`useq_Fin n` maps a natural number `i` to an element of `Fin n` (a type with `n` elements).
+It wraps `i` around using modulo `n`.
 
-def test (num den : ℕ+) (mix numSamples : ℕ) (threshold : Float) : IO Unit := do
-  let (samples, min, max) ← sample (DiscreteGaussianPMF num den mix) numSamples
-  let hist ← histogram samples min max
-  let mean ← estimateMean hist
-  let variance ← estimateVariance hist mean
-  let skewness ← estimateSkewness hist mean variance
-  let kurtosis ← estimateSkewness hist mean variance
-  let cdf ← estimateCDF hist
-  let D ← KolmogorovDistance cdf num den
+Arguments:
+- `n`: The size of the finite type (must be non-zero).
+- `i`: The natural number to convert.
 
-  if mean.abs > threshold then
-    panic! s!"mean = {mean}"
-  IO.println s!"mean = {mean}"
+Returns:
+- An element of `Fin n`.
+--/
+def useq_Fin n [NeZero n] : ℕ → Fin n := fun i =>
+  ⟨_, Nat.mod_lt i (Nat.pos_of_neZero n)⟩
 
-  let trueVariance := (num : ℕ).toFloat^2 / (den : ℕ).toFloat^2
-  if (variance - trueVariance).abs > threshold then
-    panic! s!"variance = {variance}, true variance is {trueVariance}"
-  IO.println s!"variance = {variance}, true variance is {trueVariance}"
+lemma useq_Fin_cyclic n [NeZero n] : cyclic (useq_Fin n) := by
+  unfold cyclic
+  unfold useq_Fin
+  simp only [Fintype.card_fin]
+  apply And.intro
+  · intros u
+    use u.val
+    cases' u with u hu
+    simp only
+    simp_all only [Fin.mk.injEq]
+    exact Nat.mod_eq_of_lt hu
+  · intros i j hij
+    exact Fin.mk.inj_iff.mpr hij
 
-  if skewness.abs > threshold then
-    panic! s!"skewness = {skewness}"
-  IO.println s!"skewness = {skewness}"
+lemma useq_Fin_fair n [NeZero n] : fair (useq_Fin n) :=
+  cycl_Fair (useq_Fin n) (useq_Fin_cyclic n)
 
-  if kurtosis.abs > threshold then
-    panic! s!"kurtosis = {kurtosis}"
-  IO.println s!"kurtosis = {kurtosis}"
+#eval HopfieldNet_stabilize test_params extu (useq_Fin 4) (useq_Fin_fair 4)
 
-  if D.abs > threshold then
-    panic! s!"Kolmogorov distance = {D}"
-  IO.println s!"Kolmogorov distance = {D}"
-
-
-def main : IO Unit := do
-  let tests : List (ℕ+ × ℕ+ × ℕ) := [
-    -- (1,1,0),
-    (1,1,7),
-    -- (1,1,10000000),
-    -- (1,2,0),
-    (1,2,7),
-    -- (1,2,10000000),
-    -- (2,1,0),
-    (2,1,7),
-    -- (2,1,10000000),
-  ]
-  for (num,den,mix) in tests do
-    IO.println s!"num = {(num : ℕ)}, den = {(den : ℕ)}, mix = {mix}"
-    test num den mix 100000 0.1
+#eval HopfieldNet_conv_time_steps test_params extu (useq_Fin 4) (useq_Fin_cyclic 4)
