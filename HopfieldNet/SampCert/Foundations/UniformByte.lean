@@ -70,14 +70,12 @@ def probUniformByte_PMF : PMF UInt8 := ⟨ probUniformByte, probUniformByte_norm
 Evaluation of ``probUniformByteUpperBits`` for inside the support
 -/
 def probUniformByteUpperBits_eval_support {i x : ℕ} (Hx : x < 2 ^ (min 8 i)) :
-    probUniformByteUpperBits i x = 2^(8 - i) / UInt8.size := by stop
+    probUniformByteUpperBits i x = 2^(8 - i) / UInt8.size := by
   simp [probUniformByteUpperBits]
   rw [Nat.sub_eq_max_sub]
   simp [SLang.probBind, SLang.probPure, probUniformByte]
   cases (Classical.em (i < 8))
-
-  · -- Simplify body
-    rw [max_eq_left (by linarith)]
+  · rw [max_eq_left (by linarith)]
     rw [min_eq_right (by linarith)] at Hx
     conv =>
       enter [1, 1, a]
@@ -196,18 +194,19 @@ def probUniformByteUpperBits_eval_support {i x : ℕ} (Hx : x < 2 ^ (min 8 i)) :
       apply And.intro
       · intro x'
         rcases x' with ⟨ ⟨ x'', H2x'' ⟩, Hx'' ⟩
-        unfold UInt8.toNat
-        simp
+        --unfold UInt8.toNat
+        --simp
         congr
-        unfold UInt8.ofNatLT
+        --unfold UInt8.ofNatLT
         apply Nat.sub_add_cancel
+        simp only [reducePow, UInt8.ofBitVec_ofFin, UInt8.ofFin_mk, UInt8.toNat_ofNatLT]
         rw [Hx'']
         rw [UInt8.toNat]
         apply (Nat.le_div_iff_mul_le (by simp)).mp
         simp
       · intro x'
         rcases x' with ⟨ x'', Hx'' ⟩
-        rw [UInt8.toNat]
+        --rw [UInt8.toNat]
         simp
     simp
   · rw [max_eq_right (by linarith)]
@@ -311,7 +310,7 @@ def probUniformP2_eval_support {i x : ℕ} (Hx : x < 2 ^ i):
     rcases @euclidean_division x UInt8.size (by simp) with ⟨ p, q, Hq, Hx ⟩
     have X (a : UInt8) (b : ℕ) D :
         (@ite _ (q + UInt8.size * p = UInt8.size * b + a.toNat) D (1 : ENNReal) 0) =
-        (if p = b then (1 : ENNReal) else 0) * (if q = a.toNat then (1 : ENNReal) else 0) := by
+        (if p = b then (1 : ENNReal) else 0) * (if q = a.toNat then (1 : ENNReal) else 0) := by stop
       split
       · rename_i He
         conv at He =>
@@ -336,7 +335,7 @@ def probUniformP2_eval_support {i x : ℕ} (Hx : x < 2 ^ i):
               exfalso
               apply Ht Hk
         simp only [ne_eq]
-        apply (Decidable.not_and_iff_or_not (p = b) (q = a.toNat)).mp
+        apply (Decidable.not_and_iff_or_not.mp (p = b) (q = a.toNat))
         intro HK
         apply He
         rw [And.comm] at HK
