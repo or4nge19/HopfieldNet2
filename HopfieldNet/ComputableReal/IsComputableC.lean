@@ -182,8 +182,8 @@ open ComplexOrder in
 instance instDecidableLT : Decidable (x < y) :=
   inferInstanceAs (Decidable (_ ∧ _))
 
-example : (1 + Complex.I) * (1 - Complex.I : ℂ) = 2 := by stop
+example : (1 + Complex.I) * (1 - Complex.I : ℂ) = 2 := by
   native_decide
 
-example : ‖Complex.I‖ ≠ (1 / 2) := by stop
+example : ‖Complex.I‖ ≠ (1 / 2) := by
   native_decide
