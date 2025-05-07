@@ -820,7 +820,7 @@ lemma hebbian_deleted_threshold_is_zero {m : ℕ} [DecidableEq U]
   θ' ((DeleteNeurons neurons_to_delete.toList (Hebbian ps)).θ u_check) = 0 := by
   simp only [DeleteNeurons, DeleteNeuron, Hebbian, θ']
   induction neurons_to_delete.toList with
-  | nil => simp [List.foldl_nil]
+  | nil => simp [List.foldl_nil]; exact rfl
   | cons head tail ih =>
     rw [List.foldl_cons]
     sorry
