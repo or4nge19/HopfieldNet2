@@ -1,6 +1,4 @@
-import HopfieldNet.Papers.Hopfield82.ContentAddressableMemory
-import Mathlib
-
+import HopfieldNet.Papers.Hopfield82.PhaseSpaceFlow
 namespace Hopfield82
 
 open NeuralNetwork State Matrix Finset Real

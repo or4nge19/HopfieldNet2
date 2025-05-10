@@ -1,4 +1,4 @@
-import HopfieldNet.Papers.Hopfield82.PhaseSpaceFlow
+import HopfieldNet.Papers.Hopfield82.MemoryConfusion
 import Mathlib.Combinatorics.Enumerative.Bell
 import Mathlib.Combinatorics.SimpleGraph.Finite
 

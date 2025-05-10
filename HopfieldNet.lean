@@ -7,11 +7,10 @@ import HopfieldNet.Asym
 import HopfieldNet.Stochastic
 import HopfieldNet.DetailedBalance
 import HopfieldNet.test
-import HopfieldNet.Papers.Hopfield82.ContentAddressableMemory
-import HopfieldNet.Papers.Hopfield82.EnergyConvergence
-import HopfieldNet.Papers.Hopfield82.FaultTolerance
-import HopfieldNet.Papers.Hopfield82.MemoryConfusion
 import HopfieldNet.Papers.Hopfield82.PhaseSpaceFlow
+import HopfieldNet.Papers.Hopfield82.MemoryConfusion
+import HopfieldNet.Papers.Hopfield82.MemoryStorage
+import HopfieldNet.Papers.Hopfield82.EnergyConvergence
 import HopfieldNet.SpinState.Basic
 import HopfieldNet.SpinState.StochasticUpdate
 import HopfieldNet.ComputableReal.aux_lemmas
