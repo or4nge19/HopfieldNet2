@@ -1,6 +1,6 @@
 import Mathlib.Data.Real.Sign
 import Mathlib.Data.Real.ConjExponents
-import HopfieldNet.ComputableReal.IsComputable
+import HopfieldNet.Tools.ComputableReal.IsComputable
 
 namespace IsComputable
 

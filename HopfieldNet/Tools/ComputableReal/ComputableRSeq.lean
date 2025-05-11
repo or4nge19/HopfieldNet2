@@ -3,7 +3,7 @@ import Mathlib.Data.Real.Archimedean
 import Mathlib.Data.Sign
 import Mathlib.Tactic.Rify
 
-import HopfieldNet.ComputableReal.aux_lemmas
+import HopfieldNet.Tools.ComputableReal.aux_lemmas
 
 namespace QInterval
 

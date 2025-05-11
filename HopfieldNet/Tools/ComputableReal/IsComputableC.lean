@@ -1,6 +1,6 @@
 import Mathlib.Analysis.InnerProductSpace.Basic
-import HopfieldNet.ComputableReal.SpecialFunctions.Sqrt
-import HopfieldNet.ComputableReal.IsComputable
+import HopfieldNet.Tools.ComputableReal.SpecialFunctions.Sqrt
+import HopfieldNet.Tools.ComputableReal.IsComputable
 
 /- Type class stating that `x:ℂ` has a ComputableℝSeq for its real and imaginary parts.
 Note that we can't define this as `IsComputable x.re`+`IsComputable x.im`, because then

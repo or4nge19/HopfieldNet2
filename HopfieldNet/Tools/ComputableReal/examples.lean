@@ -1,4 +1,4 @@
-import HopfieldNet.ComputableReal.ComputableReal
+import HopfieldNet.Tools.ComputableReal.ComputableReal
 import Mathlib.Probability.Distributions.Gamma
 
 open Real

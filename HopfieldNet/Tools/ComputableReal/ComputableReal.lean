@@ -1,4 +1,4 @@
-import HopfieldNet.ComputableReal.ComputableRSeq
+import HopfieldNet.Tools.ComputableReal.ComputableRSeq
 
 /-- Computable reals, defined as the quotient of ComputableℝSeq sequences -- sequences with
   Cauchy sequences of lower and upper bounds that converge to the same value -- by the equivalence
@@ -187,7 +187,8 @@ theorem val_nsmul (x : Computableℝ) (n : ℕ) : (n • x).val = n • x.val :=
 section safe_inv
 
 set_option linter.dupNamespace false in
-private def nz_quot_equiv := Equiv.subtypeQuotientEquivQuotientSubtype
+private def nz_quot_equiv : Equiv { x : ComputableℝSeq // x.val ≠ 0 } { x : Computableℝ // x ≠ 0 } :=
+  Equiv.subtypeQuotientEquivQuotientSubtype
     (fun x : ComputableℝSeq ↦ x.val ≠ 0)
     (fun x : Computableℝ ↦ x ≠ 0)
     (fun _ ↦ ⟨
