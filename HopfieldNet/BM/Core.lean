@@ -1,4 +1,4 @@
-import HopfieldNet.HN
+import HopfieldNet.HN.Core
 import Mathlib.Algebra.Lie.OfAssociative
 import Mathlib.Data.Real.StarOrdered
 import Mathlib.Order.CompletePartialOrder
