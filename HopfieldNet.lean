@@ -13,6 +13,7 @@ import HopfieldNet.Papers.Hopfield82.MemoryStorage
 import HopfieldNet.Papers.Hopfield82.EnergyConvergence
 import HopfieldNet.SpinState.Basic
 import HopfieldNet.SpinState.StochasticUpdate
+import HopfieldNet.BM
 import HopfieldNet.ComputableReal.aux_lemmas
 import HopfieldNet.ComputableReal.ComputableReal
 import HopfieldNet.ComputableReal.ComputableRSeq
