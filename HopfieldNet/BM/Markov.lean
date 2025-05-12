@@ -3,10 +3,8 @@ Copyright (c) 2025 Matteo Cipollina. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Matteo Cipollina
 -/
-import HopfieldNet.BM -- Contains BoltzmannMachine, ParamsBM, StateBM, energy, gibbsSamplingStep
-import HopfieldNet.Markov -- Contains generic Markov chain definitions like DetailedBalance, Kernel.pow, etc.
-                           -- and also Fintype instance for HopfieldNetwork.State
-                           -- (which StateBM is an abbrev of)
+import HopfieldNet.BM 
+import HopfieldNet.Markov
 import Mathlib.Probability.Kernel.Basic
 import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib
@@ -17,10 +15,8 @@ open PMF MeasureTheory ProbabilityTheory.Kernel Set
 variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
 variable [Coe R ℝ] -- For Real.exp and other ℝ operations
 
--- Ensure a finite type instance for our states
 noncomputable instance : Fintype ((BoltzmannMachine R U).State) := by
   -- States are functions from U to {-1, 1} with a predicate
-  -- Create a fintype for {-1, 1}
   let binaryType := {x : R | x = -1 ∨ x = 1}
   have binaryFintype : Fintype binaryType := by
     apply Fintype.ofList [⟨-1, Or.inl rfl⟩, ⟨1, Or.inr rfl⟩]
@@ -36,32 +32,20 @@ noncomputable instance : Fintype ((BoltzmannMachine R U).State) := by
       left
       apply Subtype.ext
       exact h
-
-  -- Define the mapping function explicitly with proper type conversion
   let f : ((BoltzmannMachine R U).State) → (U → binaryType) := fun s u =>
     ⟨s.act u, by
-      -- Convert between equivalent predicates
       unfold binaryType
-      -- s.hp u proves (BoltzmannMachine R U).pact (s.act u)
-      -- Need to convert to x = -1 ∨ x = 1
       have h := s.hp u
-      -- In BoltzmannMachine, pact is likely defined as x = 1 ∨ x = -1 (note the order!)
       cases h with
       | inl h_pos => right; exact h_pos
       | inr h_neg => left; exact h_neg⟩
-
-  -- Prove the function is injective
   have f_inj : Function.Injective f := by
     intro s1 s2 h_eq
     apply State.ext
     intro u
-    -- Extract the value component from the equality of dependent pairs
     have h := congr_fun h_eq u
-    -- Extract the value from the subtype equality
     have hval : (f s1 u).val = (f s2 u).val := congr_arg Subtype.val h
     exact hval
-
-  -- Apply the Fintype.ofInjective constructor using our injective function
   exact Fintype.ofInjective f f_inj
 
 noncomputable instance : Fintype (StateBM R U) := by
@@ -70,11 +54,9 @@ noncomputable instance : Fintype (StateBM R U) := by
 
 namespace BoltzmannMachine
 
--- Define MeasurableSpace for BoltzmannMachine.State directly
 instance (R U : Type) [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] :
   MeasurableSpace ((BoltzmannMachine R U).State) := ⊤
 
--- Now we can define the instance for StateBM
 instance : MeasurableSpace (StateBM R U) := inferInstance
 
 instance : DiscreteMeasurableSpace (StateBM R U) :=
