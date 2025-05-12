@@ -13,7 +13,7 @@ open Finset Matrix NeuralNetwork State ENNReal Real
 open PMF MeasureTheory ProbabilityTheory.Kernel Set
 
 variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
-variable [Coe R ℝ] -- For Real.exp and other ℝ operations
+variable [Coe R ℝ] 
 
 noncomputable instance : Fintype ((BoltzmannMachine R U).State) := by
   -- States are functions from U to {-1, 1} with a predicate
