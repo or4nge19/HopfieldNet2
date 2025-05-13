@@ -6,7 +6,7 @@ Authors: Matteo Cipollina
 
 import Mathlib.LinearAlgebra.Matrix.PosDef
 import HopfieldNet.SpinState.Basic
-
+set_option checkBinderAnnotations false
 /-!
 # Asymmetric Hopfield Networks
 

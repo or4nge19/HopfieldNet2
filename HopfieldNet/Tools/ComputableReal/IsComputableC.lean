@@ -2,6 +2,8 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import HopfieldNet.Tools.ComputableReal.SpecialFunctions.Sqrt
 import HopfieldNet.Tools.ComputableReal.IsComputable
 
+#exit
+
 /- Type class stating that `x:ℂ` has a ComputableℝSeq for its real and imaginary parts.
 Note that we can't define this as `IsComputable x.re`+`IsComputable x.im`, because then
 (if `x` is a noncomputable expression), this will be a noncomputable expression. -/
@@ -14,7 +16,6 @@ class IsComputableℂ (x : ℂ) : Type where
     re : IsComputable x.re
     im : IsComputable x.im
 
-#exit
 namespace IsComputableℂ
 
 open ComplexConjugate

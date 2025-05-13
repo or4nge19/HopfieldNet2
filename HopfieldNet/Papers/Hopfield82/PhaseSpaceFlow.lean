@@ -39,7 +39,7 @@ namespace Hopfield82
 
 open NeuralNetwork State Matrix Finset Real
 
-variable {R U : Type} [LinearOrderedField R] [Fintype U] [Nonempty U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U]
 
 /-! ### Phase Space Flow -/
 
@@ -49,7 +49,7 @@ In the paper, this corresponds to the instantaneous state of all neurons (p.2554
 "A point in state space then represents the instantaneous condition of the system."
 -/
 abbrev PhaseSpacePoint (R U : Type)
-    [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] :=
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :=
   (HopfieldNetwork R U).State
 
 /-- Convert Option to Vector for threshold values --/
@@ -75,7 +75,7 @@ The `localField` for neuron i in state s is the weighted sum of inputs from othe
 minus the threshold. This corresponds to ∑j Tij Vj - θi in the paper.
 -/
 
-def localField {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+def localField {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (wθ : Params (HopfieldNetwork R U)) (s : PhaseSpacePoint R U) (i : U) : R :=
 
   (∑ j ∈ Finset.univ, wθ.w i j * s.act j) - getThreshold (vectorToOption (wθ.θ i))
@@ -127,7 +127,7 @@ def EnergyLandscape [DecidableEq R] [DecidableEq U] (wθ : Params (HopfieldNetwo
   λ (s : PhaseSpacePoint R U) => s.E wθ
 
 @[simp]
-lemma up_act_eq_iff_eq {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+lemma up_act_eq_iff_eq {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   {wθ : Params (HopfieldNetwork R U)} {s : (HopfieldNetwork R U).State} {u : U} :
   (s.Up wθ u).act u = s.act u → s.Up wθ u = s := by
   intro h_act_eq

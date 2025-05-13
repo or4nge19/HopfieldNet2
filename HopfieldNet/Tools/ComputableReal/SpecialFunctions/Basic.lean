@@ -2,9 +2,10 @@ import Mathlib.Data.Real.Sign
 import Mathlib.Data.Real.ConjExponents
 import HopfieldNet.Tools.ComputableReal.IsComputable
 
+#exit
+
 namespace IsComputable
 
-#exit
 instance instComputableOfScientific (m : ℕ) (b : Bool) (e : ℕ) :
     IsComputable (@OfScientific.ofScientific ℝ NNRatCast.toOfScientific m b e) :=
   ⟨(OfScientific.ofScientific m b e : ℚ),

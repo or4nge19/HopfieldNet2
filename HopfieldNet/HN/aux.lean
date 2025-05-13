@@ -7,8 +7,8 @@ import Mathlib.Algebra.EuclideanDomain.Field
 import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.LinearAlgebra.Matrix.Symmetric
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-
-variable {U : Type*} [LinearOrderedField R]
+set_option checkBinderAnnotations false
+variable {U : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 open Finset Fintype Matrix
 

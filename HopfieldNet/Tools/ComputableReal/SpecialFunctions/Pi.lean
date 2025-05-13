@@ -2,12 +2,14 @@ import Mathlib.Data.Real.Pi.Bounds
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import HopfieldNet.Tools.ComputableReal.SpecialFunctions.Sqrt
 
+
+#exit
 open scoped QInterval
 
 namespace ComputableℝSeq
 
 section Pi
-#exit
+
 instance instComputableSqrtTwoAddSeries (x : ℝ) [hx : IsComputable x] (n : ℕ) :
     IsComputable (Real.sqrtTwoAddSeries x n) :=
   n.rec hx (fun _ _ ↦ IsComputable.instComputableSqrt _)

@@ -32,7 +32,7 @@ The network uses Gibbs sampling to generate samples from the underlying probabil
 -/
 open Finset Matrix NeuralNetwork State ENNReal Real PMF
 
-variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
 
 lemma BM_pact_of_HNfact (θ val : R) :
   (fun act : R => act = 1 ∨ act = -1) (HNfact θ val) := by
@@ -51,7 +51,7 @@ It extends `HopfieldNetwork` with specific properties:
 - Weights are symmetric, and self-weights are zero.
 - Activation is binary (1 or -1).
 -/
-abbrev BoltzmannMachine (R U : Type) [LinearOrderedField R] [DecidableEq U]
+abbrev BoltzmannMachine (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
   [Nonempty U] [Fintype U] : NeuralNetwork R U :=
 { (HopfieldNetwork R U) with
   Adj := fun u v => u ≠ v,
@@ -71,7 +71,7 @@ abbrev BoltzmannMachine (R U : Type) [LinearOrderedField R] [DecidableEq U]
 /--
 Parameters for a Boltzmann Machine.
 -/
-structure ParamsBM (R U : Type) [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] where
+structure ParamsBM (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] where
   /-- The weight matrix of the Boltzmann Machine. -/
   w : Matrix U U R
   /-- Proof that the weight matrix satisfies the properties required by `BoltzmannMachine.pw`. -/
@@ -87,7 +87,7 @@ structure ParamsBM (R U : Type) [LinearOrderedField R] [DecidableEq U] [Fintype 
 `StateBM` is an alias for the state of a `BoltzmannMachine`.
 It represents the activation values of all neurons in the network.
 -/
-abbrev StateBM (R U : Type) [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] :=
+abbrev StateBM (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :=
   (BoltzmannMachine R U).State
 
 namespace BoltzmannMachine

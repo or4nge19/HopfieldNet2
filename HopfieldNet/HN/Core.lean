@@ -12,7 +12,7 @@ import HopfieldNet.HN.aux
 
 open Finset Matrix NeuralNetwork State
 
-variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
 
 /--
 `HNfnet` computes the weighted sum of predictions for all elements in `U`, excluding `u`.
@@ -45,7 +45,7 @@ abbrev HNfout (act : R) : R := act
 - `R`: A linear ordered field.
 - `U`: A finite, nonempty set of neurons with decidable equality.
 -/
-abbrev HopfieldNetwork (R U : Type) [LinearOrderedField R] [DecidableEq U]
+abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
    [Nonempty U] [Fintype U] : NeuralNetwork R U where
   /- The adjacency relation between neurons `u` and `v`, defined as `u ≠ v`. -/
   Adj u v := u ≠ v
@@ -664,24 +664,24 @@ lemma not_stable_implies_sseqm_lt_sseqn (useq : ℕ → U) (hf : fair useq) (n :
 @[simp]
 lemma num_of_states_leq_c_implies_stable_sseq (s : (HopfieldNetwork R U).State)
   (useq : ℕ → U) (hf : fair useq) (c : ℕ) :
-    ∀ n : ℕ, (@num_of_states_less _ _ _ _ _ _ wθ (seqStates' s useq n)) ≤ c →
-  ∃ m ≥ n, (@seqStates' _ _ _ _ _ _ wθ s useq m).isStable wθ := by
+    ∀ n : ℕ, (@num_of_states_less _ _ _ _ _ _ _ _ wθ (seqStates' s useq n)) ≤ c →
+  ∃ m ≥ n, (@seqStates' _ _ _ _ _ _ _ _ wθ s useq m).isStable wθ := by
   induction' c with c hc
   · intros n hn; use n; constructor
     · apply Nat.le_refl
     · apply num_of_states_leq_zero_implies_stable
       simp only [nonpos_iff_eq_zero] at hn; assumption
   · intros n hn;
-    by_cases H : (@seqStates' _ _ _ _ _ _ wθ s useq n).isStable wθ
+    by_cases H : (@seqStates' _ _ _ _ _ _ _ _ wθ s useq n).isStable wθ
     · use n
     · obtain ⟨m, ⟨hm, hlt⟩⟩ := not_stable_implies_sseqm_lt_sseqn s useq hf n H
-      have : @num_of_states_less _ _ _ _ _ _ wθ (seqStates' s useq m)
-        < @num_of_states_less _ _ _ _ _ _ wθ (seqStates' s useq n) := by
+      have : @num_of_states_less _ _ _ _ _ _ _ _ wθ (seqStates' s useq m)
+        < @num_of_states_less _ _ _ _ _ _ _ _ wθ (seqStates' s useq n) := by
           apply num_of_states_decreases; assumption
-      have : @num_of_states_less _ _ _ _ _ _ wθ (seqStates' s useq m) ≤ c := by
+      have : @num_of_states_less _ _ _ _ _ _ _ _ wθ (seqStates' s useq m) ≤ c := by
         apply Nat.le_of_lt_succ;
         rw [← Nat.succ_eq_add_one] at hn
-        calc _ < @num_of_states_less _ _ _ _ _ _ wθ (seqStates' s useq n) := this
+        calc _ < @num_of_states_less _ _ _ _ _ _ _ _ wθ (seqStates' s useq n) := this
              _ ≤ c.succ := hn
       obtain ⟨m', ⟨hm', hstable⟩⟩ := hc m this
       use m'; constructor
@@ -690,7 +690,7 @@ lemma num_of_states_leq_c_implies_stable_sseq (s : (HopfieldNetwork R U).State)
 @[simp]
 theorem HopfieldNet_convergence_fair : ∀ (useq : ℕ → U), fair useq →
   ∃ N, (seqStates' s useq N).isStable wθ := fun useq hfair => by
-  let c := @num_of_states_less _ _ _ _ _ _ wθ (seqStates' s useq 0)
+  let c := @num_of_states_less _ _ _ _ _ _ _ _ wθ (seqStates' s useq 0)
   obtain ⟨N, ⟨_, hN⟩⟩ := num_of_states_leq_c_implies_stable_sseq s useq hfair c 0 (Nat.le_refl c)
   use N
 

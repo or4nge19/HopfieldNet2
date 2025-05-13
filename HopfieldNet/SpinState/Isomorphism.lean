@@ -1,11 +1,11 @@
 import HopfieldNet.SpinState.Basic
-import HopfieldNet.aux
+import HopfieldNet.HN.aux
 import HopfieldNet.NN
-import HopfieldNet.HN
-import HopfieldNet.test
+import HopfieldNet.HN.Core
+import HopfieldNet.HN.test
 
 namespace HopfieldIsomorphism
-
+set_option checkBinderAnnotations false
 open SpinState HopfieldState NeuralNetwork State
 
 variable {n : ℕ}
@@ -17,7 +17,7 @@ def spinStateToReal (s : SpinState) : ℝ := s.toReal
 noncomputable
 def realToSpinState (r : ℝ) : SpinState :=
   if r ≥ 0 then SpinState.up else SpinState.down
-
+#exit
 /-- Convert a HopfieldState to a Pattern -/
 noncomputable
 def stateToPattern {n : ℕ} [Nonempty (Fin n)] (x : HopfieldState n) : NeuralNetwork.State (HopfieldNetwork ℝ (Fin n)) :=

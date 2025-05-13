@@ -33,7 +33,7 @@ open MeasureTheory ProbabilityTheory ENNReal Finset Function ProbabilityTheory.K
 namespace MarkovChain
 
 -- Using the discrete sigma-algebra implicitly for the finite state space
-instance (R U : Type) [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] :
+instance (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :
     MeasurableSpace ((HopfieldNetwork R U).State) := ⊤
 
 -- Prove all sets are measurable in the discrete sigma-algebra
@@ -41,7 +41,7 @@ lemma measurableSet_discrete {α : Type*} [MeasurableSpace α] (h : ‹_› = �
   rw [h]
   trivial
 
-instance (R U : Type) [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] :
+instance (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :
     DiscreteMeasurableSpace ((HopfieldNetwork R U).State) where
   forall_measurableSet := fun s => measurableSet_discrete rfl s
 
@@ -78,7 +78,7 @@ def stationaryOfDetailedBalance {α : Type*} [MeasurableSpace α] {μ : Measure 
   isStationary := by
     intro s hs
     have bind_def : (μ.bind K) s = ∫⁻ x, (K x s) ∂μ := by
-      apply Measure.bind_apply hs (Kernel.measurable K)
+      apply Measure.bind_apply hs (Kernel.aemeasurable K)
     have h_balance := h Set.univ s MeasurableSet.univ hs
     rw [bind_def]
     have h_univ : ∫⁻ x, K x s ∂μ = ∫⁻ x in Set.univ, K x s ∂μ := by
@@ -99,7 +99,7 @@ def stationaryOfDetailedBalance {α : Type*} [MeasurableSpace α] {μ : Measure 
 
 section HopfieldMarkovChain
 
-variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
 
 instance : Nonempty ((HopfieldNetwork R U).State) := by
   let defaultState : (HopfieldNetwork R U).State := {
@@ -276,7 +276,7 @@ lemma boltzmannDistribution_sum_one [IsOrderedCancelAddMonoid ENNReal] (wθ : Pa
 Proves that the Boltzmann distribution for a Hopfield network forms a valid probability measure.
 -/
 theorem boltzmannDistribution_isProbability [IsOrderedCancelAddMonoid ENNReal] {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
   IsProbabilityMeasure (boltzmannDistribution wθ T hT) := by
   constructor

@@ -5,7 +5,7 @@ namespace Hopfield82
 
 open NeuralNetwork State Matrix Finset Real
 
-variable {R U : Type} [LinearOrderedField R] [Fintype U] [Nonempty U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U]
 
 /-! ### Fault Tolerance -/
 
@@ -86,10 +86,10 @@ def FaultTolerance {m : ℕ} [DecidableEq U]
   ∀ u_check ∈ (Finset.univ : Finset U) \ neurons_to_delete,
     ((ps k).Up wθ' u_check).act u_check = (ps k).act u_check
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- When m is at most a tenth of total neurons, each pattern is fixed point in the undamaged network --/
 @[simp]
-lemma pattern_stability_in_hebbian {m : ℕ} [LinearOrderedField R] [Fintype U] [DecidableEq U]
+lemma pattern_stability_in_hebbian {m : ℕ} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (horth : ∀ {i j : Fin m}, i ≠ j → dotProduct (ps i).act (ps j).act = 0)
     (hm : m ≤ Fintype.card U / 10) (k : Fin m) :
@@ -194,8 +194,8 @@ lemma sum_if_or_condition [DecidableEq U] (i u : U) (hu : u ≠ i) (f : U → R)
         exact Or.inl h_j
     simp only [h_equiv]
 
-omit [LinearOrderedField R] [Fintype U] [Nonempty U] in
-lemma sum_if_eq_to_sub [LinearOrderedField R] [Fintype U] [DecidableEq U] (i : U) (f : U → R) :
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U] in
+lemma sum_if_eq_to_sub [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U] (i : U) (f : U → R) :
   ∑ j : U, (if j = i then 0 else f j) = ∑ j : U, f j - f i := by
   apply eq_sub_of_add_eq
   rw [sum_split_by_eq i f]
@@ -203,8 +203,8 @@ lemma sum_if_eq_to_sub [LinearOrderedField R] [Fintype U] [DecidableEq U] (i : U
   rw [sum_ite]
   rw [sum_const_zero, zero_add]
 
-omit [LinearOrderedField R] [Nonempty U] in
-lemma deleted_connection_sum [DecidableEq U] [LinearOrderedField R]
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Nonempty U] in
+lemma deleted_connection_sum [DecidableEq U] [Field R] [LinearOrder R] [IsStrictOrderedRing R]
   (i u : U) (hu : u ≠ i) (w : Matrix U U R) (act : U → R) :
   (∑ j : U, if j = i ∨ u = i then 0 else w u j * act j) = ∑ j : U, w u j * act j - w u i * act i := by
   have h_condition_simp : ∀ j : U, (j = i ∨ u = i) ↔ j = i := by
@@ -219,10 +219,10 @@ lemma deleted_connection_sum [DecidableEq U] [LinearOrderedField R]
   simp_rw [h_condition_simp]
   apply sum_if_eq_to_sub i (fun j => w u j * act j)
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 @[simp]
 lemma delete_one_neuron_effect_general
-[LinearOrderedField R] [Fintype U] [DecidableEq U]
+[Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (wθ : Params (HopfieldNetwork R U))
     (i : U) (u : U) (hu : u ≠ i) (act : U → R) :
   (DeleteNeuron i wθ).w.mulVec act u =
@@ -242,10 +242,10 @@ lemma delete_one_neuron_effect_general
   rw [Finset.sum_congr rfl fun x _ => by rw [ite_mul, zero_mul]]
   apply sum_if_eq_to_sub i (fun x => wθ.w u x * act x)
 
-omit [LinearOrderedField R] [Fintype U]in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U]in
 @[simp]
 lemma delete_one_neuron_effect {m : ℕ}
-[LinearOrderedField R] [Fintype U] [DecidableEq U]
+[Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (i : U) (u : U) (hu : u ≠ i) (k : Fin m) :
   (DeleteNeuron i (Hebbian ps)).w.mulVec (ps k).act u =
@@ -327,44 +327,44 @@ lemma delete_neurons_order_independent [DecidableEq U] (wθ : Params (HopfieldNe
   unfold DeleteNeuron
   congr
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- When deleting a single neuron from a network, the resulting weighted sum for a neuron u
     that's not the deleted neuron equals the original weighted sum minus the contribution
     from the deleted neuron. -/
 lemma delete_single_neuron_step {m : ℕ}
-    [LinearOrderedField R] [Fintype U] [DecidableEq U]
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (neuron : U) (u : U) (hu : u ≠ neuron) (k : Fin m) :
   (DeleteNeuron neuron (Hebbian ps)).w.mulVec (ps k).act u =
   (Hebbian ps).w.mulVec (ps k).act u - (Hebbian ps).w u neuron * (ps k).act neuron := by
   rw [delete_one_neuron_effect_general (Hebbian ps) neuron u hu (ps k).act]
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- When deleting neurons from an empty list, the result is the original network -/
 lemma delete_empty_neurons_step {m : ℕ}
-    [LinearOrderedField R] [Fintype U] [DecidableEq U]
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (wθ : Params (HopfieldNetwork R U)) (u : U) (k : Fin m) :
   (List.foldl (fun acc neuron => DeleteNeuron neuron acc) wθ []).w.mulVec (ps k).act u =
   wθ.w.mulVec (ps k).act u := by
   simp only [List.foldl_nil]
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- When deleting a list of neurons with a new neuron added at the front, the effect
     on the weighted sum equals the effect of deleting the first neuron and then
     deleting the rest of the list. -/
 lemma delete_cons_neuron_step {m : ℕ}
-    [LinearOrderedField R] [Fintype U] [DecidableEq U]
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (head : U) (tail : List U) (u : U) (_ : u ≠ head) (_ : u ∉ tail) (k : Fin m) :
   (List.foldl (fun acc neuron => DeleteNeuron neuron acc) (Hebbian ps) (head :: tail)).w.mulVec (ps k).act u =
   (List.foldl (fun acc neuron => DeleteNeuron neuron acc) (DeleteNeuron head (Hebbian ps)) tail).w.mulVec (ps k).act u := by
   rw [List.foldl_cons]
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- For a singleton list, the effect matches the single neuron deletion case -/
 lemma delete_singleton_neuron_step {m : ℕ}
-    [LinearOrderedField R] [Fintype U] [DecidableEq U]
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (neuron : U) (u : U) (hu : u ≠ neuron) (k : Fin m) :
   (List.foldl (fun acc n => DeleteNeuron n acc) (Hebbian ps) [neuron]).w.mulVec (ps k).act u =
@@ -372,11 +372,11 @@ lemma delete_singleton_neuron_step {m : ℕ}
   rw [← delete_single_neuron_step ps neuron u hu k]
   exact rfl
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- The effect of deleting a neuron from an already deleted network on a neuron u that
     is not in the deleted set -/
 lemma delete_neuron_from_deleted_network {m : ℕ}
-    [LinearOrderedField R] [Fintype U] [DecidableEq U]
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (prev_deleted : List U) (neuron : U) (u : U) (hu : u ≠ neuron) (_ : u ∉ prev_deleted) (k : Fin m) :
   (DeleteNeuron neuron (List.foldl (fun acc n => DeleteNeuron n acc) (Hebbian ps) prev_deleted)).w.mulVec (ps k).act u =
@@ -420,10 +420,10 @@ lemma foldl_delete_preserves_weights [DecidableEq U]
     rw [ih_w (DeleteNeuron hd base) h_nodup_l hv_notin_tl hw_notin_tl]
     rw [delete_neuron_preserves_other_weights base hd v w hv_neq_hd hw_neq_hd]
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- Helper lemma: Deleting a list of neurons recursively subtracts their contributions.
     Requires that the list of neurons has no duplicates. -/
-lemma delete_neurons_recursive {m : ℕ} [LinearOrderedField R] [Fintype U] [DecidableEq U]
+lemma delete_neurons_recursive {m : ℕ} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (neurons : List U) (h_nodup : neurons.Nodup) (u : U) (hu : u ∉ neurons) (k : Fin m) :
   (List.foldl (fun acc neuron => DeleteNeuron neuron acc) (Hebbian ps) neurons).w.mulVec (ps k).act u =
@@ -467,9 +467,9 @@ lemma deleted_neuron_weight_contribution [DecidableEq U] (wθ : Params (Hopfield
   wθ.w u i * s i = ∑ j ∈ {i}, wθ.w u j * s j := by
   rw [sum_singleton]
 
-omit [LinearOrderedField R] [Fintype U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] in
 /-- DeleteNeurons removes weights connected to deleted neurons --/
-lemma deleted_neurons_field_effect {m : ℕ} [LinearOrderedField R] [Fintype U] [DecidableEq U]
+lemma deleted_neurons_field_effect {m : ℕ} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (deleted_neurons : Finset U) (u : U) (hu : u ∉ deleted_neurons) (k : Fin m) :
   (DeleteNeurons deleted_neurons.toList (Hebbian ps)).w.mulVec (ps k).act u =
@@ -517,7 +517,7 @@ Axiom stating the bound on the absolute value of the cross-talk term.
 This encapsulates the statistical argument from Hopfield's paper that for
 random-like patterns, the sum of interfering terms is bounded.
 -/
-lemma cross_talk_term_abs_bound_assumption {R U : Type} [LinearOrderedField R] [Fintype U] [Nonempty U] [DecidableEq U] {m : ℕ}
+lemma cross_talk_term_abs_bound_assumption {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U] [DecidableEq U] {m : ℕ}
     (ps : Fin m → (HopfieldNetwork R U).State) (deleted_neurons : Finset U)
     (k : Fin m) (u : U) (_hu : u ∉ deleted_neurons)
     (_horth : ∀ {i j : Fin m}, i ≠ j → dotProduct (ps i).act (ps j).act = 0) -- Orthogonality is a simplifying assumption often made.
@@ -672,9 +672,9 @@ lemma deleted_field_bound (hu : u ∉ deleted_neurons)
     _ = (Fintype.card U / 10 : R) * (ps k).act u := by
       rw [add_sub_cancel_left]
 
-omit [LinearOrderedField R] [Fintype U] [Nonempty U] [DecidableEq U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U] [DecidableEq U] in
 /-- With constrained m and limited deleted neurons, the field remains strong enough --/
-lemma field_remains_sufficient {m : ℕ} [LinearOrderedField R] [Fintype U] [Nonempty U]
+lemma field_remains_sufficient {m : ℕ} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U]
     (hm_cond : m ≤ Fintype.card U / 10) :
   (Fintype.card U : R) - (m : R) - (Fintype.card U / 10 : R) > 0 := by
   let N_R : R := (Fintype.card U : R)
@@ -778,7 +778,7 @@ lemma deleted_field_product_bound [Fintype U] [Nonempty U]
 
 /-- With bounded numbers of patterns and deleted neurons, the field remains strong enough
     to maintain the pattern stability, adjusted for N/5 bound. --/
-lemma field_remains_sufficient_for_N_div_5 (R : Type) [LinearOrderedField R] [Fintype U] [Nonempty U]
+lemma field_remains_sufficient_for_N_div_5 (R : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U]
     (hm_cond : m ≤ Fintype.card U / 10) :
   (Fintype.card U : R) - (m : R) - (Fintype.card U / 5 : R) > 0 := by
   let N_R : R := Fintype.card U
@@ -897,12 +897,12 @@ lemma DeleteNeurons_with_Finset [DecidableEq U] (deleted_neurons : Finset U) (w�
   DeleteNeurons deleted_neurons.toList wθ := by
   rfl
 
-omit [LinearOrderedField R] [Fintype U] [Nonempty U] [DecidableEq U] in
+omit [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U] [DecidableEq U] in
 /-- A Hopfield network can tolerate the failure of up to 10% of its neurons
     while maintaining all stored patterns as fixed points, provided:
     1) The stored patterns are orthogonal
     2) The number of patterns is at most 10% of the network size --/
-theorem fault_tolerance_bound {m : ℕ} [LinearOrderedField R] [Fintype U] [DecidableEq U] [Nonempty U]
+theorem fault_tolerance_bound {m : ℕ} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [DecidableEq U] [Nonempty U]
     (ps : Fin m → (HopfieldNetwork R U).State)
     (horth : ∀ i j : Fin m, i ≠ j → dotProduct (ps i).act (ps j).act = 0) :
   m ≤ Fintype.card U / 10 → ∀ k_pat : Fin m, FaultTolerance ps k_pat (Fintype.card U / 10) := by

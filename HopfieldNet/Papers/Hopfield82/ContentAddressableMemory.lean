@@ -6,7 +6,7 @@ namespace Hopfield82
 
 open NeuralNetwork State Matrix Finset Real
 
-variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Inhabited U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Inhabited U]
 
 /-! ### Content-Addressable Memory -/
 
@@ -47,7 +47,7 @@ where
 open NeuralNetwork State Matrix Finset Real
 open BigOperators Order MeasureTheory Set
 
--- variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] -- Already declared above
+-- variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] -- Already declared above
 
 -- Define a single instance and make sure it's properly placed before it's used
 instance : Inhabited (PhaseSpacePoint R U) :=
@@ -85,7 +85,7 @@ This formalizes the central concept from the paper (p.2554):
 memory item on the basis of sufficient partial information."
 -/
 structure ContentAddressableMemory (R U : Type)
-    [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] where
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] where
   /-- The Hopfield network parameters. -/
   params : Params (HopfieldNetwork R U)
   /-- The set of stored patterns. -/
@@ -120,7 +120,7 @@ def MetricDecayFunction (R : Type) := (metric_value : ℕ) → (network_size : �
 A specific exponential decay model, often used to model probabilities or familiarity scores.
 This corresponds to `exp(-value / (N/C))` where C is a constant (e.g., 10).
 -/
-noncomputable def ExponentialDecayMetric [LinearOrderedField R] [HDiv R R ℝ] [Coe ℝ R] : MetricDecayFunction R :=
+noncomputable def ExponentialDecayMetric [Field R] [LinearOrder R] [IsStrictOrderedRing R] [HDiv R R ℝ] [Coe ℝ R] : MetricDecayFunction R :=
   fun value network_size =>
     ((Real.exp (-((value : R) / ((network_size : R) / 10)))) : R)
 
@@ -135,7 +135,7 @@ This formalizes the empirical finding from the paper (p.2556):
 Beyond that distance, the probability fell off smoothly."
 The `ExponentialDecayMetric` can be used as `decay_func` to model this smooth fall-off.
 -/
-def AbstractCompletionProbability [LinearOrderedField R]
+def AbstractCompletionProbability [Field R] [LinearOrder R] [IsStrictOrderedRing R]
     (cam : ContentAddressableMemory R U) (p : PhaseSpacePoint R U) (d : ℕ)
     (decay_func : MetricDecayFunction R) : R :=
   if p ∈ cam.patterns then
@@ -221,7 +221,7 @@ stable state is much higher in energy than the stored memory states and very sel
 A high familiarity measure (close to 1) indicates `s` is similar to a stored pattern.
 The `ExponentialDecayMetric` can be used as `decay_func`.
 -/
-def AbstractFamiliarityMeasure [LinearOrderedField R]
+def AbstractFamiliarityMeasure [Field R] [LinearOrder R] [IsStrictOrderedRing R]
     (cam : ContentAddressableMemory R U) (s : PhaseSpacePoint R U)
     (decay_func : MetricDecayFunction R) : R :=
   let distances := cam.patterns.image (fun p_img => HammingDistance s p_img); -- Renamed p to p_img
@@ -237,7 +237,7 @@ def AbstractFamiliarityMeasure [LinearOrderedField R]
 `IsFamiliar` determines whether a pattern should be recognized as familiar
 based on a threshold familiarity measure, using a specific `decay_func` for the measure.
 -/
-def IsFamiliar [LinearOrderedField R]
+def IsFamiliar [Field R] [LinearOrder R] [IsStrictOrderedRing R]
     (cam : ContentAddressableMemory R U) (s : PhaseSpacePoint R U) (threshold_val : R) -- Renamed threshold to threshold_val
     (decay_func : MetricDecayFunction R) : Prop :=
   AbstractFamiliarityMeasure cam s decay_func ≥ threshold_val
@@ -254,7 +254,7 @@ by any initial state that does not resemble adequately closely
 one of the assigned memories and represents positive recognition
 that the starting state is not familiar."
 -/
-theorem familiarity_recognition [LinearOrderedField R]
+theorem familiarity_recognition [Field R] [LinearOrder R] [IsStrictOrderedRing R]
     (cam : ContentAddressableMemory R U)
     (p : PhaseSpacePoint R U) (s : PhaseSpacePoint R U) (threshold_val : R) -- Renamed threshold to threshold_val
     (decay_func : MetricDecayFunction R) -- Added decay_func parameter
@@ -282,7 +282,7 @@ noncomputable def CategoryRepresentative [DecidableEq (PhaseSpacePoint R U)]
 
 -- Helper function that turns equality of PhaseSpacePoints into a Bool
 private def eqbPhaseSpacePoint {R U : Type}
-    [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
     [DecidableEq (PhaseSpacePoint R U)] (x y : PhaseSpacePoint R U) : Bool :=
   if x = y then true else false
 
@@ -342,7 +342,7 @@ system would spend a while near Vs and then leave and go to a point
 near Vs+1."
 -/
 structure SequentialAttractor (R U : Type)
-    [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] where
+    [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] where
   /-- The parameters of the Hopfield network. These might include non-symmetric weights for sequence memory. -/
   params : Params (HopfieldNetwork R U)
   /-- The sequence of states forming the attractor. -/

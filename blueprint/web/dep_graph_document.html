@@ -63,13 +63,13 @@
 <div id="statements">
 
     
-    <div class="dep-modal-container" id="NeuralNetwork_modal">
+    <div class="dep-modal-container" id="NeuNet_modal">
       <div class="dep-modal-content">
           <button class="dep-closebtn">
 <svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
 </button>
         
-  <div class="thm" id="NeuralNetwork" style="display: none">
+  <div class="thm" id="NeuNet" style="display: none">
     <div class="thm_thmheading">
       <span class="definition_thmcaption">
       Definition
@@ -86,7 +86,7 @@
 <p> where \(\boldsymbol {\sigma }^{(u)} = (\sigma _1^{(u)} , \ldots , \sigma _{\kappa _1(u)}^{(u)} )\) and \(\boldsymbol {\theta } = (\theta _1^{(u)} , \ldots , \theta _{\kappa _2(u)}^{(u)} )\) are the input parameter vectors. </p>
 </div>
 
-    <a class="latex_link" href="sect0001.html#NeuralNetwork">LaTeX</a>
+    <a class="latex_link" href="sect0001.html#NeuNet">LaTeX</a>
     
     
   <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NeuralNetwork">Lean</a>
@@ -117,7 +117,7 @@ graphContainer.graphviz({useWorker: true})
     .width(width)
     .height(height)
     .fit(true)
-    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	NeuralNetwork	[color=green,		fillcolor="#B0ECA3",		label=NeuralNetwork,		shape=box,		style=filled];}`)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	NeuNet	[color=green,		fillcolor="#B0ECA3",		label=NeuNet,		shape=box,		style=filled];}`)
     .on("end", interactive);
 
 latexLabelEscaper = function(label) {

@@ -35,7 +35,7 @@ of Hopfield networks with asymmetric weights.
 
 open Finset Matrix NeuralNetwork State
 
-variable {R U : Type} [LinearOrderedField R] [StarRing R] [DecidableEq U] [Fintype U] [Nonempty U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [StarRing R] [DecidableEq U] [Fintype U] [Nonempty U]
 
 /-- A matrix `A : Matrix n n α` is "antisymmetric" if `Aᵀ = -A`. -/
 def Matrix.IsAntisymm [Neg α] (A : Matrix n n α) : Prop := Aᵀ = -A
@@ -58,7 +58,7 @@ The network has:
 - Asymmetric weights (w_ij can differ from w_ji)
 - Weights that can be decomposed into antisymmetric and positive definite components
 -/
-abbrev AsymmetricHopfieldNetwork (R U : Type) [LinearOrderedField R] [DecidableEq U]
+abbrev AsymmetricHopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
    [Nonempty U] [Fintype U] [StarRing R] : NeuralNetwork R U where
   /- The adjacency relation between neurons `u` and `v`, defined as `u ≠ v`. -/
   Adj u v := u ≠ v

@@ -5,6 +5,8 @@ import Mathlib.Tactic.Rify
 
 import HopfieldNet.Tools.ComputableReal.aux_lemmas
 
+#exit
+
 namespace QInterval
 
 scoped notation "ℚInterval" => NonemptyInterval ℚ

@@ -7,7 +7,7 @@ namespace Hopfield82
 
 open NeuralNetwork State Matrix Finset Real
 
-variable {R U : Type} [LinearOrderedField R] [Fintype U] [Nonempty U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U] [Nonempty U]
 
 /-! ### Memory Capacity -/
 

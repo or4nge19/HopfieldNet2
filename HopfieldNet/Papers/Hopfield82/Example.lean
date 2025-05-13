@@ -48,7 +48,7 @@ def smallNetwork : Params (HopfieldNetwork ℚ (Fin 4)) :=
 /--
 `hammingDistance` calculates the number of bits that differ between two states.
 -/
-def hammingDistance {R U : Type} [LinearOrderedField R] [Nonempty U] [DecidableEq R] [DecidableEq U] [Fintype U]
+def hammingDistance {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Nonempty U] [DecidableEq R] [DecidableEq U] [Fintype U]
     (s₁ s₂ : (HopfieldNetwork R U).State) : ℕ :=
   card {i | s₁.act i ≠ s₂.act i}
 
@@ -58,7 +58,7 @@ number of bits randomly.
 
 For simplicity in this example, we deterministically flip the first `numBits` bits.
 -/
-def updateWithNoise {R : Type} {n : ℕ} [LinearOrderedField R] [DecidableEq (Fin n)] [Nonempty (Fin n)]
+def updateWithNoise {R : Type} {n : ℕ} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq (Fin n)] [Nonempty (Fin n)]
     (s : (HopfieldNetwork R (Fin n)).State) (numBits : ℕ) : (HopfieldNetwork R (Fin n)).State :=
   if numBits = 0 then s else
     { act := λ i => if i.val < numBits then -s.act i else s.act i,

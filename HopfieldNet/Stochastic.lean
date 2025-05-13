@@ -51,7 +51,7 @@ lemma State.ext {R U : Type} [Zero R] {NN : NeuralNetwork R U}
   apply funext
   exact h
 
-instance decidableEqState {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] :
+instance decidableEqState {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :
   DecidableEq ((HopfieldNetwork R U).State) := by
   intro s₁ s₂
   apply decidable_of_iff (∀ u, s₁.act u = s₂.act u)
@@ -60,20 +60,20 @@ instance decidableEqState {R U : Type} [LinearOrderedField R] [DecidableEq U] [F
 /-- Decompose energy into weight component and bias component --/
 @[simp]
 lemma energy_decomposition {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State) :
   s.E wθ = s.Ew wθ + s.Eθ wθ := by
   rw [← @add_neg_eq_iff_eq_add]; exact add_neg_eq_of_eq_add rfl
 
 /-- Weight matrix is symmetric in a Hopfield network --/
 lemma weight_symmetry {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (wθ : Params (HopfieldNetwork R U)) (v1 v2 : U) :
   wθ.w v1 v2 = wθ.w v2 v1 := (congrFun (congrFun (id (wθ.hw').symm) v1) v2)
 
 /-- Energy sum can be split into terms with u and terms without u --/
 lemma energy_sum_split {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State) (u : U):
   ∑ v : U, ∑ v2 ∈ {v2 | v2 ≠ v}, wθ.w v v2 * s.act v * s.act v2 =
     (∑ v2 ∈ {v2 | v2 ≠ u}, wθ.w u v2 * s.act u * s.act v2) +
@@ -98,7 +98,7 @@ def NN.State.metropolisDecision
     The update probability depends on the energy change associated with flipping the neuron's state,
     parameterized by the temperature `T`. -/
 noncomputable def NN.State.gibbsUpdateNeuron
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State) (u : U)
   : PMF ((HopfieldNetwork R U).State) :=
   let h_u := s.net wθ u
@@ -125,7 +125,7 @@ noncomputable def NN.State.gibbsUpdateNeuron
     PMF.pure $ if should_flip then s.Up wθ u else s
 
 /-- Function to set a specific neuron state --/
-def NN.State.updateNeuron {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+def NN.State.updateNeuron {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) : (HopfieldNetwork R U).State :=
 { act := fun u' => if u' = u then val else s.act u',
   hp := by
@@ -138,7 +138,7 @@ def NN.State.updateNeuron {R U : Type} [LinearOrderedField R] [DecidableEq U] [F
 
 /-- Update a single neuron according to Gibbs sampling rule --/
 noncomputable def NN.State.gibbsUpdateSingleNeuron
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Calculate local field for the neuron
@@ -182,7 +182,7 @@ of Gibbs sampling by:
 2. Updating that neuron's state according to the Gibbs distribution
 -/
 noncomputable def NN.State.gibbsSamplingStep
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Uniform random selection of neuron
@@ -238,7 +238,7 @@ lemma Array.mkArray_creates_valid_hopfield_params {n : ℕ} [Nonempty (Fin n)] :
 In a Hopfield network, two neurons are adjacent if and only if they are different.
 This formalizes the fully connected nature of Hopfield networks.
 --/
-lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [LinearOrderedField R] [DecidableEq U]
+lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
     [Nonempty U] [Fintype U] (u v : U) :
     ¬(HopfieldNetwork R U).Adj u v → u = v := by
   intro h
@@ -277,7 +277,7 @@ noncomputable def patternStochasticUpdate
     2. Then performing a single Gibbs sampling step on the resulting state
     The temperature parameter T controls the randomness of the updates. --/
 noncomputable def NN.State.gibbsSamplingSteps
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (steps : ℕ)
   (s : (HopfieldNetwork R U).State) : PMF ((HopfieldNetwork R U).State) :=
   match steps with
@@ -292,7 +292,7 @@ noncomputable def temperatureSchedule (initial_temp : ℝ) (cooling_rate : ℝ) 
 /-- Recursively applies Gibbs sampling steps with decreasing temperature according to
     the cooling schedule, terminating when the step count reaches the target number of steps. -/
 noncomputable def applyAnnealingSteps
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (temp_schedule : ℕ → ℝ) (steps : ℕ)
   (step : ℕ) (state : (HopfieldNetwork R U).State) : PMF ((HopfieldNetwork R U).State) :=
   if h : step ≥ steps then
@@ -316,7 +316,7 @@ the temperature according to an exponential cooling schedule, allowing the syste
 state space and eventually settle into a low-energy configuration.
 -/
 noncomputable def NN.State.simulatedAnnealing
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U))
   (initial_temp : ℝ) (cooling_rate : ℝ) (steps : ℕ)
   (initial_state : (HopfieldNetwork R U).State) : PMF ((HopfieldNetwork R U).State) :=
@@ -330,7 +330,7 @@ for transitioning from a `current` state to a `proposed` state according to the 
 * If the energy difference is positive, returns exp(-ΔE/T) following the Boltzmann distribution
 -/
 noncomputable def NN.State.acceptanceProbability
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ)
   (current : (HopfieldNetwork R U).State) (proposed : (HopfieldNetwork R U).State) : ℝ :=
   let energy_diff := proposed.E wθ - current.E wθ
@@ -343,13 +343,13 @@ noncomputable def NN.State.acceptanceProbability
 of the Boltzmann factor `exp(-E/T)`.
 -/
 noncomputable def NN.State.partitionFunction
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ℝ :=
   ∑ s : (HopfieldNetwork R U).State, Real.exp (-s.E wθ / T)
 
 /-- Metropolis-Hastings single step for Hopfield networks --/
 noncomputable def NN.State.metropolisHastingsStep
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Uniform random selection of neuron
@@ -381,7 +381,7 @@ noncomputable def NN.State.metropolisHastingsStep
 
 /-- Multiple steps of Metropolis-Hastings algorithm for Hopfield networks --/
 noncomputable def NN.State.metropolisHastingsSteps
-  {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (steps : ℕ) (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
   match steps with
@@ -391,32 +391,32 @@ noncomputable def NN.State.metropolisHastingsSteps
 
 /-- The Boltzmann (Gibbs) distribution over neural network states --/
 noncomputable def boltzmannDistribution {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ((HopfieldNetwork R U).State → ℝ) :=
   λ s => Real.exp (-s.E wθ / T) / NN.State.partitionFunction wθ T
 
 /-- The transition probability matrix for Gibbs sampling --/
 noncomputable def gibbsTransitionProb {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) : ℝ :=
   ENNReal.toReal ((NN.State.gibbsSamplingStep wθ T s) s')
 
 /-- The transition probability matrix for Metropolis-Hastings --/
 noncomputable def metropolisTransitionProb {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) : ℝ :=
   ENNReal.toReal ((NN.State.metropolisHastingsStep wθ T s) s')
 
 /-- Total variation distance between probability distributions --/
 noncomputable def total_variation_distance {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (μ ν : (HopfieldNetwork R U).State → ℝ) : ℝ :=
   (1/2) * ∑ s : (HopfieldNetwork R U).State, |μ s - ν s|
 
 /-- When states differ at exactly one site, we can identify that site --/
 @[simp]
 lemma single_site_difference {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s s' : (HopfieldNetwork R U).State)
   (h : s ≠ s' ∧ ∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∃! u : U, s.act u ≠ s'.act u := by
@@ -444,7 +444,7 @@ lemma single_site_difference {R U : Type}
 
 /-- States that are equal at all sites are equal --/
 lemma state_equality_from_sites {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s s' : (HopfieldNetwork R U).State)
   (h : ∀ u : U, s.act u = s'.act u) : s = s' := by
   apply State.ext
@@ -453,7 +453,7 @@ lemma state_equality_from_sites {R U : Type}
 /-- The updateNeuron function only changes the specified neuron, leaving others unchanged --/
 @[simp]
 lemma updateNeuron_preserves {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (v w : U) (val : R) (hval : (HopfieldNetwork R U).pact val) :
   w ≠ v → (NN.State.updateNeuron s v val hval).act w = s.act w := by
   intro h_neq
@@ -462,7 +462,7 @@ lemma updateNeuron_preserves {R U : Type}
 
 /-- For Gibbs updates, given the normalization and probabilities, the sum of normalized probabilities equals 1 --/
 lemma gibbs_probs_sum_one {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (v : U) :
   let local_field := s.net wθ v
   let probs : Bool → ENNReal := fun b =>
@@ -492,7 +492,7 @@ lemma gibbs_probs_sum_one {R U : Type}
 
 /-- The function that maps boolean values to states in Gibbs sampling --/
 def gibbs_bool_to_state_map {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (v : U) : Bool → (HopfieldNetwork R U).State :=
   λ b => if b then
     NN.State.updateNeuron s v 1 (by exact mul_self_eq_mul_self_iff.mp rfl)
@@ -543,7 +543,7 @@ lemma pmf_map_pos_implies_preimage {α β : Type} [Fintype α] [DecidableEq β]
 /-- For states with positive Gibbs update probability, there exists a boolean variable that
     determines whether the state has activation 1 or -1 at the updated neuron --/
 lemma gibbsUpdate_exists_bool {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State) (v : U)
   (s_next : (HopfieldNetwork R U).State) :
   (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 →
@@ -576,7 +576,7 @@ lemma gibbsUpdate_exists_bool {R U : Type}
     they must be one of exactly two possible states (with neuron v set to 1 or -1) --/
 @[simp]
 lemma gibbsUpdate_possible_states {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State) (v : U)
   (s_next : (HopfieldNetwork R U).State) :
   (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 →
@@ -600,7 +600,7 @@ lemma gibbsUpdate_possible_states {R U : Type}
 /-- Gibbs update preserves states at non-updated sites --/
 @[simp]
 lemma gibbsUpdate_preserves_other_neurons {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   (v w : U) (h_neq : w ≠ v) :
   ∀ s_next, (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 →
@@ -619,7 +619,7 @@ lemma gibbsUpdate_preserves_other_neurons {R U : Type}
 /-- For states differing at only one site, that site must be u --/
 @[simp]
 lemma single_site_difference_unique {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) (h_diff : s ≠ s') :
   ∃! v : U, s.act v ≠ s'.act v := by
@@ -644,7 +644,7 @@ lemma single_site_difference_unique {R U : Type}
 /-- Given a single-site difference, the destination state is
      an update of the source state --/
 lemma single_site_is_update {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s s' : (HopfieldNetwork R U).State) (u : U)
   (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) := by
@@ -693,7 +693,7 @@ lemma pmf_binary_norm_sum_one
     standard values (1 or -1), the result equals the standard update --/
 @[simp]
 lemma update_neuron_equiv {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (val : R)
   (hval : (HopfieldNetwork R U).pact val) :
   val = 1 → NN.State.updateNeuron s u val hval =
@@ -709,7 +709,7 @@ lemma update_neuron_equiv {R U : Type}
 /-- Updates with different activation values produce different states --/
 @[simp]
 lemma different_activation_different_state {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) :
   NN.State.updateNeuron s u 1 (by exact Or.inl rfl) ≠
   NN.State.updateNeuron s u (-1) (by exact Or.inr rfl) := by
@@ -728,7 +728,7 @@ lemma different_activation_different_state {R U : Type}
 /-- Two neuron updates at the same site are equal if and only if
     their new values are equal --/
 lemma update_neuron_eq_iff {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (val₁ val₂ : R)
   (hval₁ : (HopfieldNetwork R U).pact val₁) (hval₂ : (HopfieldNetwork R U).pact val₂) :
   NN.State.updateNeuron s u val₁ hval₁ = NN.State.updateNeuron s u val₂ hval₂ ↔ val₁ = val₂ := by
@@ -750,7 +750,7 @@ lemma update_neuron_eq_iff {R U : Type}
 /-- Determines when a boolean-indexed update equals a specific update --/
 @[simp]
 lemma bool_update_eq_iff {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (b : Bool) (val : R)
   (hval : (HopfieldNetwork R U).pact val) :
   (if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
@@ -778,7 +778,7 @@ lemma bool_update_eq_iff {R U : Type}
 /-- When filtering a PMF with binary support to states matching a given state's update,
     the result reduces to a singleton if the update site matches --/
 lemma pmf_filter_update_neuron {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (val : R)
   (hval : (HopfieldNetwork R U).pact val) :
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
@@ -870,7 +870,7 @@ lemma gibbs_prob_false
 /-- For a PMF over binary values mapped to states, the probability of a specific state
     equals the probability of its corresponding binary value --/
 lemma pmf_map_binary_state {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (b : Bool) (p : Bool → ENNReal) (h_sum : ∑ b, p b = 1) :
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
     if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
@@ -943,7 +943,7 @@ lemma pmf_map_binary_state {R U : Type}
 
 /-- A specialized version of the previous lemma for the case where the state is an update with new_val = 1 --/
 lemma pmf_map_update_one {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (p : Bool → ENNReal) (h_sum : ∑ b, p b = 1) :
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
     if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
@@ -954,7 +954,7 @@ lemma pmf_map_update_one {R U : Type}
 
 /-- A specialized version for the case where the state is an update with new_val = -1 --/
 lemma pmf_map_update_neg_one {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (p : Bool → ENNReal) (h_sum : ∑ b, p b = 1) :
   let f : Bool → (HopfieldNetwork R U).State := λ b =>
     if b then NN.State.updateNeuron s u 1 (by exact Or.inl rfl)
@@ -982,7 +982,7 @@ lemma exp_ratio_to_sigmoid (x : ℝ) :
 
 /-- Local field is the weighted sum of incoming activations --/
 lemma local_field_eq_weighted_sum {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State) (u : U) :
   s.net wθ u = ∑ v ∈ univ.erase u, wθ.w u v * s.act v := by
   unfold NeuralNetwork.State.net
@@ -994,7 +994,8 @@ lemma local_field_eq_weighted_sum {R U : Type}
     · ext v
       simp only [mem_filter, mem_erase, mem_univ, true_and, and_true]
     · intro v _
-      rw [@OrderedCommSemiring.mul_comm]
+      simp_all only [mem_erase, ne_eq, mem_univ, and_true]
+      --rw [@OrderedCommSemiring.mul_comm]
   exact sum_filter_eq
 
 /-- Converts the ratio of Boltzmann factors to ENNReal sigmoid form. --/
@@ -1099,7 +1100,7 @@ lemma gibbs_prob_negative
 
 @[simp]
 lemma gibbs_bool_to_state_map_positive {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) :
   val = 1 → NN.State.updateNeuron s u val hval =
     NN.State.updateNeuron s u 1 (by exact Or.inl rfl) := by
@@ -1115,7 +1116,7 @@ lemma gibbs_bool_to_state_map_positive {R U : Type}
 
 @[simp]
 lemma gibbs_bool_to_state_map_negative {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s : (HopfieldNetwork R U).State) (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) :
   val = -1 → NN.State.updateNeuron s u val hval =
     NN.State.updateNeuron s u (-1) (by exact Or.inr rfl) := by
@@ -1130,7 +1131,7 @@ lemma gibbs_bool_to_state_map_negative {R U : Type}
 
 -- Lemma for the probability calculation in the positive case
 lemma gibbs_prob_positive_case {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
@@ -1169,7 +1170,7 @@ lemma gibbs_prob_positive_case {R U : Type}
 
 -- Lemma for the probability calculation in the negative case
 lemma gibbs_prob_negative_case {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
@@ -1206,7 +1207,7 @@ lemma gibbs_prob_negative_case {R U : Type}
 
 /-- PMF map from boolean values to updated states preserves probability structure --/
 lemma gibbsUpdate_pmf_structure {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
   let local_field := s.net wθ u
   let probs : Bool → ENNReal := fun b =>
@@ -1257,7 +1258,7 @@ lemma gibbsUpdate_pmf_structure {R U : Type}
 
 /-- The probability of updating a neuron to 1 using Gibbs sampling --/
 lemma gibbsUpdate_prob_positive {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
@@ -1293,7 +1294,7 @@ lemma gibbsUpdate_prob_positive {R U : Type}
 
 /-- The probability of updating a neuron to -1 using Gibbs sampling --/
 lemma gibbsUpdate_prob_negative {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U) :
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
@@ -1331,7 +1332,7 @@ lemma gibbsUpdate_prob_negative {R U : Type}
 
 /-- In a Hopfield network, activation values can only be 1 or -1. --/
 lemma hopfield_value_dichotomy {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (val : R) (hval : (HopfieldNetwork R U).pact val) :
   val ≠ 1 → val = -1 := by
   intro h_not_one
@@ -1350,7 +1351,7 @@ where Z is the normalization constant (partition function).
 --/
 @[simp]
 lemma gibbs_update_single_neuron_prob {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   (u : U) (new_val : R) (hval : (HopfieldNetwork R U).pact new_val) :
   let local_field := s.net wθ u
@@ -1375,7 +1376,7 @@ lemma gibbs_update_single_neuron_prob {R U : Type}
 /-- When states differ at exactly one site, the later state can be expressed as
     an update of the first state at that site --/
 lemma single_site_transition_as_update {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
   (s s' : (HopfieldNetwork R U).State) (u : U)
   (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) := by
@@ -1409,7 +1410,7 @@ lemma uniform_neuron_selection_prob {U : Type} [Fintype U] [Nonempty U] (u : U) 
 /-- When states differ at site u, the probability of transitioning to s' by updating
     any other site v is zero --/
 lemma gibbs_update_zero_other_sites {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u v : U) (h : ∀ w : U, w ≠ u → s.act w = s'.act w) (h_diff : s.act u ≠ s'.act u) :
   v ≠ u → (NN.State.gibbsUpdateSingleNeuron s wθ T v) s' = 0 := by
@@ -1448,7 +1449,7 @@ lemma gibbs_update_zero_other_sites {R U : Type}
 /-- When calculating the transition probability sum, only the term for the
     differing site contributes --/
 lemma gibbs_transition_sum_simplification {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) (h_diff : s.act u ≠ s'.act u) :
   let neuron_pmf : PMF U := PMF.ofFintype
@@ -1479,7 +1480,7 @@ lemma gibbs_transition_sum_simplification {R U : Type}
     an update of the first state at that site --/
 @[simp]
 lemma single_site_difference_as_update {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s s' : (HopfieldNetwork R U).State) (u : U)
   (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
@@ -1498,7 +1499,7 @@ lemma single_site_difference_as_update {R U : Type}
 
 @[simp]
 lemma gibbs_update_preserves_other_sites {R U : Type}
-  [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   (v u : U) (hvu : v ≠ u) :
   ∀ s_next, (NN.State.gibbsUpdateSingleNeuron s wθ T v) s_next > 0 → s_next.act u = s.act u := by

@@ -1,7 +1,7 @@
 import HopfieldNet.Tools.ComputableReal.ComputableReal
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Tactic.Peel
-
+#exit
 /- Type class stating that `x:ℝ` has a ComputableℝSeq, i.e. that x is a computable number. Like
 `Decidable`, it carries data with it - even though (classically) we could prove that ever proposition
 is decidable, and every real is computable. -/
@@ -9,7 +9,6 @@ class IsComputable (x : ℝ) : Type where
     seq : ComputableℝSeq
     prop : seq.val = x
 
-#exit
 namespace IsComputable
 
 /-- Turns one `IsComputable` into another one, given a proof that they're equal. This is directly

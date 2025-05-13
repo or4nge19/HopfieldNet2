@@ -7,7 +7,7 @@ Author: Matteo Cipollina
 import Mathlib.Probability.ProbabilityMassFunction.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import HopfieldNet.SpinState.Basic
-
+set_option checkBinderAnnotations false
 namespace HopfieldState
 
 variable {n : ℕ} [Fact (n > 0)]
