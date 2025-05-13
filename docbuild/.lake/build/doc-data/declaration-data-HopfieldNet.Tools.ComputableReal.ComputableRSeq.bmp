@@ -1,0 +1,1 @@
+{"name":"HopfieldNet.Tools.ComputableReal.ComputableRSeq","instances":[],"imports":["Init","Mathlib.Algebra.Order.Interval.Basic","Mathlib.Data.Real.Archimedean","Mathlib.Data.Sign","Mathlib.Tactic.Rify","HopfieldNet.Tools.ComputableReal.aux_lemmas"],"declarations":[]}

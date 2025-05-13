@@ -1,0 +1,1 @@
+{"name":"HopfieldNet.Tools.ComputableReal.SpecialFunctions.Exp","instances":[],"imports":["Init","HopfieldNet.Tools.ComputableReal.IsComputable","Mathlib.Data.Complex.Exponential","Mathlib.Analysis.SpecialFunctions.Exp","Mathlib.Analysis.SpecialFunctions.Pow.Real"],"declarations":[]}

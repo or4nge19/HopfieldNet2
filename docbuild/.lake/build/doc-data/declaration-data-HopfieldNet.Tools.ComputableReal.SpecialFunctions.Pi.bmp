@@ -1,0 +1,1 @@
+{"name":"HopfieldNet.Tools.ComputableReal.SpecialFunctions.Pi","instances":[],"imports":["Init","Mathlib.Data.Real.Pi.Bounds","Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic","HopfieldNet.Tools.ComputableReal.SpecialFunctions.Sqrt"],"declarations":[]}

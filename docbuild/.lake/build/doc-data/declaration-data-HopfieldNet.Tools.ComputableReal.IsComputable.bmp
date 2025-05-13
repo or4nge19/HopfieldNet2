@@ -1,0 +1,1 @@
+{"name":"HopfieldNet.Tools.ComputableReal.IsComputable","instances":[],"imports":["Init","HopfieldNet.Tools.ComputableReal.ComputableReal","Mathlib.Analysis.RCLike.Basic","Mathlib.Tactic.Peel"],"declarations":[]}

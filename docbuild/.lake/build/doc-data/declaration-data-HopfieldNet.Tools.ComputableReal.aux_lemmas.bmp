@@ -1,0 +1,1 @@
+{"name":"HopfieldNet.Tools.ComputableReal.aux_lemmas","instances":[],"imports":["Init","Mathlib.Data.Real.Archimedean"],"declarations":[]}

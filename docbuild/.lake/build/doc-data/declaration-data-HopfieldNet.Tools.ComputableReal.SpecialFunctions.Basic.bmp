@@ -1,0 +1,1 @@
+{"name":"HopfieldNet.Tools.ComputableReal.SpecialFunctions.Basic","instances":[],"imports":["Init","Mathlib.Data.Real.Sign","Mathlib.Data.Real.ConjExponents","HopfieldNet.Tools.ComputableReal.IsComputable"],"declarations":[]}

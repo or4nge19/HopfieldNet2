@@ -1,0 +1,1 @@
+{"name":"HopfieldNet.Tools.ComputableReal.SpecialFunctions.Sqrt","instances":[],"imports":["Init","HopfieldNet.Tools.ComputableReal.IsComputable","Mathlib.Data.Real.Sqrt","Mathlib.Analysis.SpecialFunctions.Log.Base","Mathlib.Data.Real.GoldenRatio"],"declarations":[]}
