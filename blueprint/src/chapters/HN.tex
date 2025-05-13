@@ -1,0 +1,31 @@
+
+\begin{definition}
+\label{NeuralNetwork}
+An (artificial) neural network is a directed graph \( G = (U, C) \), where neurons \( u \in U \) 
+are connected by directed edges \( c \in C \) (connections). 
+The neuron set is partitioned as \( U = U_{\mathrm{in}} \cup U_{\mathrm{out}} \cup U_{\mathrm{hidden}} \), 
+with \( U_{\mathrm{in}}, U_{\mathrm{out}} \neq \emptyset \) and \( U_{\mathrm{hidden}} \cap (U_{\mathrm{in}} 
+\cup U_{\mathrm{out}}) = \emptyset \). Each connection \( (v, u) \in C \) has a weight \( w_{uv} \), and each neuron \( u \) 
+has real-valued quantities: network input \( \mathrm{net}_u \), activation \( \mathrm{act}_u \), and output \( \mathrm{out}_u \).
+ Input neurons \( u \in U_{\mathrm{in}} \) also have a fourth quantity, the external input \( \mathrm{ext}_u \). 
+ The predecessors and successors of a vertex \( u \) in a directed graph \( G = (U, C) \) are defined as
+$\mathrm{pred}(u) = \{ v \in V \mid (v, u) \in C \}$ and 
+$\mathrm{succ}(u) = \{ v \in V \mid (u, v) \in C \}$ respectively. Each neuron \( u \) 
+is associated with the following functions:  
+
+$$f_{\mathrm{net}}^{(u)} : \mathbb{R}^{2|\mathrm{pred}(u)|+ \kappa_1 (u)} \to \mathbb{R}, \quad
+ f_{\mathrm{act}}^{(u)} : \mathbb{R}^{1+\kappa_2 (u)} \to \mathbb{R}, \quad f_{\mathrm{out}}^{(u)} : \mathbb{R} \to \mathbb{R}. $$
+ These functions compute \( \mathrm{net}_u \), \( \mathrm{act}_u \), and \( \mathrm{out}_u \), 
+ where \( \kappa_1(u) \) and \( \kappa_2(u) \) count the number of parameters of those functions, 
+ which can depend on the neurons. Specifically, the new activation $\mathrm{act}_u'$ of a neuron $u$ is computed as follows:
+\begin{equation*}
+\mathrm{act}_u'=  
+f_{\mathrm{act}}^{(u)} \big(f_{\mathrm{net}}^{(u)} \big(
+w_{uv_1}, \ldots, w_{uv_{\mathrm{pred}(u)}}, f_{\mathrm{out}}^{(v_1)}(\mathrm{act}_{v_1}),\ldots,
+f_{\mathrm{out}}^{(v_{\mathrm{pred}(u)})}(\mathrm{act}_{v_{\mathrm{pred}(u)}}),
+\boldsymbol{\sigma}^{(u)}\big), \boldsymbol{\theta}^{(u)}\big)
+\end{equation*}
+where $\boldsymbol{\sigma}^{(u)} = (\sigma_1^{(u)} , \ldots , 
+\sigma_{\kappa_1(u)}^{(u)} )$ and $\boldsymbol{\theta} = (\theta_1^{(u)} , \ldots , \theta_{\kappa_2(u)}^{(u)} )$ are the input parameter vectors.
+\leanok
+\end{definition}
