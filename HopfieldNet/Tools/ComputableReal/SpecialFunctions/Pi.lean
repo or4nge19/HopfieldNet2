@@ -7,7 +7,7 @@ open scoped QInterval
 namespace ComputableℝSeq
 
 section Pi
-
+#exit
 instance instComputableSqrtTwoAddSeries (x : ℝ) [hx : IsComputable x] (n : ℕ) :
     IsComputable (Real.sqrtTwoAddSeries x n) :=
   n.rec hx (fun _ _ ↦ IsComputable.instComputableSqrt _)

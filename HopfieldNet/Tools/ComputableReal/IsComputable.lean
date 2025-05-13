@@ -9,6 +9,7 @@ class IsComputable (x : ℝ) : Type where
     seq : ComputableℝSeq
     prop : seq.val = x
 
+#exit
 namespace IsComputable
 
 /-- Turns one `IsComputable` into another one, given a proof that they're equal. This is directly

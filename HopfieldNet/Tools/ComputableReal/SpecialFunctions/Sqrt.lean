@@ -8,7 +8,7 @@ namespace ComputableℝSeq
 open scoped QInterval
 
 namespace Sqrt
-
+#exit
 theorem boundedSqrt_le_rsqrt (y : ℚ) (n : ℕ) (b : ℕ) (hb : 0 < b):
     mkRat (Int.sqrt (y.num * b^n)) ((y.den * b^n).sqrt + 1) ≤ Real.sqrt y := by
   simp only [Rat.mkRat_eq_div, Nat.cast_add, Nat.cast_one, Int.cast_add, Int.cast_one]

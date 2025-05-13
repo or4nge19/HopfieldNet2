@@ -4,6 +4,7 @@ import HopfieldNet.Tools.ComputableReal.IsComputable
 
 namespace IsComputable
 
+#exit
 instance instComputableOfScientific (m : ℕ) (b : Bool) (e : ℕ) :
     IsComputable (@OfScientific.ofScientific ℝ NNRatCast.toOfScientific m b e) :=
   ⟨(OfScientific.ofScientific m b e : ℚ),

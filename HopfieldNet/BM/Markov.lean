@@ -13,7 +13,7 @@ open Finset Matrix NeuralNetwork State ENNReal Real
 open PMF MeasureTheory ProbabilityTheory.Kernel Set
 
 variable {R U : Type} [LinearOrderedField R] [DecidableEq U] [Fintype U] [Nonempty U]
-variable [Coe R ℝ] 
+variable [Coe R ℝ]
 
 noncomputable instance : Fintype ((BoltzmannMachine R U).State) := by
   -- States are functions from U to {-1, 1} with a predicate
@@ -71,9 +71,9 @@ noncomputable def gibbsTransitionKernelBM (p : ParamsBM R U) :
     ProbabilityTheory.Kernel (StateBM R U) (StateBM R U) where
   toFun := fun state => (BoltzmannMachine.gibbsSamplingStep p state).toMeasure
   -- For discrete state spaces, any function to measures is measurable
-  measurable' := Measurable.of_discrete 
+  measurable' := Measurable.of_discrete
 
-/-- The Gibbs transition kernel for a Boltzmann Machine is a Markov Kernel 
+/-- The Gibbs transition kernel for a Boltzmann Machine is a Markov Kernel
 (preserves probability)-/
 instance isMarkovKernel_gibbsTransitionKernelBM (p : ParamsBM R U) :
    ProbabilityTheory.IsMarkovKernel (gibbsTransitionKernelBM p) where

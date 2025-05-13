@@ -55,10 +55,50 @@
       
       <dt>Dark green background</dt><dd>the <em>proof</em> of this result and all its ancestors are formalized</dd>
       
+      <dt>Dark green border</dt><dd>this is in Mathlib</dd>
+      
     </dl>
   </div>
     <div id="graph"></div>
-<div id="statements"></div>
+<div id="statements">
+
+    
+    <div class="dep-modal-container" id="NeuralNetwork_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="NeuralNetwork" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">1</span></div>
+    <div class="thm_thmcontent"><p>  An (artificial) neural network is a directed graph \( G = (U, C) \), where neurons \( u \in U \) are connected by directed edges \( c \in C \) (connections). The neuron set is partitioned as \( U = U_{\mathrm{in}} \cup U_{\mathrm{out}} \cup U_{\mathrm{hidden}} \), with \( U_{\mathrm{in}}, U_{\mathrm{out}} \neq \emptyset \) and \( U_{\mathrm{hidden}} \cap (U_{\mathrm{in}} \cup U_{\mathrm{out}}) = \emptyset \). Each connection \( (v, u) \in C \) has a weight \( w_{uv} \), and each neuron \( u \) has real-valued quantities: network input \( \mathrm{net}_u \), activation \( \mathrm{act}_u \), and output \( \mathrm{out}_u \). Input neurons \( u \in U_{\mathrm{in}} \) also have a fourth quantity, the external input \( \mathrm{ext}_u \). The predecessors and successors of a vertex \( u \) in a directed graph \( G = (U, C) \) are defined as \(\mathrm{pred}(u) = \{  v \in V \mid (v, u) \in C \} \) and \(\mathrm{succ}(u) = \{  v \in V \mid (u, v) \in C \} \) respectively. Each neuron \( u \) is associated with the following functions: </p>
+<div class="displaymath" id="a0000000004">
+  \[ f_{\mathrm{net}}^{(u)} : \mathbb {R}^{2|\mathrm{pred}(u)|+ \kappa _1 (u)} \to \mathbb {R}, \quad f_{\mathrm{act}}^{(u)} : \mathbb {R}^{1+\kappa _2 (u)} \to \mathbb {R}, \quad f_{\mathrm{out}}^{(u)} : \mathbb {R} \to \mathbb {R}.  \]
+</div>
+<p> These functions compute \( \mathrm{net}_u \), \( \mathrm{act}_u \), and \( \mathrm{out}_u \), where \( \kappa _1(u) \) and \( \kappa _2(u) \) count the number of parameters of those functions, which can depend on the neurons. Specifically, the new activation \(\mathrm{act}_u'\) of a neuron \(u\) is computed as follows: </p>
+<div class="displaymath" id="a0000000005">
+  \begin{equation*}  \mathrm{act}_u’= f_{\mathrm{act}}^{(u)} \big(f_{\mathrm{net}}^{(u)} \big( w_{uv_1}, \ldots , w_{uv_{\mathrm{pred}(u)}}, f_{\mathrm{out}}^{(v_1)}(\mathrm{act}_{v_1}),\ldots , f_{\mathrm{out}}^{(v_{\mathrm{pred}(u)})}(\mathrm{act}_{v_{\mathrm{pred}(u)}}), \boldsymbol {\sigma }^{(u)}\big), \boldsymbol {\theta }^{(u)}\big) \end{equation*}
+</div>
+<p> where \(\boldsymbol {\sigma }^{(u)} = (\sigma _1^{(u)} , \ldots , \sigma _{\kappa _1(u)}^{(u)} )\) and \(\boldsymbol {\theta } = (\theta _1^{(u)} , \ldots , \theta _{\kappa _2(u)}^{(u)} )\) are the input parameter vectors. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#NeuralNetwork">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NeuralNetwork">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+</div>
 </div> <!-- content -->
 </div> <!-- wrapper -->
 <script src="js/jquery.min.js" type="text/javascript"></script>
@@ -77,7 +117,7 @@ graphContainer.graphviz({useWorker: true})
     .width(width)
     .height(height)
     .fit(true)
-    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [penwidth=1.8];	edge [arrowhead=vee];}`)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	NeuralNetwork	[color=green,		fillcolor="#B0ECA3",		label=NeuralNetwork,		shape=box,		style=filled];}`)
     .on("end", interactive);
 
 latexLabelEscaper = function(label) {

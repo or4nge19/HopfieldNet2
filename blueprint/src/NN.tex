@@ -1,5 +1,7 @@
+\chapter{NN}
 
 \begin{definition}
+\lean{NeuralNetwork}
 \label{NeuralNetwork}
 An (artificial) neural network is a directed graph \( G = (U, C) \), where neurons \( u \in U \) 
 are connected by directed edges \( c \in C \) (connections). 
@@ -7,8 +9,8 @@ The neuron set is partitioned as \( U = U_{\mathrm{in}} \cup U_{\mathrm{out}} \c
 with \( U_{\mathrm{in}}, U_{\mathrm{out}} \neq \emptyset \) and \( U_{\mathrm{hidden}} \cap (U_{\mathrm{in}} 
 \cup U_{\mathrm{out}}) = \emptyset \). Each connection \( (v, u) \in C \) has a weight \( w_{uv} \), and each neuron \( u \) 
 has real-valued quantities: network input \( \mathrm{net}_u \), activation \( \mathrm{act}_u \), and output \( \mathrm{out}_u \).
- Input neurons \( u \in U_{\mathrm{in}} \) also have a fourth quantity, the external input \( \mathrm{ext}_u \). 
- The predecessors and successors of a vertex \( u \) in a directed graph \( G = (U, C) \) are defined as
+Input neurons \( u \in U_{\mathrm{in}} \) also have a fourth quantity, the external input \( \mathrm{ext}_u \). 
+The predecessors and successors of a vertex \( u \) in a directed graph \( G = (U, C) \) are defined as
 $\mathrm{pred}(u) = \{ v \in V \mid (v, u) \in C \}$ and 
 $\mathrm{succ}(u) = \{ v \in V \mid (u, v) \in C \}$ respectively. Each neuron \( u \) 
 is associated with the following functions:  

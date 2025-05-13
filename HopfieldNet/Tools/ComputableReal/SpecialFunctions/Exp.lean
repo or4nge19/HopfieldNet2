@@ -5,7 +5,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
 namespace ComputableℝSeq
 namespace Exp
-
+#exit
 /-
 The Taylor series error formula, where fN is the nth-order approximation:
 f(x) - fN(x) = 1/(n+1)! * f^(n+1)(c) * x^(n+1) for some c in [0,x].

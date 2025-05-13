@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  MathJax = { 
+    tex: {
+		    inlineMath: [['$','$'], ['\\(','\\)']]
+	} }
+</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+</script>
+<meta name="generator" content="plasTeX" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NN</title>
+<link rel="next" href="sect0002.html" title="Bibliography" />
+<link rel="prev" href="index.html" title="Neural Networks in Lean4" />
+<link rel="up" href="index.html" title="Neural Networks in Lean4" />
+<link rel="stylesheet" href="styles/theme-white.css" />
+<link rel="stylesheet" href="styles/amsthm.css" />
+<link rel="stylesheet" href="styles/showmore.css" />
+<link rel="stylesheet" href="styles/blueprint.css" />
+<link rel="stylesheet" href="styles/extra_styles.css" />
+</head>
+
+<body>
+<header>
+<svg  id="toc-toggle" class="icon icon-list-numbered "><use xlink:href="symbol-defs.svg#icon-list-numbered"></use></svg>
+<h1 id="doc_title"><a href="index.html">Neural Networks in Lean4</a></h1>
+</header>
+
+<div class="wrapper">
+<nav class="toc">
+<ul class="sub-toc-0">
+<li class=" active current">
+  <a href="sect0001.html"><span class="toc_ref">1</span> <span class="toc_entry">NN</span></a>
+ </li>
+<li class="">
+  <a href="sect0002.html"><span class="toc_ref">2</span> <span class="toc_entry">Bibliography</span></a>
+ </li>
+<li ><a href="dep_graph_document.html">Dependency graph</a></li>
+</ul>
+</nav>
+
+<div class="content">
+<div class="content-wrapper">
+
+
+<div class="main-text">
+<h1 id="a0000000002">1 NN</h1>
+<div class="definition_thmwrapper theorem-style-definition" id="NeuralNetwork">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">1</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#NeuralNetwork">#</a>
+    
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NeuralNetwork" class="lean_decl">NeuralNetwork</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>  An (artificial) neural network is a directed graph \( G = (U, C) \), where neurons \( u \in U \) are connected by directed edges \( c \in C \) (connections). The neuron set is partitioned as \( U = U_{\mathrm{in}} \cup U_{\mathrm{out}} \cup U_{\mathrm{hidden}} \), with \( U_{\mathrm{in}}, U_{\mathrm{out}} \neq \emptyset \) and \( U_{\mathrm{hidden}} \cap (U_{\mathrm{in}} \cup U_{\mathrm{out}}) = \emptyset \). Each connection \( (v, u) \in C \) has a weight \( w_{uv} \), and each neuron \( u \) has real-valued quantities: network input \( \mathrm{net}_u \), activation \( \mathrm{act}_u \), and output \( \mathrm{out}_u \). Input neurons \( u \in U_{\mathrm{in}} \) also have a fourth quantity, the external input \( \mathrm{ext}_u \). The predecessors and successors of a vertex \( u \) in a directed graph \( G = (U, C) \) are defined as \(\mathrm{pred}(u) = \{  v \in V \mid (v, u) \in C \} \) and \(\mathrm{succ}(u) = \{  v \in V \mid (u, v) \in C \} \) respectively. Each neuron \( u \) is associated with the following functions: </p>
+<div class="displaymath" id="a0000000004">
+  \[ f_{\mathrm{net}}^{(u)} : \mathbb {R}^{2|\mathrm{pred}(u)|+ \kappa _1 (u)} \to \mathbb {R}, \quad f_{\mathrm{act}}^{(u)} : \mathbb {R}^{1+\kappa _2 (u)} \to \mathbb {R}, \quad f_{\mathrm{out}}^{(u)} : \mathbb {R} \to \mathbb {R}.  \]
+</div>
+<p> These functions compute \( \mathrm{net}_u \), \( \mathrm{act}_u \), and \( \mathrm{out}_u \), where \( \kappa _1(u) \) and \( \kappa _2(u) \) count the number of parameters of those functions, which can depend on the neurons. Specifically, the new activation \(\mathrm{act}_u'\) of a neuron \(u\) is computed as follows: </p>
+<div class="displaymath" id="a0000000005">
+  \begin{equation*}  \mathrm{act}_u’= f_{\mathrm{act}}^{(u)} \big(f_{\mathrm{net}}^{(u)} \big( w_{uv_1}, \ldots , w_{uv_{\mathrm{pred}(u)}}, f_{\mathrm{out}}^{(v_1)}(\mathrm{act}_{v_1}),\ldots , f_{\mathrm{out}}^{(v_{\mathrm{pred}(u)})}(\mathrm{act}_{v_{\mathrm{pred}(u)}}), \boldsymbol {\sigma }^{(u)}\big), \boldsymbol {\theta }^{(u)}\big) \end{equation*}
+</div>
+<p> where \(\boldsymbol {\sigma }^{(u)} = (\sigma _1^{(u)} , \ldots , \sigma _{\kappa _1(u)}^{(u)} )\) and \(\boldsymbol {\theta } = (\theta _1^{(u)} , \ldots , \theta _{\kappa _2(u)}^{(u)} )\) are the input parameter vectors. </p>
+
+  </div>
+</div>
+
+
+</div> <!--main-text -->
+</div> <!-- content-wrapper -->
+</div> <!-- content -->
+</div> <!-- wrapper -->
+
+<nav class="prev_up_next">
+  <svg  id="showmore-minus" class="icon icon-eye-minus showmore"><use xlink:href="symbol-defs.svg#icon-eye-minus"></use></svg>
+
+  <svg  id="showmore-plus" class="icon icon-eye-plus showmore"><use xlink:href="symbol-defs.svg#icon-eye-plus"></use></svg>
+
+  <a href="index.html" title="Neural Networks in Lean4"><svg  class="icon icon-arrow-left "><use xlink:href="symbol-defs.svg#icon-arrow-left"></use></svg>
+</a>
+  <a href="index.html" title="Neural Networks in Lean4"><svg  class="icon icon-arrow-up "><use xlink:href="symbol-defs.svg#icon-arrow-up"></use></svg>
+</a>
+  <a href="sect0002.html" title="Bibliography"><svg  class="icon icon-arrow-right "><use xlink:href="symbol-defs.svg#icon-arrow-right"></use></svg>
+</a>
+</nav>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/plastex.js"></script>
+<script type="text/javascript" src="js/svgxuse.js"></script>
+<script type="text/javascript" src="js/js.cookie.min.js"></script>
+<script type="text/javascript" src="js/showmore.js"></script>
+</body>
+</html>
