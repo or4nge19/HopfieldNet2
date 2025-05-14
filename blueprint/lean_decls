@@ -1,1 +1,13 @@
 NeuralNetwork
+HopfieldNetwork
+HopfieldNet_convergence_fair
+HopfieldNet_convergence_cyclic
+AsymmetricHopfieldNetwork
+potentialFunction
+potential_function_bounded
+boltzmannDistribution
+NN.State.gibbsUpdateSingleNeuron
+NN.State.simulatedAnnealing
+NN.State.metropolisHastingsStep
+MarkovChain.totalVariation
+MarkovChain.stochasticHopfieldMarkovProcess

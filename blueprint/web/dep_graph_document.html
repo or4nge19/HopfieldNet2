@@ -63,13 +63,277 @@
 <div id="statements">
 
     
-    <div class="dep-modal-container" id="NeuNet_modal">
+    <div class="dep-modal-container" id="Asymmetric HopfieldNetwork_modal">
       <div class="dep-modal-content">
           <button class="dep-closebtn">
 <svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
 </button>
         
-  <div class="thm" id="NeuNet" style="display: none">
+  <div class="thm" id="Asymmetric HopfieldNetwork" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">5</span></div>
+    <div class="thm_thmcontent"><p>   We define asymmetric Hopfield networks as general neural networks with the same graph514 structure and functions as symmetric Hopfield networks but with this matrix decomposition515 property instead of symmetry. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#Asymmetric HopfieldNetwork">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/AsymmetricHopfieldNetwork">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="boltzmannDistribution_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="boltzmannDistribution" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">8</span></div>
+    <div class="thm_thmcontent"><p>  The Boltzmann distribution: </p>
+<div class="displaymath" id="a0000000009">
+  \[ P(s) = \frac{e^{-E(s)/T}}{Z} \]
+</div>
+<p> where \(E(s)\) is the energy of state \(s,\) \(T\) is the temperature parameter and \(Z = \sum _{s} e^{-E(s)/T}\) is the partition function. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#boltzmannDistribution">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/boltzmannDistribution">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="Convergence_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="Convergence" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">3</span><span class="theorem_thmtitle">Convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
+	[
+	<a href="sect0002.html#comp" >4</a>
+	]
+</span>)</span></div>
+    <div class="thm_thmcontent"><p>    If the activations of the neurons of a Hopfield network are updated asynchronously, a stable state is reached in a finite number of steps. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#Convergence">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_fair">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="ConvergenceCor_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="ConvergenceCor" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">4</span><span class="theorem_thmtitle">Corollary of convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
+	[
+	<a href="sect0002.html#comp" >4</a>
+	]
+</span>)</span></div>
+    <div class="thm_thmcontent"><p>    If the neurons are traversed in an arbitrary, but fixed cyclic fashion, at most \(n\cdot 2^n\) steps (updates of individual neurons) are needed, where \(n\) is the number of neurons of the network. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#ConvergenceCor">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_cyclic">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="GibbsSampling_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="GibbsSampling" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">9</span></div>
+    <div class="thm_thmcontent"><p>   For neuron updates, we use Gibbs sampling, as introduced by Geman and Geman <span class="cite">
+	[
+	<a href="sect0002.html#geman" >1</a>
+	]
+</span>, where a neuron \(u\) is updated according to : </p>
+<div class="displaymath" id="a0000000010">
+  \[ P(s_u = +1 | s_{-u}) = \frac{1}{1 + e^{-2h_u/T}} \]
+</div>
+<p> where \(h_u\) is the local field defined as \(h_u = \sum _v w_{uv}s_v - \theta _u\). </p>
+<p>This formula can be derived directly from the Boltzmann distribution by considering the conditional probability of a single neuron’s state given all others: </p>
+<div class="displaymath" id="a0000000011">
+  \[ P(s_u = +1 | s_{-u}) = \frac{P(s_u = +1, s_{-u})}{P(s_u = +1, s_{-u}) + P(s_u = -1, s_{-u})} \]
+</div>
+<p>The energy difference between states with \(s_u = +1\) and \(s_u = -1\) is \(\Delta E = -2h_u\), which gives us the formula above after substitution and simplification. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#GibbsSampling">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NN.State.gibbsUpdateSingleNeuron">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="HopfieldNetwork_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="HopfieldNetwork" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">2</span></div>
+    <div class="thm_thmcontent"><p>   A Hopfield network is a neural network with graph \(G = (U,C)\) as described in the previous section, that satisfies the following conditions: \( U_{\text{hidden}} = \emptyset \), and \( U_{\text{in}} = U_{\text{out}} = U \), \( C = U \times U - \{ (u, u) \mid u \in U \}  \), i.e., no self-connections. The connection weights are symmetric, i.e., for all \( u, v \in U \), we have \( w_{uv} = w_{vu} \) when \( u \neq v \). The activation of each neuron is either \( 1 \) or \( -1 \) depending on the input. There are no loops, meaning neurons don’t receive their own output as input. Instead, each neuron \(u\) receives inputs from all other neurons, and in turn, all other neurons receive the output of neuron \(u\). </p>
+<ul class="itemize">
+  <li><p>The network input function is given by </p>
+<div class="displaymath" id="a0000000006">
+  \[  \forall u \in U : \quad f^{(u)}_{\text{net}}(w_u, in_u) = \sum _{v \in U - \{ u\} } w_{uv} \cdot \text{out}_v.  \]
+</div>
+</li>
+  <li><p>The activation function is a threshold function </p>
+<div class="displaymath" id="a0000000007">
+  \[ \forall u \in U : \quad f^{(u)}_{\text{act}}(\text{net}_u, \theta _u) = \begin{cases}  1 &  \text{if } \text{net}_u \geq \theta _u, \\ -1 &  \text{otherwise}. \end{cases}  \]
+</div>
+</li>
+  <li><p>The output function is the identity </p>
+<div class="displaymath" id="a0000000008">
+  \[ \forall u \in U : \quad f^{(u)}_{\text{out}}(\text{act}_u) = \text{act}_u.  \]
+</div>
+</li>
+</ul>
+</div>
+
+    <a class="latex_link" href="sect0001.html#HopfieldNetwork">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNetwork">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="Metropolis-Hastings_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="Metropolis-Hastings" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">11</span></div>
+    <div class="thm_thmcontent"><p>   Another sampling method we formalize is the Metropolis-Hastings algorithm, introduced by Metropolis et al. <span class="cite">
+	[
+	<a href="sect0002.html#metropolis" >6</a>
+	]
+</span> and later generalized by Hastings <span class="cite">
+	[
+	<a href="sect0002.html#hastings" >2</a>
+	]
+</span>, which accepts or rejects proposed state changes with probability: </p>
+<div class="displaymath" id="a0000000013">
+  \[ P(\text{accept}) = \min (1, e^{-(E(s') - E(s))/T}) \]
+</div>
+<p> where \(s'\) is the proposed state after flipping a neuron. This allows the network to sometimes move to higher energy states, helping it escape local minima. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#Metropolis-Hastings">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NN.State.metropolisHastingsStep">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="NeuralNetwork_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="NeuralNetwork" style="display: none">
     <div class="thm_thmheading">
       <span class="definition_thmcaption">
       Definition
@@ -86,10 +350,175 @@
 <p> where \(\boldsymbol {\sigma }^{(u)} = (\sigma _1^{(u)} , \ldots , \sigma _{\kappa _1(u)}^{(u)} )\) and \(\boldsymbol {\theta } = (\theta _1^{(u)} , \ldots , \theta _{\kappa _2(u)}^{(u)} )\) are the input parameter vectors. </p>
 </div>
 
-    <a class="latex_link" href="sect0001.html#NeuNet">LaTeX</a>
+    <a class="latex_link" href="sect0001.html#NeuralNetwork">LaTeX</a>
     
     
   <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NeuralNetwork">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="Potential function is bounded_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="Potential function is bounded" style="display: none">
+    <div class="thm_thmheading">
+      <span class="lemma_thmcaption">
+      Lemma
+      </span>
+      <span class="lemma_thmlabel">7</span></div>
+    <div class="thm_thmcontent"><p>   The significance of this potential function lies in its relationship to Lyapunov stability566 theory. We prove it is bounded regardless of the network’s configuration. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#Potential function is bounded">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/potential_function_bounded">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="PotentialFunction_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="PotentialFunction" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">6</span></div>
+    <div class="thm_thmcontent"><p>   The potential function for asymmetric Hopfield networks at time step \(k\) represents the energy of the network at time step \(k\), considering that neuron \((k \mod n)\) is being updated. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#PotentialFunction">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/potentialFunction">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="SimulatedAnnealing_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="SimulatedAnnealing" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">10</span></div>
+    <div class="thm_thmcontent"><p>   We also implement simulated annealing, as introduced by Kirkpatrick et al. <span class="cite">
+	[
+	<a href="sect0002.html#kirk" >3</a>
+	]
+</span>, which systematically decreases the temperature \(T\) over time according to a cooling schedule: </p>
+<div class="displaymath" id="a0000000012">
+  \[ T(t) = T_0 \times e^{-\alpha t} \]
+</div>
+<p> where \(T_0\) is the initial temperature and \(\alpha \) is the cooling rate. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#SimulatedAnnealing">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NN.State.simulatedAnnealing">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="stochasticHopfieldMarkovProcess_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="stochasticHopfieldMarkovProcess" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">13</span></div>
+    <div class="thm_thmcontent"><p>   The stochastic Hopfield Markov process, which models the evolution of Hopfield network states over discrete time steps using Gibbs sampling at fixed temperature. In this simplified model, the transition kernel is time-homogeneous (same for all steps). </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#stochasticHopfieldMarkovProcess">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/MarkovChain.stochasticHopfieldMarkovProcess">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="Total variation_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="Total variation" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">12</span></div>
+    <div class="thm_thmcontent"><p>   To measure convergence to the equilibrium Boltzmann distribution, we use the total variation distance, as described by Levin and Peres <span class="cite">
+	[
+	<a href="sect0002.html#levin" >5</a>
+	]
+</span> : </p>
+<div class="displaymath" id="a0000000014">
+  \[ d_{TV}(\mu , \nu ) = \frac{1}{2} \sum _s |\mu (s) - \nu (s)|. \]
+</div>
+</div>
+
+    <a class="latex_link" href="sect0001.html#Total variation">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/MarkovChain.totalVariation">Lean</a>
     
     
   
@@ -117,7 +546,7 @@ graphContainer.graphviz({useWorker: true})
     .width(width)
     .height(height)
     .fit(true)
-    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	NeuNet	[color=green,		fillcolor="#B0ECA3",		label=NeuNet,		shape=box,		style=filled];}`)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	PotentialFunction	[color=green,		fillcolor="#B0ECA3",		label=PotentialFunction,		shape=box,		style=filled];	"Potential function is bounded"	[color=green,		label="Potential function is bounded",		shape=ellipse];	PotentialFunction -> "Potential function is bounded"	[style=dashed];	SimulatedAnnealing	[color=green,		fillcolor="#B0ECA3",		label=SimulatedAnnealing,		shape=box,		style=filled];	ConvergenceCor	[color=green,		label=ConvergenceCor,		shape=ellipse];	NeuralNetwork	[color=green,		fillcolor="#B0ECA3",		label=NeuralNetwork,		shape=box,		style=filled];	HopfieldNetwork	[color=green,		fillcolor="#B0ECA3",		label=HopfieldNetwork,		shape=box,		style=filled];	NeuralNetwork -> HopfieldNetwork	[style=dashed];	HopfieldNetwork -> PotentialFunction	[style=dashed];	HopfieldNetwork -> SimulatedAnnealing	[style=dashed];	HopfieldNetwork -> ConvergenceCor	[style=dashed];	"Asymmetric HopfieldNetwork"	[color=green,		fillcolor="#B0ECA3",		label="Asymmetric HopfieldNetwork",		shape=box,		style=filled];	HopfieldNetwork -> "Asymmetric HopfieldNetwork"	[style=dashed];	GibbsSampling	[color=green,		fillcolor="#B0ECA3",		label=GibbsSampling,		shape=box,		style=filled];	HopfieldNetwork -> GibbsSampling	[style=dashed];	"Total variation"	[color=green,		fillcolor="#B0ECA3",		label="Total variation",		shape=box,		style=filled];	HopfieldNetwork -> "Total variation"	[style=dashed];	"Metropolis-Hastings"	[color=green,		fillcolor="#B0ECA3",		label="Metropolis-Hastings",		shape=box,		style=filled];	HopfieldNetwork -> "Metropolis-Hastings"	[style=dashed];	stochasticHopfieldMarkovProcess	[color=green,		fillcolor="#B0ECA3",		label=stochasticHopfieldMarkovProcess,		shape=box,		style=filled];	HopfieldNetwork -> stochasticHopfieldMarkovProcess	[style=dashed];	Convergence	[color=green,		label=Convergence,		shape=ellipse];	HopfieldNetwork -> Convergence	[style=dashed];	boltzmannDistribution	[color=green,		fillcolor="#B0ECA3",		label=boltzmannDistribution,		shape=box,		style=filled];	boltzmannDistribution -> GibbsSampling	[style=dashed];	boltzmannDistribution -> "Total variation"	[style=dashed];}`)
     .on("end", interactive);
 
 latexLabelEscaper = function(label) {

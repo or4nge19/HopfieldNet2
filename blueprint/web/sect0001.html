@@ -48,7 +48,12 @@
 
 <div class="main-text">
 <h1 id="a0000000002">1 NN</h1>
-<div class="definition_thmwrapper theorem-style-definition" id="NeuNet">
+<p>We strictly follow Chapter 4 of <span class="cite">
+	[
+	<a href="sect0002.html#comp" >4</a>
+	]
+</span> for the definitions of neural and Hopfield networks. </p>
+<div class="definition_thmwrapper theorem-style-definition" id="NeuralNetwork">
   <div class="definition_thmheading">
     <span class="definition_thmcaption">
     Definition
@@ -61,7 +66,7 @@
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0001.html#NeuNet">#</a>
+    <a class="icon proof" href="sect0001.html#NeuralNetwork">#</a>
     
     
     
@@ -96,6 +101,819 @@
   \begin{equation*}  \mathrm{act}_u’= f_{\mathrm{act}}^{(u)} \big(f_{\mathrm{net}}^{(u)} \big( w_{uv_1}, \ldots , w_{uv_{\mathrm{pred}(u)}}, f_{\mathrm{out}}^{(v_1)}(\mathrm{act}_{v_1}),\ldots , f_{\mathrm{out}}^{(v_{\mathrm{pred}(u)})}(\mathrm{act}_{v_{\mathrm{pred}(u)}}), \boldsymbol {\sigma }^{(u)}\big), \boldsymbol {\theta }^{(u)}\big) \end{equation*}
 </div>
 <p> where \(\boldsymbol {\sigma }^{(u)} = (\sigma _1^{(u)} , \ldots , \sigma _{\kappa _1(u)}^{(u)} )\) and \(\boldsymbol {\theta } = (\theta _1^{(u)} , \ldots , \theta _{\kappa _2(u)}^{(u)} )\) are the input parameter vectors. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="HopfieldNetwork">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">2</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#HopfieldNetwork">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#NeuralNetwork">Definition 1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNetwork" class="lean_decl">HopfieldNetwork</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   A Hopfield network is a neural network with graph \(G = (U,C)\) as described in the previous section, that satisfies the following conditions: \( U_{\text{hidden}} = \emptyset \), and \( U_{\text{in}} = U_{\text{out}} = U \), \( C = U \times U - \{ (u, u) \mid u \in U \}  \), i.e., no self-connections. The connection weights are symmetric, i.e., for all \( u, v \in U \), we have \( w_{uv} = w_{vu} \) when \( u \neq v \). The activation of each neuron is either \( 1 \) or \( -1 \) depending on the input. There are no loops, meaning neurons don’t receive their own output as input. Instead, each neuron \(u\) receives inputs from all other neurons, and in turn, all other neurons receive the output of neuron \(u\). </p>
+<ul class="itemize">
+  <li><p>The network input function is given by </p>
+<div class="displaymath" id="a0000000006">
+  \[  \forall u \in U : \quad f^{(u)}_{\text{net}}(w_u, in_u) = \sum _{v \in U - \{ u\} } w_{uv} \cdot \text{out}_v.  \]
+</div>
+</li>
+  <li><p>The activation function is a threshold function </p>
+<div class="displaymath" id="a0000000007">
+  \[ \forall u \in U : \quad f^{(u)}_{\text{act}}(\text{net}_u, \theta _u) = \begin{cases}  1 &  \text{if } \text{net}_u \geq \theta _u, \\ -1 &  \text{otherwise}. \end{cases}  \]
+</div>
+</li>
+  <li><p>The output function is the identity </p>
+<div class="displaymath" id="a0000000008">
+  \[ \forall u \in U : \quad f^{(u)}_{\text{out}}(\text{act}_u) = \text{act}_u.  \]
+</div>
+</li>
+</ul>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="Convergence">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">3</span>
+    <span class="theorem_thmtitle">Convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
+	[
+	<a href="sect0002.html#comp" >4</a>
+	]
+</span>)</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#Convergence">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_fair" class="lean_decl">HopfieldNet_convergence_fair</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    If the activations of the neurons of a Hopfield network are updated asynchronously, a stable state is reached in a finite number of steps. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="ConvergenceCor">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">4</span>
+    <span class="theorem_thmtitle">Corollary of convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
+	[
+	<a href="sect0002.html#comp" >4</a>
+	]
+</span>)</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#ConvergenceCor">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_cyclic" class="lean_decl">HopfieldNet_convergence_cyclic</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>    If the neurons are traversed in an arbitrary, but fixed cyclic fashion, at most \(n\cdot 2^n\) steps (updates of individual neurons) are needed, where \(n\) is the number of neurons of the network. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="Asymmetric HopfieldNetwork">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">5</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#Asymmetric HopfieldNetwork">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/AsymmetricHopfieldNetwork" class="lean_decl">AsymmetricHopfieldNetwork</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   We define asymmetric Hopfield networks as general neural networks with the same graph514 structure and functions as symmetric Hopfield networks but with this matrix decomposition515 property instead of symmetry. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="PotentialFunction">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">6</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#PotentialFunction">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/potentialFunction" class="lean_decl">potentialFunction</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   The potential function for asymmetric Hopfield networks at time step \(k\) represents the energy of the network at time step \(k\), considering that neuron \((k \mod n)\) is being updated. </p>
+
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="Potential function is bounded">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">7</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#Potential function is bounded">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#PotentialFunction">Definition 6</a></li>
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/potential_function_bounded" class="lean_decl">potential_function_bounded</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p>   The significance of this potential function lies in its relationship to Lyapunov stability566 theory. We prove it is bounded regardless of the network’s configuration. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="boltzmannDistribution">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">8</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#boltzmannDistribution">#</a>
+    
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/boltzmannDistribution" class="lean_decl">boltzmannDistribution</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>  The Boltzmann distribution: </p>
+<div class="displaymath" id="a0000000009">
+  \[ P(s) = \frac{e^{-E(s)/T}}{Z} \]
+</div>
+<p> where \(E(s)\) is the energy of state \(s,\) \(T\) is the temperature parameter and \(Z = \sum _{s} e^{-E(s)/T}\) is the partition function. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="GibbsSampling">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">9</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#GibbsSampling">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+          <li><a href="sect0001.html#boltzmannDistribution">Definition 8</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NN.State.gibbsUpdateSingleNeuron" class="lean_decl">NN.State.gibbsUpdateSingleNeuron</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   For neuron updates, we use Gibbs sampling, as introduced by Geman and Geman <span class="cite">
+	[
+	<a href="sect0002.html#geman" >1</a>
+	]
+</span>, where a neuron \(u\) is updated according to : </p>
+<div class="displaymath" id="a0000000010">
+  \[ P(s_u = +1 | s_{-u}) = \frac{1}{1 + e^{-2h_u/T}} \]
+</div>
+<p> where \(h_u\) is the local field defined as \(h_u = \sum _v w_{uv}s_v - \theta _u\). </p>
+<p>This formula can be derived directly from the Boltzmann distribution by considering the conditional probability of a single neuron’s state given all others: </p>
+<div class="displaymath" id="a0000000011">
+  \[ P(s_u = +1 | s_{-u}) = \frac{P(s_u = +1, s_{-u})}{P(s_u = +1, s_{-u}) + P(s_u = -1, s_{-u})} \]
+</div>
+<p>The energy difference between states with \(s_u = +1\) and \(s_u = -1\) is \(\Delta E = -2h_u\), which gives us the formula above after substitution and simplification. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="SimulatedAnnealing">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">10</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#SimulatedAnnealing">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NN.State.simulatedAnnealing" class="lean_decl">NN.State.simulatedAnnealing</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   We also implement simulated annealing, as introduced by Kirkpatrick et al. <span class="cite">
+	[
+	<a href="sect0002.html#kirk" >3</a>
+	]
+</span>, which systematically decreases the temperature \(T\) over time according to a cooling schedule: </p>
+<div class="displaymath" id="a0000000012">
+  \[ T(t) = T_0 \times e^{-\alpha t} \]
+</div>
+<p> where \(T_0\) is the initial temperature and \(\alpha \) is the cooling rate. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="Metropolis-Hastings">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">11</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#Metropolis-Hastings">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/NN.State.metropolisHastingsStep" class="lean_decl">NN.State.metropolisHastingsStep</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   Another sampling method we formalize is the Metropolis-Hastings algorithm, introduced by Metropolis et al. <span class="cite">
+	[
+	<a href="sect0002.html#metropolis" >6</a>
+	]
+</span> and later generalized by Hastings <span class="cite">
+	[
+	<a href="sect0002.html#hastings" >2</a>
+	]
+</span>, which accepts or rejects proposed state changes with probability: </p>
+<div class="displaymath" id="a0000000013">
+  \[ P(\text{accept}) = \min (1, e^{-(E(s') - E(s))/T}) \]
+</div>
+<p> where \(s'\) is the proposed state after flipping a neuron. This allows the network to sometimes move to higher energy states, helping it escape local minima. </p>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="Total variation">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">12</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#Total variation">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+          <li><a href="sect0001.html#boltzmannDistribution">Definition 8</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/MarkovChain.totalVariation" class="lean_decl">MarkovChain.totalVariation</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   To measure convergence to the equilibrium Boltzmann distribution, we use the total variation distance, as described by Levin and Peres <span class="cite">
+	[
+	<a href="sect0002.html#levin" >5</a>
+	]
+</span> : </p>
+<div class="displaymath" id="a0000000014">
+  \[ d_{TV}(\mu , \nu ) = \frac{1}{2} \sum _s |\mu (s) - \nu (s)|. \]
+</div>
+
+  </div>
+</div>
+<div class="definition_thmwrapper theorem-style-definition" id="stochasticHopfieldMarkovProcess">
+  <div class="definition_thmheading">
+    <span class="definition_thmcaption">
+    Definition
+    </span>
+    <span class="definition_thmlabel">13</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#stochasticHopfieldMarkovProcess">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/MarkovChain.stochasticHopfieldMarkovProcess" class="lean_decl">MarkovChain.stochasticHopfieldMarkovProcess</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="definition_thmcontent">
+  <p>   The stochastic Hopfield Markov process, which models the evolution of Hopfield network states over discrete time steps using Gibbs sampling at fixed temperature. In this simplified model, the transition kernel is time-homogeneous (same for all steps). </p>
 
   </div>
 </div>

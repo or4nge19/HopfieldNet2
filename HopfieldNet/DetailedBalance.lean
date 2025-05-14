@@ -377,7 +377,8 @@ lemma ENNReal.natCast_eq_ofReal (n : ℕ) : (n : ENNReal) = ENNReal.ofReal n := 
     · norm_num
 
 lemma gibbs_transition_sum_single_site {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ][Field ℕ] [CommGroup ℕ] [Inv ℕ] [HDiv ℕ ℕ ℝ] -- Removed Field ℕ etc. constraints
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
+  [Coe R ℝ][Field ℕ] [CommGroup ℕ] [Inv ℕ] [HDiv ℕ ℕ ℝ] -- Removed Field ℕ etc. constraints
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (h_diff : s.act u ≠ s'.act u) :
@@ -413,7 +414,7 @@ lemma gibbs_single_site_transition_explicit {R U : Type}
   [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ][HDiv ℕ ℕ ℝ] [CommGroup ℕ] [Field ℕ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
-  (h_bias : θ' (wθ.θ u) = 0) (hT_pos : T > 0) (h_neq : s ≠ s') :
+  (_ : θ' (wθ.θ u) = 0) (_ : T > 0) (h_neq : s ≠ s') :
   gibbsTransitionProb wθ T s s' =
     (1 / (Fintype.card U : ℝ)) * ENNReal.toReal (
       let local_field := s.net wθ u
@@ -503,7 +504,7 @@ by
       ENNReal.natCast_ne_top (Fintype.card U)
     have h_one_div_card : (1 / (Fintype.card U : ENNReal)).toReal = 1 / (Fintype.card U : ℝ) := by
       rw [ENNReal.toReal_div]
-      · rw [ENNReal.one_toReal]
+      · rw [ENNReal.toReal_one]
         exact rfl
     rw [ENNReal.toReal_mul]
     congr 1
