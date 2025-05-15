@@ -2,8 +2,6 @@ import Mathlib.Data.Real.Pi.Bounds
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import HopfieldNet.Tools.ComputableReal.SpecialFunctions.Sqrt
 
-
-#exit
 open scoped QInterval
 
 namespace ComputableℝSeq

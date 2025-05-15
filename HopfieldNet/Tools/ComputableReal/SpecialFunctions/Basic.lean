@@ -2,8 +2,6 @@ import Mathlib.Data.Real.Sign
 import Mathlib.Data.Real.ConjExponents
 import HopfieldNet.Tools.ComputableReal.IsComputable
 
-#exit
-
 namespace IsComputable
 
 instance instComputableOfScientific (m : ℕ) (b : Bool) (e : ℕ) :

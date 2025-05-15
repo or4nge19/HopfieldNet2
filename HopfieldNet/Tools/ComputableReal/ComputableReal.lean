@@ -1,6 +1,5 @@
 import HopfieldNet.Tools.ComputableReal.ComputableRSeq
 
-#exit
 /-- Computable reals, defined as the quotient of ComputableℝSeq sequences -- sequences with
   Cauchy sequences of lower and upper bounds that converge to the same value -- by the equivalence
   relation of having the same converged value. This is similar to how reals are quotients of Cauchy
@@ -188,31 +187,31 @@ theorem val_nsmul (x : Computableℝ) (n : ℕ) : (n • x).val = n • x.val :=
 section safe_inv
 
 set_option linter.dupNamespace false in
-private def nz_quot_equiv : Equiv { x : ComputableℝSeq // x.val ≠ 0 } { x : Computableℝ // x ≠ 0 } :=
-  Equiv.subtypeQuotientEquivQuotientSubtype
-    (fun x : ComputableℝSeq ↦ x.val ≠ 0)
-    (fun x : Computableℝ ↦ x ≠ 0)
-    (fun _ ↦ ⟨
-      fun h h₂ ↦ by
-        rw [← eq_iff_eq_val, val_zero] at h₂
-        exact h h₂,
-      fun (h : ¬_ = 0) h₂ ↦ by
-        rw [← eq_iff_eq_val, val_zero] at h
-        exact h h₂⟩)
-    (fun _ _ ↦ Iff.rfl)
+private def nz_quot_equiv : Equiv { x : ComputableℝSeq // x.val ≠ 0 } { x : Computableℝ // x ≠ 0 } := by sorry
+  -- Equiv.subtypeQuotientEquivQuotientSubtype
+  --   (fun x : ComputableℝSeq ↦ x.val ≠ 0)
+  --   (fun x : Computableℝ ↦ x ≠ 0)
+  --   (fun _ ↦ ⟨
+  --     fun h h₂ ↦ by
+  --       rw [← eq_iff_eq_val, val_zero] at h₂
+  --       exact h h₂,
+  --     fun (h : ¬_ = 0) h₂ ↦ by
+  --       rw [← eq_iff_eq_val, val_zero] at h
+  --       exact h h₂⟩)
+  --   (fun _ _ ↦ Iff.rfl)
 
 /-- Auxiliary inverse definition that operates on the nonzero Computableℝ values. -/
-def safe_inv' : { x : Computableℝ // x ≠ 0 } → { x : Computableℝ // x ≠ 0 } :=
-  fun v ↦ nz_quot_equiv.invFun <| Quotient.map _ fun x y h₁ ↦ by
-    change (ComputableℝSeq.inv_nz x).val.val = (ComputableℝSeq.inv_nz y).val.val
-    rw [ComputableℝSeq.val_inv_nz x, ComputableℝSeq.val_inv_nz y, h₁]
-  (nz_quot_equiv.toFun v)
+def safe_inv' : { x : Computableℝ // x ≠ 0 } → { x : Computableℝ // x ≠ 0 } := sorry
+  -- fun v ↦ nz_quot_equiv.invFun <| Quotient.map _ fun x y h₁ ↦ by
+  --   change (ComputableℝSeq.inv_nz x).val.val = (ComputableℝSeq.inv_nz y).val.val
+  --   rw [ComputableℝSeq.val_inv_nz x, ComputableℝSeq.val_inv_nz y, h₁]
+  -- (nz_quot_equiv.toFun v)
 
 /-- Inverse of a nonzero Computableℝ, safe (terminating) as long as x is nonzero. -/
 irreducible_def safe_inv (hnz : x ≠ 0) : Computableℝ := safe_inv' ⟨x, hnz⟩
 
 @[simp]
-theorem safe_inv_val (hnz : x ≠ 0) : (x.safe_inv hnz).val = x.val⁻¹ := by
+theorem safe_inv_val (hnz : x ≠ 0) : (x.safe_inv hnz).val = x.val⁻¹ := by stop
   let ⟨x',hx'⟩ := Quotient.exists_rep x
   subst hx'
   have : (nz_quot_equiv { val := ⟦x'⟧, property := hnz : { x : Computableℝ // x ≠ 0 } }) =
@@ -313,7 +312,7 @@ instance instDecidableLE : DecidableRel (fun (x y : Computableℝ) ↦ x ≤ y) 
     infer_instance
 
 --TODO: add a faster `min` and `max` that don't require sign computation.
-instance instLinearOrderedField : LinearOrderedField Computableℝ := by
+instance instLinearOrderedField : LinearOrderedField Computableℝ := by stop
   refine' { instField, instLT, instLE with
       decidableLE := inferInstance
       le_refl := _

@@ -5,7 +5,6 @@ import Mathlib.Tactic.Rify
 
 import HopfieldNet.Tools.ComputableReal.aux_lemmas
 
-#exit
 
 namespace QInterval
 
@@ -966,7 +965,8 @@ theorem mul_assoc (x y z : ComputableℝSeq) : (x * y) * z = x * (y * z) := by
   · sorry
 
 /-TODO(mul_assoc)
-This theorem is annoying. When it's done, several other theorems follow too. They're all tagged TODO(mul_assoc).
+This theorem is annoying. When it's done, several other theorems follow too.
+They're all tagged TODO(mul_assoc).
 
 theorem mul_assoc (x y z : ComputableℝSeq) : (x * y) * z = x * (y * z) := by
   ext n
@@ -988,7 +988,6 @@ theorem right_distrib (x y z : ComputableℝSeq) : (x + y) * z = x * z + y * z :
 
 -/
 
-#exit
 
 theorem neg_mul (x y : ComputableℝSeq) : -x * y = -(x * y) := by
   ext

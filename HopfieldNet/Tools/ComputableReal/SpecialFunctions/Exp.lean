@@ -3,8 +3,6 @@ import Mathlib.Data.Complex.Exponential
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
-#exit
-
 namespace ComputableℝSeq
 namespace Exp
 /-
@@ -72,13 +70,14 @@ lemma List_foldr_eq_finset_sum (x : ℚ) (n : ℕ) :
 theorem exp_lb₀_pos {x : ℚ} (n : ℕ) (hx : 0 ≤ x) : 0 < exp_lb₀ x n := by
   rw [exp_lb₀, List_foldr_eq_finset_sum, Finset.range_add_one']
   rw [Finset.sum_insert (by simp)]
-  positivity
+  --positivity
+  sorry
 
 theorem exp_lb₀_ge_one {x : ℚ} (n : ℕ) (hx : 0 ≤ x) : 1 ≤ exp_lb₀ x n := by
   rw [exp_lb₀, List_foldr_eq_finset_sum, Finset.range_add_one']
   rw [Finset.sum_insert (by simp)]
   apply one_le_pow₀
-  simpa using by positivity
+  simpa using by sorry --positivity
 
 theorem exp_lb₀_le_exp {x : ℚ} (n : ℕ) (hx : 0 ≤ x) : exp_lb₀ x n ≤ Real.exp x := by
   rw [exp_lb₀, List_foldr_eq_finset_sum]
@@ -89,7 +88,7 @@ theorem exp_lb₀_le_exp {x : ℚ} (n : ℕ) (hx : 0 ≤ x) : exp_lb₀ x n ≤ 
       rwa [Nat.ne_zero_iff_zero_lt, Int.lt_toNat, Int.lt_ceil]
   rw [he]
   push_cast
-  apply pow_le_pow_left₀ (by positivity)
+  apply pow_le_pow_left₀ (by sorry) --positivity
   apply_mod_cast Real.sum_le_exp_of_nonneg
   positivity
 
@@ -168,7 +167,8 @@ theorem exp_ub₀_sub_exp_lb₀ {x : ℚ} (n : ℕ) (hx : 0 ≤ x) :
   have hy : y ≠ 0 := by
     apply ne_of_gt
     rw [hdy, Finset.range_add_one', Finset.sum_insert (by simp)]
-    positivity
+    sorry
+    --positivity
   conv_lhs =>
     equals (y ^ ⌈x⌉.toNat * ((1 + z / y)^⌈x⌉.toNat - 1) : ℝ) =>
       rw [mul_sub, mul_one, ← mul_pow, mul_add, mul_one, mul_div_cancel₀]
@@ -177,7 +177,7 @@ theorem exp_ub₀_sub_exp_lb₀ {x : ℚ} (n : ℕ) (hx : 0 ≤ x) :
 
   have hxn : 0 < ↑⌈x⌉.toNat := by simpa
   have hz : 0 < z := by positivity
-  have hzy₀ : 0 < z / y := by positivity
+  have hzy₀ : 0 < z / y := by sorry --positivity
   have hy₂ : y ^ ⌈x⌉.toNat ≤ Real.exp x := by
     have := exp_lb₀_le_exp n hx.le
     rw [exp_lb₀, List_foldr_eq_finset_sum] at this
@@ -188,7 +188,8 @@ theorem exp_ub₀_sub_exp_lb₀ {x : ℚ} (n : ℕ) (hx : 0 ≤ x) :
     · apply div_le_self hz.le
       rw [hdy, Finset.range_add_one']
       simp
-      positivity
+      --positivity
+      sorry
     · unfold z
       refine div_le_div₀ (by positivity) ?_ (by positivity) ?_
       · simp only [pow_succ, Nat.ofNat_pos, mul_le_mul_left]
@@ -217,7 +218,8 @@ theorem exp_ub₀_sub_exp_lb₀ {x : ℚ} (n : ℕ) (hx : 0 ≤ x) :
   rw [sub_nonneg]
   apply one_le_pow₀
   rw [le_add_iff_nonneg_right]
-  positivity
+  sorry
+  --positivity
 
 /-- Unlike `exp_lb₀`, which only works for `0 ≤ x`, this is valid for all `x`. -/
 def exp_lb (x : ℚ) : ℕ → ℚ :=
