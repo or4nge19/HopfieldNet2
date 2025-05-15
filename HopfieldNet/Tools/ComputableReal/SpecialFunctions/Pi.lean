@@ -8,11 +8,11 @@ namespace ComputableℝSeq
 
 section Pi
 
-instance instComputableSqrtTwoAddSeries (x : ℝ) [hx : IsComputable x] (n : ℕ) :
+noncomputable instance instComputableSqrtTwoAddSeries (x : ℝ) [hx : IsComputable x] (n : ℕ) :
     IsComputable (Real.sqrtTwoAddSeries x n) :=
   n.rec hx (fun _ _ ↦ IsComputable.instComputableSqrt _)
 
-def sqrtTwoAddSeries_n : ℕ → ComputableℝSeq :=
+noncomputable def sqrtTwoAddSeries_n : ℕ → ComputableℝSeq :=
   fun n ↦ (instComputableSqrtTwoAddSeries 0 n).seq
 
 theorem sqrtTwoAddSeries_n_lb_le (n k : ℕ) : (sqrtTwoAddSeries_n n).lb k ≤ Real.sqrtTwoAddSeries 0 n := by
@@ -154,7 +154,7 @@ theorem sqrtTwoAddSeries_n_bounds (n k : ℕ) (hk : 3 ≤ k) :
   rw [mul_add, add_div]
   linarith
 
-def sqrtTwoSubSqrtTwoAddSeries_n : ℕ → ComputableℝSeq :=
+noncomputable def sqrtTwoSubSqrtTwoAddSeries_n : ℕ → ComputableℝSeq :=
   fun n ↦ (inferInstance : IsComputable (Real.sqrt (2 - Real.sqrtTwoAddSeries 0 n))).seq
 
 theorem sqrtTwoSubSqrtTwoAddSeries_eq (n k : ℕ) :
@@ -310,11 +310,11 @@ theorem sqrtTwoSubSqrtTwoAddSeries_ub (n k : ℕ) (hk : 3 ≤ k) :
   linarith
 
 /-- See theorem Real.pi_lt_sqrtTwoAddSeries in Mathlib -/
-def pi_lb (n : ℕ) : ℚ :=
+noncomputable def pi_lb (n : ℕ) : ℚ :=
   2 ^ (n + 1) * (sqrtTwoSubSqrtTwoAddSeries_n n).lb (3 * n)
 
 /-- See theorem Real.pi_gt_sqrtTwoAddSeries in Mathlib -/
-def pi_ub (n : ℕ) : ℚ :=
+noncomputable def pi_ub (n : ℕ) : ℚ :=
   2 ^ (n + 1) * (sqrtTwoSubSqrtTwoAddSeries_n n).ub (3 * n) + 1 / 4 ^ n
 
 -- ~70ms for 10^-40 precision
@@ -435,7 +435,7 @@ theorem pi_ub_causeq : ∃ (h' : IsCauSeq abs pi_ub), Real.mk ⟨pi_ub, h'⟩ = 
   · linarith  [pi_ub_ge_pi j]
   · linarith
 
-def Pi : ComputableℝSeq :=
+noncomputable def Pi : ComputableℝSeq :=
   mk Real.pi
   (lub := fun n ↦ ⟨⟨pi_lb n, pi_ub n⟩,
     Rat.cast_le.mp <| (pi_lb_le_pi n).trans (pi_ub_ge_pi n)⟩)
@@ -455,7 +455,7 @@ end ComputableℝSeq
 
 namespace IsComputable
 
-instance instComputablePi : IsComputable (Real.pi) where
+noncomputable instance instComputablePi : IsComputable (Real.pi) where
   seq := ComputableℝSeq.Pi
   prop := ComputableℝSeq.mk_val_eq_val
 
