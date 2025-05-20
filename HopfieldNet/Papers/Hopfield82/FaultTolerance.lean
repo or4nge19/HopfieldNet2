@@ -47,14 +47,14 @@ noncomputable def DeleteNeuron [DecidableEq U] (i : U)
       specialize hsymm j k
       exact hsymm
 
-/--
-The `FaultTolerance` of a Hopfield network is its ability to maintain function
-despite the failure of some components. The paper notes that these networks are
-inherently robust to component failures.
--/
 /- Apply DeleteNeuron to a list of neurons sequentially --/
 noncomputable def DeleteNeurons [DecidableEq U] (neurons : List U) (wθ : Params (HopfieldNetwork R U)) : Params (HopfieldNetwork R U) :=
   List.foldl (fun acc neuron => DeleteNeuron neuron acc) wθ neurons
+
+
+-- The `FaultTolerance` of a Hopfield network is its ability to maintain function
+-- despite the failure of some components. The paper notes that these networks are
+-- inherently robust to component failures.
 
 /--
 Defines fault tolerance for a Hopfield network.

@@ -208,6 +208,8 @@ INPUT bib.tex
 INPUT /home/michail/HopfieldNet/blueprint/print/print.bbl
 INPUT /home/michail/HopfieldNet/blueprint/print/print.bbl
 INPUT /home/michail/HopfieldNet/blueprint/print/print.bbl
-INPUT /home/michail/HopfieldNet/blueprint/print/print.aux
-INPUT /home/michail/HopfieldNet/blueprint/print/print.out
-INPUT /home/michail/HopfieldNet/blueprint/print/print.out
+INPUT ./Hopfield1982.tex
+INPUT ./Hopfield1982.tex
+INPUT ./Hopfield1982.tex
+INPUT ./Hopfield1982.tex
+INPUT Hopfield1982.tex
