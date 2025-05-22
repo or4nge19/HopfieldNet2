@@ -95,11 +95,6 @@ This theorem captures the convergence result from the paper:
 "Every initial state flows to a limit point (if synchrony is not assumed)."
 \end{definition}
 
-
-
-
-
-
 \section{Memory Storage Algorithm}
 
 \begin{definition}\label{normalizedPattern}
@@ -113,7 +108,7 @@ matching the $(2V_i - 1)$ term from equation 2 in Hopfield's paper.
 \uses{HopfieldNetwork}
 \leanok
 The `hebbian` function computes the weight matrix according to Equation 2 of Hopfield's paper:
-    $T_{ij} = \sum_\{s} (2V_i^s - 1)(2V_i^s - 1) with T_{ii} = 0$
+    $T_{ij} = \sum_{s} (2V_{i}^s - 1)(2V_{i}^s - 1) with T_{ii} = 0$
 Note that this is equivalent to the existing `Hebbian` definition in HopfieldNet.HN,
 but we make the connection to the paper explicit here.
 \end{definition}
@@ -132,7 +127,7 @@ This property is essential for understanding the storage capacity of Hopfield ne
 
 \begin{definition}\label{spin_glass_analogy}
 \uses{HopfieldNetwork}
-The `spin_glass_analogy` formalizes the connection between Hopfield networks and
+The `spin\_glass\_analogy` formalizes the connection between Hopfield networks and
 physical spin glass systems, as discussed in the paper.
 
 From the paper (p.2555): "This case is isomorphic with an Ising model."
@@ -140,7 +135,7 @@ From the paper (p.2555): "This case is isomorphic with an Ising model."
 
 \begin{definition}\label{energy_convergence}
 \uses{HopfieldNet_convergence_fair, FixedPoint,pacePoint}
-The `energy_convergence` theorem formalizes the connection between energy minimization
+The `energy\_convergence` theorem formalizes the connection between energy minimization
 and the convergence to fixed points.
 This theorem establishes the connection between energy minimization and convergence
 to fixed points in Hopfield networks, as described in the paper
@@ -219,11 +214,6 @@ memory item on the basis of sufficient partial information.
 \leanok
 A generic function type representing how a metric (like completion probability or familiarity)
 decays or changes based on a distance-like value and network size.
-Parameters:
-- `metric_value`: The input value to the decay function (e.g., distance from threshold, closest distance).
-- `network_size`: The size of the network (e.g., `Fintype.card U`).
-- `R`: The type for the output (e.g., probabilities).
-Returns a value in `R`.
 \end{definition}
 
 \begin{definition}\label{ExponentialDecayMetric}
@@ -237,12 +227,9 @@ This corresponds to `exp(-value / (N/C))` where C is a constant (e.g., 10).
 \uses{MetricDecayFunction}
 \leanok
 The `AbstractCompletionProbability` measures the likelihood of correctly completing a pattern
-as a function of the Hamming distance `d` from the stored pattern, using a provided `decay_func`.
-
-If `d` is within `cam.threshold`, probability is 1. Beyond that, it's determined by `decay_func`
-applied to `d - cam.threshold`.
+as a function of the Hamming distance `d` from the stored pattern.
 This formalizes the empirical finding from the paper (p.2556):
-"For distance ≤ 5, the nearest state was reached more than 90\% of the time.
+"For distance $\leq 5,$ the nearest state was reached more than 90\% of the time.
 Beyond that distance, the probability fell off smoothly."
 \end{definition}
 
@@ -256,7 +243,7 @@ It's measured as the reduction in Hamming distance to the closest stored pattern
 \begin{definition}\label{error_correction_guarantee}
 \uses{ContentAddressableMemory,HopfieldNet_stabilize}
 \leanok
-The `error_correction_guarantee` theorem establishes that Hopfield networks
+The `error\_correction\_guarantee` theorem establishes that Hopfield networks
 can correct a substantial fraction of errors in the input pattern.
 
 This formalizes a key capability of content-addressable memories.
@@ -284,21 +271,21 @@ This quantifies the robustness of memory retrieval.
 \begin{theorem}\label{basin_volume_bound}
 \uses{ContentAddressableMemory}
 \leanok
-The `basin_volume_bound` theorem establishes that the basin volume decreases
+The `basin\_volume\_bound` theorem establishes that the basin volume decreases
 exponentially with the number of stored patterns.
 This formalizes how memory capacity affects retrieval robustness.
-\end{definition}
+\end{theorem}
 
-\begin{definition}\label{HopfieldNetwork}
+\begin{definition}\label{AbstractFamiliarityMeasure}
 \uses{HopfieldNetwork}
 \leanok
 `AbstractFamiliarityMeasure` quantifies how familiar a given state `s` is to the network,
-based on its proximity (closest Hamming distance) to stored patterns, using a provided `decay_func`.
+based on its proximity (closest Hamming distance) to stored patterns, using a provided `decay\_func`.
 
 The paper discusses (p.2557): "The state 00000... is always stable. For a threshold of 0, this
 stable state is much higher in energy than the stored memory states and very seldom occurs."
 A high familiarity measure (close to 1) indicates `s` is similar to a stored pattern.
-The `ExponentialDecayMetric` can be used as `decay_func`.
+The `ExponentialDecayMetric` can be used as `decay\_func`.
 \end{definition}
 
 
@@ -314,8 +301,11 @@ error in recall is severe."
 
 \begin{definition}\label{Real.erf}
 \leanok
-The error function `erf(x)` is defined as:
-  erf(x) = (2/√π) ∫₀ˣ e^(-t²) dt
+The error function is defined as:
+  %erf(x) = (2/π) ∫₀ˣ e^(-t²) dt
+  \[
+\operatorname{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \, dt
+\]
 This function is central in probability theory, especially for normal distributions.
 \end{definition}
 
@@ -325,17 +315,20 @@ This function is central in probability theory, especially for normal distributi
 The `PatternRetrievalError` function computes the probability of an error in pattern retrieval
 for a network storing m patterns. This increases as m approaches and exceeds 0.15N.
 This corresponds to the error probability P discussed in Equation 10 of the paper:
-P = ∫_σ^∞ (1/√(2π)) e^(-x²/2) dx = (1/2)(1 - erf(σ/√2)) where σ = N/(2√(nN)) and n is the number of patterns.
+\( P = \int_{\sigma}^{\infty} \frac{1}{\sqrt{2\pi}} e^{-x^2 / 2} \, 
+dx = \frac{1}{2} \left(1 - \operatorname{erf}\left(\frac{\sigma}{\sqrt{2}}\right)\right) \),
+ where \( \sigma = \frac{N}{2\sqrt{nN}} \) and \( n \) is the number of patterns.
+
 \end{definition}
 
-\begin{theorem}\label{PatternRetrievalError}
+\begin{theorem}\label{storage_capacity_bound}
 \uses{HopfieldNetwork, Hebbian_stable}
 \leanok
 The result from the paper that a Hopfield network can store approximately 0.15N patterns
-with high reliability, where N is the number of neurons. This theorem formalizes the
+with high reliability, where $N$ is the number of neurons. This theorem formalizes the
  key result about storage capacity from the paper,
-utilizing the Hebbian_stable theorem from the existing codebase.
-\end{definition}
+utilizing the Hebbian\_stable theorem from the existing codebase.
+\end{theorem}
 
 
 \section{Fault Tolerance}
@@ -371,7 +364,7 @@ When m is at most a tenth of total neurons, each pattern is fixed point in the u
 When deleting a single neuron from a network, the resulting weighted sum for a neuron u
 that's not the deleted neuron equals the original weighted sum minus the contribution
 from the deleted neuron.
-\end{definition}
+\end{lemma}
 
 \begin{definition}\label{delete_empty_neurons_step}
 When deleting neurons from an empty list, the result is the original network
@@ -467,19 +460,12 @@ Proving a tight bound likely requires assumptions beyond simple orthogonality,
 such as patterns being random and uncorrelated, analyzed in the limit of large N.
 The bound likely depends on `m` (number of patterns) and `N` (number of neurons).
 **Hopfield Assumption:** Implicitly assumes patterns behave statistically like random vectors.
-\end{definition}
+\end{lemma}
 
 \begin{lemma}\label{deleted_field_bound}
 \uses{bound_cross_talk_term}
 The field reduction from deleting neurons has a bounded effect.
 This version uses the decomposition and the (unproven) cross-talk bound.
-
-**Hopfield Assumptions:**
-1.  Standard Hebbian learning (`T_{ii} = 0`).
-2.  Patterns `ps` are orthogonal (`horth`).
-3.  Patterns `ps` behave statistically like random vectors (implicit in `bound_cross_talk_term`).
-4.  Number of stored patterns `m` is small relative to network size `N` (`hm`).
-5.  Number of deleted neurons is small relative to network size `N` (`hcard`).
 \end{lemma}
 
 \begin{lemma}\label{field_remains_sufficient}

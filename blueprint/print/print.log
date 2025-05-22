@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2025.4.6)  20 MAY 2025 15:31
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023/Debian) (preloaded format=xelatex 2025.4.6)  22 MAY 2025 15:44
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -472,10 +472,6 @@ Package hyperref Info: Link coloring ON on input line 30.
 \@outlinefile=\write3
 \openout3 = `print.out'.
 
-
-
-Package hyperref Warning: Rerun to get /PageLabels entry.
-
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
 (Font)                  OT1/cmr/m/n --> TU/lmr/m/n on input line 30.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
@@ -695,6 +691,7 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 (Font)              scaled to size 5.99936pt on input line 32.
 LaTeX Font Info:    Trying to load font information for U+msa on input line 32.
 
+
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
@@ -708,9 +705,6 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ] (./content.tex
 (./NN.tex
 Chapter 1.
-
-LaTeX Warning: Citation `comp' on page 1 undefined on input line 3.
-
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
 (Font)              scaled to size 10.00107pt on input line 7.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
@@ -735,75 +729,94 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/b/n' will be
 (Font)              scaled to size 6.99925pt on input line 29.
 LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/b/n' will be
 (Font)              scaled to size 4.99947pt on input line 29.
-
-LaTeX Warning: Reference `NeuralNetwork' on page 1 undefined on input line 39.
-
 [1
+
+] [2]) (./Hopfield1982.tex [3]
+Chapter 2.
+[4
 
 ]
 
-LaTeX Warning: Citation `comp' on page 2 undefined on input line 69.
+LaTeX Warning: Reference `HopfieldNet_convergence_fair' on page 5 undefined on 
+input line 92.
 
 
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 71
-.
+LaTeX Warning: Reference `HopfieldNet_convergence_fair' on page 5 undefined on 
+input line 137.
 
 
-LaTeX Warning: Citation `comp' on page 2 undefined on input line 77.
+LaTeX Warning: Reference `pacePoint' on page 5 undefined on input line 137.
+
+Missing character: There is no ≤ (U+2264) in font [lmroman10-regular]:mapping=t
+ex-text;!
+
+LaTeX Warning: Reference `HopfieldNet_stabilize' on page 5 undefined on input l
+ine 203.
+
+[5]
+
+LaTeX Warning: Reference `HopfieldNet_stabilize' on page 6 undefined on input l
+ine 237.
 
 
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 80
-.
+LaTeX Warning: Reference `HopfieldNet_stabilize' on page 6 undefined on input l
+ine 244.
 
 
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 89
-.
+LaTeX Warning: Reference `HopfieldNet_stabilize' on page 6 undefined on input l
+ine 253.
 
 
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 98
-.
+LaTeX Warning: Reference `HopfieldNet_stabilize' on page 6 undefined on input l
+ine 263.
+
+[6]
+
+LaTeX Warning: Reference `DeleteNeurons' on page 7 undefined on input line 346.
 
 
-LaTeX Warning: Reference `PotentialFunction' on page 2 undefined on input line 
-106.
+
+LaTeX Warning: Reference `Hebbian' on page 7 undefined on input line 362.
 
 
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 10
-6.
+LaTeX Warning: Reference `Hebbian' on page 7 undefined on input line 371.
 
 
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 12
-4.
+LaTeX Warning: Reference `delete_neuron_preserves_other_weights' on page 7 unde
+fined on input line 404.
+
+[7]
+
+LaTeX Warning: Reference `stateisStablecondition' on page 8 undefined on input 
+line 447.
 
 
-LaTeX Warning: Reference `boltzmannDistribution' on page 2 undefined on input l
-ine 124.
+LaTeX Warning: Reference `DeleteNeurons' on page 8 undefined on input line 515.
 
 
-LaTeX Warning: Citation `geman' on page 2 undefined on input line 127.
+) (./biblio.tex (/home/michail/HopfieldNet/blueprint/print/print.bbl [8])))
+[9
+
+] (/home/michail/HopfieldNet/blueprint/print/print.aux)
+ ***********
+LaTeX2e <2023-11-01> patch level 1
+L3 programming layer <2024-01-22>
+ ***********
 
 
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 14
-3.
+LaTeX Warning: There were undefined references.
 
+Package rerunfilecheck Info: File `print.out' has not changed.
+(rerunfilecheck)             Checksum: FF1492BA5F23E958DEF420C25CD4CC36;1422.
+ ) 
+Here is how much of TeX's memory you used:
+ 16918 strings out of 476846
+ 310844 string characters out of 5803825
+ 1936627 words of memory out of 5000000
+ 38614 multiletter control sequences out of 15000+600000
+ 564901 words of font info for 95 fonts, out of 8000000 for 9000
+ 14 hyphenation exceptions out of 8191
+ 90i,9n,114p,542b,536s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-LaTeX Warning: Citation `kirk' on page 2 undefined on input line 145.
-
-
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 15
-3.
-
-
-LaTeX Warning: Citation `metropolis' on page 2 undefined on input line 156.
-
-
-LaTeX Warning: Citation `hastings' on page 2 undefined on input line 157.
-
-
-LaTeX Warning: Reference `HopfieldNetwork' on page 2 undefined on input line 16
-6.
-
-[2]
-
-LaTeX Warning: Reference `boltzmannDistribution' on page 3 undefined on input l
-i
+Output written on /home/michail/HopfieldNet/blueprint/print/print.pdf (10 pages
+).
