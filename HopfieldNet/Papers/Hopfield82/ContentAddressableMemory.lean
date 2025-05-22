@@ -312,7 +312,7 @@ noncomputable def GeneralizationCapability
     0
   (correctCount : R) / (num_categories : R)
 
-/- A simple measure of how closely two patterns match, returning a real number. -/
+/-- A simple measure of how closely two patterns match, returning a real number. -/
 def PatternSimilarity (p q : PhaseSpacePoint R U) : R :=
   (Fintype.card U - HammingDistance p q : ℕ)
 

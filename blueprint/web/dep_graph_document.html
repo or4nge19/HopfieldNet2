@@ -74,14 +74,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">32</span></div>
-    <div class="thm_thmcontent"><p>  The ‘AbstractCompletionProbability‘ measures the likelihood of correctly completing a pattern as a function of the Hamming distance ‘d‘ from the stored pattern. This formalizes the empirical finding from the paper (p.2556): "For distance \(\leq 5,\) the nearest state was reached more than 90% of the time. Beyond that distance, the probability fell off smoothly." </p>
+      <span class="definition_thmlabel">33</span></div>
+    <div class="thm_thmcontent"><p>   The ‘AbstractCompletionProbability‘ measures the likelihood of correctly completing a pattern as a function of the Hamming distance ‘d‘ from the stored pattern. This formalizes the empirical finding from the paper (p.2556): "For distance \(\leq 5,\) the nearest state was reached more than 90% of the time. Beyond that distance, the probability fell off smoothly." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#AbstractCompletionProbability">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.AbstractCompletionProbability">Lean</a>
     
     
   
@@ -104,15 +104,15 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">38</span></div>
-    <div class="thm_thmcontent"><p>  ‘AbstractFamiliarityMeasure‘ quantifies how familiar a given state ‘s‘ is to the network, based on its proximity (closest Hamming distance) to stored patterns, using a provided ‘decay_func‘. </p>
+      <span class="definition_thmlabel">39</span></div>
+    <div class="thm_thmcontent"><p>   ‘AbstractFamiliarityMeasure‘ quantifies how familiar a given state ‘s‘ is to the network, based on its proximity (closest Hamming distance) to stored patterns, using a provided ‘decay_func‘. </p>
 <p>The paper discusses (p.2557): "The state 00000... is always stable. For a threshold of 0, this stable state is much higher in energy than the stored memory states and very seldom occurs." A high familiarity measure (close to 1) indicates ‘s‘ is similar to a stored pattern. The ‘ExponentialDecayMetric‘ can be used as ‘decay_func‘. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#AbstractFamiliarityMeasure">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.AbstractFamiliarityMeasure">Lean</a>
     
     
   
@@ -135,7 +135,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">5</span></div>
+      <span class="definition_thmlabel">6</span></div>
     <div class="thm_thmcontent"><p>   We define asymmetric Hopfield networks as general neural networks with the same graph514 structure and functions as symmetric Hopfield networks but with this matrix decomposition515 property instead of symmetry. </p>
 </div>
 
@@ -165,14 +165,14 @@
       <span class="theorem_thmcaption">
       Theorem
       </span>
-      <span class="theorem_thmlabel">37</span></div>
-    <div class="thm_thmcontent"><p>  The ‘basin_volume_bound‘ theorem establishes that the basin volume decreases exponentially with the number of stored patterns. This formalizes how memory capacity affects retrieval robustness. </p>
+      <span class="theorem_thmlabel">38</span></div>
+    <div class="thm_thmcontent"><p>   The ‘basin_volume_bound‘ theorem establishes that the basin volume decreases exponentially with the number of stored patterns. This formalizes how memory capacity affects retrieval robustness. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#basin_volume_bound">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.basin_volume_bound">Lean</a>
     
     
   
@@ -195,14 +195,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">19</span></div>
-    <div class="thm_thmcontent"><p>  A ‘BasinOfAttraction‘ of a fixed point is the set of all states that converge to it. In the paper (p.2554): "Then, if the system is started sufficiently near any Xa, as at \(X = Xa + \Delta ,\) it will proceed in time until \(X \equiv Xa.\)" </p>
+      <span class="definition_thmlabel">20</span></div>
+    <div class="thm_thmcontent"><p>   A ‘BasinOfAttraction‘ of a fixed point is the set of all states that converge to it. In the paper (p.2554): "Then, if the system is started sufficiently near any Xa, as at \(X = Xa + \Delta ,\) it will proceed in time until \(X \equiv Xa.\)" </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#BasinOfAttraction">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.BasinOfAttraction">Lean</a>
     
     
   
@@ -225,15 +225,15 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">35</span></div>
-    <div class="thm_thmcontent"><p>  The ‘BasinOfAttraction’‘ of a pattern is the set of all states that converge to it. This concept is central to understanding the storage and retrieval properties of Hopfield networks. </p>
+      <span class="definition_thmlabel">36</span></div>
+    <div class="thm_thmcontent"><p>   The ‘BasinOfAttraction’‘ of a pattern is the set of all states that converge to it. This concept is central to understanding the storage and retrieval properties of Hopfield networks. </p>
 <p>From the paper (p.2554): "Then, if the system is started sufficiently near any Xa, as at \(X = Xa + \Delta ,\) it will proceed in time until \(X \equiv Xa.\) </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#BasinOfAttraction'">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.BasinOfAttraction'">Lean</a>
     
     
   
@@ -256,15 +256,15 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">36</span></div>
-    <div class="thm_thmcontent"><p>  The ‘BasinVolume‘ is the "size" of the basin of attraction, measured as the fraction of the state space that converges to a given pattern. </p>
+      <span class="definition_thmlabel">37</span></div>
+    <div class="thm_thmcontent"><p>   The ‘BasinVolume‘ is the "size" of the basin of attraction, measured as the fraction of the state space that converges to a given pattern. </p>
 <p>This quantifies the robustness of memory retrieval. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#BasinVolume">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.BasinVolume">Lean</a>
     
     
   
@@ -287,7 +287,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">8</span></div>
+      <span class="definition_thmlabel">9</span></div>
     <div class="thm_thmcontent"><p>  The Boltzmann distribution: </p>
 <div class="displaymath" id="a0000000010">
   \[ P(s) = \frac{e^{-E(s)/T}}{Z} \]
@@ -321,14 +321,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">59</span></div>
-    <div class="thm_thmcontent"><p>  Placeholder lemma for bounding the cross-talk term. Proving a tight bound likely requires assumptions beyond simple orthogonality, such as patterns being random and uncorrelated, analyzed in the limit of large N. The bound likely depends on ‘m‘ (number of patterns) and ‘N‘ (number of neurons). **Hopfield Assumption:** Implicitly assumes patterns behave statistically like random vectors. </p>
+      <span class="lemma_thmlabel">60</span></div>
+    <div class="thm_thmcontent"><p>   Placeholder lemma for bounding the cross-talk term. Proving a tight bound likely requires assumptions beyond simple orthogonality, such as patterns being random and uncorrelated, analyzed in the limit of large N. The bound likely depends on ‘m‘ (number of patterns) and ‘N‘ (number of neurons). **Hopfield Assumption:** Implicitly assumes patterns behave statistically like random vectors. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#bound_cross_talk_term">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.bound_cross_talk_term">Lean</a>
     
     
   
@@ -351,14 +351,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">62</span></div>
-    <div class="thm_thmcontent"><p>  For random orthogonal patterns, the cross-talk term has a bounded absolute value. This is a fundamental assumption from Hopfield’s paper about how patterns interact. </p>
+      <span class="lemma_thmlabel">63</span></div>
+    <div class="thm_thmcontent"><p>   For random orthogonal patterns, the cross-talk term has a bounded absolute value. This is a fundamental assumption from Hopfield’s paper about how patterns interact. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#bound_cross_talk_term_abs">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.bound_cross_talk_term_abs">Lean</a>
     
     
   
@@ -381,14 +381,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">51</span></div>
-    <div class="thm_thmcontent"><p>  Helper lemma: DeleteNeuron commutes with foldl of DeleteNeuron if the neuron is not in the list. </p>
+      <span class="definition_thmlabel">52</span></div>
+    <div class="thm_thmcontent"><p>   Helper lemma: DeleteNeuron commutes with foldl of DeleteNeuron if the neuron is not in the list. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#commute_delete_foldl">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.commute_delete_foldl">Lean</a>
     
     
   
@@ -411,49 +411,15 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">29</span></div>
-    <div class="thm_thmcontent"><p>  A Content Addressable Memory is a system that can retrieve a complete pattern from a partial or corrupted version. </p>
+      <span class="definition_thmlabel">30</span></div>
+    <div class="thm_thmcontent"><p>   A Content Addressable Memory is a system that can retrieve a complete pattern from a partial or corrupted version. </p>
 <p>This formalizes the central concept from the paper (p.2554): "A general content-addressable memory would be capable of retrieving this entire memory item on the basis of sufficient partial information. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#ContentAddressableMemory">LaTeX</a>
     
     
-  
-    
-    
-  
-    
-  </div>
-    
-      </div>
-    </div>
-
-
-    
-    <div class="dep-modal-container" id="Convergence_modal">
-      <div class="dep-modal-content">
-          <button class="dep-closebtn">
-<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        
-  <div class="thm" id="Convergence" style="display: none">
-    <div class="thm_thmheading">
-      <span class="theorem_thmcaption">
-      Theorem
-      </span>
-      <span class="theorem_thmlabel">3</span><span class="theorem_thmtitle">Convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
-	[
-	<a href="sect0003.html#comp" >5</a>
-	]
-</span>)</span></div>
-    <div class="thm_thmcontent"><p>    If the activations of the neurons of a Hopfield network are updated asynchronously, a stable state is reached in a finite number of steps. </p>
-</div>
-
-    <a class="latex_link" href="sect0001.html#Convergence">LaTeX</a>
-    
-    
-  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_fair">Lean</a>
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.ContentAddressableMemory">Lean</a>
     
     
   
@@ -476,48 +442,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">22</span></div>
-    <div class="thm_thmcontent"><p>  This theorem captures the convergence result from the paper: "Every initial state flows to a limit point (if synchrony is not assumed)." </p>
+      <span class="definition_thmlabel">23</span></div>
+    <div class="thm_thmcontent"><p>   This theorem captures the convergence result from the paper: "Every initial state flows to a limit point (if synchrony is not assumed)." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#convergence_to_fixed_point">LaTeX</a>
     
     
-  
-    
-    
-  
-    
-  </div>
-    
-      </div>
-    </div>
-
-
-    
-    <div class="dep-modal-container" id="ConvergenceCor_modal">
-      <div class="dep-modal-content">
-          <button class="dep-closebtn">
-<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        
-  <div class="thm" id="ConvergenceCor" style="display: none">
-    <div class="thm_thmheading">
-      <span class="theorem_thmcaption">
-      Theorem
-      </span>
-      <span class="theorem_thmlabel">4</span><span class="theorem_thmtitle">Corollary of convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
-	[
-	<a href="sect0003.html#comp" >5</a>
-	]
-</span>)</span></div>
-    <div class="thm_thmcontent"><p>    If the neurons are traversed in an arbitrary, but fixed cyclic fashion, at most \(n\cdot 2^n\) steps (updates of individual neurons) are needed, where \(n\) is the number of neurons of the network. </p>
-</div>
-
-    <a class="latex_link" href="sect0001.html#ConvergenceCor">LaTeX</a>
-    
-    
-  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_cyclic">Lean</a>
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.convergence_to_fixed_point">Lean</a>
     
     
   
@@ -540,14 +472,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">57</span></div>
-    <div class="thm_thmcontent"><p>  Axiom stating the bound on the absolute value of the cross-talk term. This encapsulates the statistical argument from Hopfield’s paper that for random-like patterns, the sum of interfering terms is bounded. </p>
+      <span class="lemma_thmlabel">58</span></div>
+    <div class="thm_thmcontent"><p>   Axiom stating the bound on the absolute value of the cross-talk term. This encapsulates the statistical argument from Hopfield’s paper that for random-like patterns, the sum of interfering terms is bounded. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#cross_talk_term_abs_bound_assumption">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.cross_talk_term_abs_bound_assumption">Lean</a>
     
     
   
@@ -570,14 +502,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">48</span></div>
-    <div class="thm_thmcontent"><p>  When deleting a list of neurons with a new neuron added at the front, the effect on the weighted sum equals the effect of deleting the first neuron and then deleting the rest of the list. </p>
+      <span class="definition_thmlabel">49</span></div>
+    <div class="thm_thmcontent"><p>   When deleting a list of neurons with a new neuron added at the front, the effect on the weighted sum equals the effect of deleting the first neuron and then deleting the rest of the list. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#delete_cons_neuron_step">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.delete_cons_neuron_step">Lean</a>
     
     
   
@@ -600,14 +532,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">47</span></div>
-    <div class="thm_thmcontent"><p> When deleting neurons from an empty list, the result is the original network  </p>
+      <span class="definition_thmlabel">48</span></div>
+    <div class="thm_thmcontent"><p>   When deleting neurons from an empty list, the result is the original network </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#delete_empty_neurons_step">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.delete_empty_neurons_step">Lean</a>
     
     
   
@@ -630,14 +562,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">50</span></div>
-    <div class="thm_thmcontent"><p>  The effect of deleting a neuron from an already deleted network on a neuron u that is not in the deleted set. </p>
+      <span class="definition_thmlabel">51</span></div>
+    <div class="thm_thmcontent"><p>   The effect of deleting a neuron from an already deleted network on a neuron u that is not in the deleted set. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#delete_neuron_from_deleted_network">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.delete_neuron_from_deleted_network">Lean</a>
     
     
   
@@ -660,14 +592,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">53</span></div>
-    <div class="thm_thmcontent"><p>  Helper lemma: Deleting a list of neurons recursively subtracts their contributions. Requires that the list of neurons has no duplicates. </p>
+      <span class="definition_thmlabel">54</span></div>
+    <div class="thm_thmcontent"><p>   Helper lemma: Deleting a list of neurons recursively subtracts their contributions. Requires that the list of neurons has no duplicates. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#delete_neurons_recursive">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.delete_neurons_recursive">Lean</a>
     
     
   
@@ -690,14 +622,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">46</span></div>
-    <div class="thm_thmcontent"><p>  When deleting a single neuron from a network, the resulting weighted sum for a neuron u that’s not the deleted neuron equals the original weighted sum minus the contribution from the deleted neuron. </p>
+      <span class="lemma_thmlabel">47</span></div>
+    <div class="thm_thmcontent"><p>   When deleting a single neuron from a network, the resulting weighted sum for a neuron u that’s not the deleted neuron equals the original weighted sum minus the contribution from the deleted neuron. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#delete_single_neuron_step">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.delete_single_neuron_step">Lean</a>
     
     
   
@@ -720,14 +652,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">49</span></div>
-    <div class="thm_thmcontent"><p>  For a singleton list, the effect matches the single neuron deletion case </p>
+      <span class="definition_thmlabel">50</span></div>
+    <div class="thm_thmcontent"><p>  For a singleton list, the effect matches the single neuron deletion case. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#delete_singleton_neuron_step">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.delete_singleton_neuron_step">Lean</a>
     
     
   
@@ -750,14 +682,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">60</span></div>
-    <div class="thm_thmcontent"><p>  The field reduction from deleting neurons has a bounded effect. This version uses the decomposition and the (unproven) cross-talk bound. </p>
+      <span class="lemma_thmlabel">61</span></div>
+    <div class="thm_thmcontent"><p>   The field reduction from deleting neurons has a bounded effect. This version uses the decomposition and the (unproven) cross-talk bound. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#deleted_field_bound">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.deleted_field_bound">Lean</a>
     
     
   
@@ -780,14 +712,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">63</span></div>
-    <div class="thm_thmcontent"><p>  TO DO </p>
+      <span class="lemma_thmlabel">64</span></div>
+    <div class="thm_thmcontent"><p>   TO DO </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#deleted_field_product_bound">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.deleted_field_product_bound">Lean</a>
     
     
   
@@ -810,14 +742,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">54</span></div>
-    <div class="thm_thmcontent"><p>  DeleteNeurons removes weights connected to deleted neurons </p>
+      <span class="definition_thmlabel">55</span></div>
+    <div class="thm_thmcontent"><p>   DeleteNeurons removes weights connected to deleted neurons. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#deleted_neurons_field_effect">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.deleted_neurons_field_effect">Lean</a>
     
     
   
@@ -840,14 +772,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">43</span></div>
-    <div class="thm_thmcontent"><p>  The ‘DeleteNeuron‘ function simulates the failure of a neuron by removing its connections. This corresponds to setting weights to/from that neuron to zero. The paper discusses (p.2558): "The collective properties are only weakly sensitive to details of the modeling or the failure of individual devices." </p>
+      <span class="definition_thmlabel">44</span></div>
+    <div class="thm_thmcontent"><p>   The ‘DeleteNeuron‘ function simulates the failure of a neuron by removing its connections. This corresponds to setting weights to/from that neuron to zero. The paper discusses (p.2558): "The collective properties are only weakly sensitive to details of the modeling or the failure of individual devices." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#DeleteNeuron">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.DeleteNeuron">Lean</a>
     
     
   
@@ -870,14 +802,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">69</span></div>
-    <div class="thm_thmcontent"><p>  When deleting neurons from a Finset, we can use Finset.toList to convert the Finset to a List. This matches the API needed by DeleteNeurons. </p>
+      <span class="definition_thmlabel">70</span></div>
+    <div class="thm_thmcontent"><p>   When deleting neurons from a Finset, we can use Finset.toList to convert the Finset to a List. This matches the API needed by DeleteNeurons. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#DeleteNeurons_with_Finset">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.DeleteNeurons_with_Finset">Lean</a>
     
     
   
@@ -900,14 +832,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">27</span></div>
-    <div class="thm_thmcontent"><p>  The ‘energy_convergence‘ theorem formalizes the connection between energy minimization and the convergence to fixed points. This theorem establishes the connection between energy minimization and convergence to fixed points in Hopfield networks, as described in the paper From the paper (p.2555): "State changes will continue until a least (local) E is reached." </p>
+      <span class="definition_thmlabel">28</span></div>
+    <div class="thm_thmcontent"><p>   The ‘energy_convergence‘ theorem formalizes the connection between energy minimization and the convergence to fixed points. This theorem establishes the connection between energy minimization and convergence to fixed points in Hopfield networks, as described in the paper From the paper (p.2555): "State changes will continue until a least (local) E is reached." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#energy_convergence">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.energy_convergence">Lean</a>
     
     
   
@@ -930,15 +862,15 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">21</span></div>
-    <div class="thm_thmcontent"><p>  The ‘EnergyChange‘ when updating neuron i is always non-positive, as proven in the paper with Equation 8. </p>
+      <span class="definition_thmlabel">22</span></div>
+    <div class="thm_thmcontent"><p>   The ‘EnergyChange‘ when updating neuron i is always non-positive, as proven in the paper with Equation 8. </p>
 <p>This theorem formalizes a key result from the paper: the energy function always decreases (or remains constant) under asynchronous updates. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#EnergyChange">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.EnergyChange">Lean</a>
     
     
   
@@ -961,14 +893,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">20</span></div>
-    <div class="thm_thmcontent"><p>  The ‘EnergyLandscape‘ of a Hopfield network is the energy function defined over all possible states. In the paper, this is the function E defined in Equation 7: \( E = -1/2 \sum \sum Tij Vi Vj\) </p>
+      <span class="definition_thmlabel">21</span></div>
+    <div class="thm_thmcontent"><p>   The ‘EnergyLandscape‘ of a Hopfield network is the energy function defined over all possible states. In the paper, this is the function E defined in Equation 7: \( E = -1/2 \sum \sum Tij Vi Vj\) </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#EnergyLandscape">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.EnergyLandscape">Lean</a>
     
     
   
@@ -991,15 +923,15 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">34</span></div>
-    <div class="thm_thmcontent"><p>  The ‘error_correction_guarantee‘ theorem establishes that Hopfield networks can correct a substantial fraction of errors in the input pattern. </p>
+      <span class="definition_thmlabel">35</span></div>
+    <div class="thm_thmcontent"><p>   The ‘error_correction_guarantee‘ theorem establishes that Hopfield networks can correct a substantial fraction of errors in the input pattern. </p>
 <p>This formalizes a key capability of content-addressable memories. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#error_correction_guarantee">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.error_correction_guarantee">Lean</a>
     
     
   
@@ -1022,14 +954,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">33</span></div>
-    <div class="thm_thmcontent"><p>  ‘ErrorCorrection‘ quantifies the network’s ability to correct errors in the input pattern. It’s measured as the reduction in Hamming distance to the closest stored pattern after convergence. </p>
+      <span class="definition_thmlabel">34</span></div>
+    <div class="thm_thmcontent"><p>   ‘ErrorCorrection‘ quantifies the network’s ability to correct errors in the input pattern. It’s measured as the reduction in Hamming distance to the closest stored pattern after convergence. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#ErrorCorrection">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.ErrorCorrection">Lean</a>
     
     
   
@@ -1052,14 +984,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">31</span></div>
-    <div class="thm_thmcontent"><p>  A specific exponential decay model, often used to model probabilities or familiarity scores. This corresponds to ‘exp(-value / (N/C))‘ where C is a constant (e.g., 10). </p>
+      <span class="definition_thmlabel">32</span></div>
+    <div class="thm_thmcontent"><p>   A specific exponential decay model, often used to model probabilities or familiarity scores. This corresponds to ‘exp(-value / (N/C))‘ where C is a constant (e.g., 10). </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#ExponentialDecayMetric">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.ExponentialDecayMetric">Lean</a>
     
     
   
@@ -1082,8 +1014,8 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">70</span></div>
-    <div class="thm_thmcontent"><p>  A Hopfield network can tolerate the failure of up to 10% of its neurons while maintaining all stored patterns as fixed points, provided: </p>
+      <span class="definition_thmlabel">71</span></div>
+    <div class="thm_thmcontent"><p>   A Hopfield network can tolerate the failure of up to 10% of its neurons while maintaining all stored patterns as fixed points, provided: </p>
 <ol class="enumerate">
   <li><p>The stored patterns are orthogonal </p>
 </li>
@@ -1095,7 +1027,7 @@
     <a class="latex_link" href="sect0002.html#fault_tolerance_bound">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.fault_tolerance_bound">Lean</a>
     
     
   
@@ -1118,14 +1050,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">44</span></div>
-    <div class="thm_thmcontent"><p>  The ‘FaultTolerance‘ of a Hopfield network is its ability to maintain function despite the failure of some components. The paper notes that these networks are inherently robust to component failures. </p>
+      <span class="definition_thmlabel">45</span></div>
+    <div class="thm_thmcontent"><p>   The ‘FaultTolerance‘ of a Hopfield network is its ability to maintain function despite the failure of some components. The paper notes that these networks are inherently robust to component failures. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#FaultTolerance">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.FaultTolerance">Lean</a>
     
     
   
@@ -1148,14 +1080,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">61</span></div>
-    <div class="thm_thmcontent"><p> With constrained m and limited deleted neurons, the field remains strong enough </p>
+      <span class="lemma_thmlabel">62</span></div>
+    <div class="thm_thmcontent"><p>  With constrained m and limited deleted neurons, the field remains strong enough </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#field_remains_sufficient">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.field_remains_sufficient">Lean</a>
     
     
   
@@ -1178,14 +1110,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">64</span></div>
-    <div class="thm_thmcontent"><p>  With bounded numbers of patterns and deleted neurons, the field remains strong enough to maintain the pattern stability, adjusted for N/5 bound. </p>
+      <span class="lemma_thmlabel">65</span></div>
+    <div class="thm_thmcontent"><p>   With bounded numbers of patterns and deleted neurons, the field remains strong enough to maintain the pattern stability, adjusted for N/5 bound. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#field_remains_sufficient_for_N_div_5">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.field_remains_sufficient_for_N_div_5">Lean</a>
     
     
   
@@ -1208,14 +1140,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">18</span></div>
-    <div class="thm_thmcontent"><p>  A ‘FixedPoint‘ of the phase space flow is a state that does not change under evolution. In the paper, these correspond to the locally stable states of the network (p.2554): "Various classes of flow patterns are possible, but the systems of use for memory particularly include those that flow toward locally stable points..." </p>
+      <span class="definition_thmlabel">19</span></div>
+    <div class="thm_thmcontent"><p>   A ‘FixedPoint‘ of the phase space flow is a state that does not change under evolution. In the paper, these correspond to the locally stable states of the network (p.2554): "Various classes of flow patterns are possible, but the systems of use for memory particularly include those that flow toward locally stable points..." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#FixedPoint">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.FixedPoint">Lean</a>
     
     
   
@@ -1238,14 +1170,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">52</span></div>
+      <span class="definition_thmlabel">53</span></div>
     <div class="thm_thmcontent"><p>  Helper lemma: Weights are preserved by foldl if indices are not in the list </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#foldl_delete_preserves_weights">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.foldl_delete_preserves_weights">Lean</a>
     
     
   
@@ -1268,7 +1200,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">9</span></div>
+      <span class="definition_thmlabel">10</span></div>
     <div class="thm_thmcontent"><p>   For neuron updates, we use Gibbs sampling, as introduced by Geman and Geman <span class="cite">
 	[
 	<a href="sect0003.html#geman" >1</a>
@@ -1311,14 +1243,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">24</span></div>
-    <div class="thm_thmcontent"><p>  The ‘hebbian‘ function computes the weight matrix according to Equation 2 of Hopfield’s paper: \(T_{ij} = \sum _{s} (2V_{i}^s - 1)(2V_{i}^s - 1) with T_{ii} = 0\) Note that this is equivalent to the existing ‘Hebbian‘ definition in HopfieldNet.HN, but we make the connection to the paper explicit here. </p>
+      <span class="definition_thmlabel">25</span></div>
+    <div class="thm_thmcontent"><p>   The ‘hebbian‘ function computes the weight matrix according to Equation 2 of Hopfield’s paper: \(T_{ij} = \sum _{s} (2V_{i}^s - 1)(2V_{i}^s - 1) with T_{ii} = 0\) Note that this is equivalent to the existing ‘Hebbian‘ definition in HopfieldNet.HN, but we make the connection to the paper explicit here. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#hebbian">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.hebbian">Lean</a>
     
     
   
@@ -1341,14 +1273,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">65</span></div>
-    <div class="thm_thmcontent"><p>  TO DO </p>
+      <span class="lemma_thmlabel">66</span></div>
+    <div class="thm_thmcontent"><p>   TO DO </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#hebbian_deleted_threshold_is_zero">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.hebbian_deleted_threshold_is_zero">Lean</a>
     
     
   
@@ -1371,15 +1303,15 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">58</span></div>
-    <div class="thm_thmcontent"><p>  Decomposes the total sum representing the field reduction into the contribution from the target pattern ‘k‘ and the cross-talk term from other patterns \(l \neq k.\) </p>
+      <span class="lemma_thmlabel">59</span></div>
+    <div class="thm_thmcontent"><p>   Decomposes the total sum representing the field reduction into the contribution from the target pattern ‘k‘ and the cross-talk term from other patterns \(l \neq k.\) </p>
 <p>**Hopfield Assumption:** Assumes the standard Hebbian learning rule where \(T_{ii} = 0\). The ‘Hebbian‘ definition in ‘HN.lean‘ implements this by subtracting ‘m • 1‘. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#Hebbian_stable">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.Hebbian_stable">Lean</a>
     
     
   
@@ -1402,14 +1334,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">56</span></div>
-    <div class="thm_thmcontent"><p>  Defines the cross-talk contribution to the deleted field sum. This term arises from the interaction of the target pattern ‘k‘ with other stored patterns \(`l \neq k`\) over the set of deleted neurons. </p>
+      <span class="definition_thmlabel">57</span></div>
+    <div class="thm_thmcontent"><p>   Defines the cross-talk contribution to the deleted field sum. This term arises from the interaction of the target pattern ‘k‘ with other stored patterns \(`l \neq k`\) over the set of deleted neurons. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#hebbian_weight_deleted_neurons_cross_talk_term">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.hebbian_weight_deleted_neurons_cross_talk_term">Lean</a>
     
     
   
@@ -1432,14 +1364,142 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">55</span></div>
-    <div class="thm_thmcontent"><p>  Calculates the contribution to the deleted field sum from the target pattern ‘k‘ itself in the Hebbian weight definition. </p>
+      <span class="definition_thmlabel">56</span></div>
+    <div class="thm_thmcontent"><p>   Calculates the contribution to the deleted field sum from the target pattern ‘k‘ itself in the Hebbian weight definition. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#hebbian_weight_deleted_neurons_l_eq_k_term">LaTeX</a>
     
     
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.hebbian_weight_deleted_neurons_l_eq_k_term">Lean</a>
+    
+    
   
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="Hopfield82.Real.erf_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="Hopfield82.Real.erf" style="display: none">
+    <div class="thm_thmheading">
+      <span class="definition_thmcaption">
+      Definition
+      </span>
+      <span class="definition_thmlabel">41</span></div>
+    <div class="thm_thmcontent"><p>  The error function is defined as: </p>
+<div class="displaymath" id="a0000000022">
+  \[  \operatorname {erf}(x) = \frac{2}{\sqrt{\pi }} \int _0^x e^{-t^2} \,  dt  \]
+</div>
+<p> This function is central in probability theory, especially for normal distributions. </p>
+</div>
+
+    <a class="latex_link" href="sect0002.html#Hopfield82.Real.erf">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.Real.erf">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="HopfieldNet_convergence_fair_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="HopfieldNet_convergence_fair" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">3</span></div>
+    <div class="thm_thmcontent"><p>   If the activations of the neurons of a Hopfield network are updated asynchronously, a stable state is reached in a finite number of steps. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#HopfieldNet_convergence_fair">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_fair">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="HopfieldNet_convergence_fairCor_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="HopfieldNet_convergence_fairCor" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">5</span><span class="theorem_thmtitle">Corollary of convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
+	[
+	<a href="sect0003.html#comp" >5</a>
+	]
+</span>)</span></div>
+    <div class="thm_thmcontent"><p>   If the neurons are traversed in an arbitrary, but fixed cyclic fashion, at most \(n\cdot 2^n\) steps (updates of individual neurons) are needed, where \(n\) is the number of neurons of the network. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#HopfieldNet_convergence_fairCor">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_convergence_cyclic">Lean</a>
+    
+    
+  
+    
+  </div>
+    
+      </div>
+    </div>
+
+
+    
+    <div class="dep-modal-container" id="HopfieldNet_stabilize_modal">
+      <div class="dep-modal-content">
+          <button class="dep-closebtn">
+<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        
+  <div class="thm" id="HopfieldNet_stabilize" style="display: none">
+    <div class="thm_thmheading">
+      <span class="theorem_thmcaption">
+      Theorem
+      </span>
+      <span class="theorem_thmlabel">4</span></div>
+    <div class="thm_thmcontent"><p>   A function that returns the stabilized state after updating. </p>
+</div>
+
+    <a class="latex_link" href="sect0001.html#HopfieldNet_stabilize">LaTeX</a>
+    
+    
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_stabilize">Lean</a>
     
     
   
@@ -1509,14 +1569,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">25</span></div>
-    <div class="thm_thmcontent"><p>  The ‘pseudoOrthogonality‘ property from Hopfield’s paper (Equations 3-4) states: For random patterns, the dot product between different patterns is approximately 0, while the dot product of a pattern with itself is approximately N. This property is essential for understanding the storage capacity of Hopfield networks. </p>
+      <span class="definition_thmlabel">26</span></div>
+    <div class="thm_thmcontent"><p>   The ‘pseudoOrthogonality‘ property from Hopfield’s paper (Equations 3-4) states: For random patterns, the dot product between different patterns is approximately 0, while the dot product of a pattern with itself is approximately N. This property is essential for understanding the storage capacity of Hopfield networks. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#isPseudoOrthogonal">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.isPseudoOrthogonal">Lean</a>
     
     
   
@@ -1539,14 +1599,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">15</span></div>
-    <div class="thm_thmcontent"><p>  The ‘localField‘ for neuron i in state s is the weighted sum of inputs from other neurons, minus the threshold. This corresponds to \(\sum j Tij Vj - \theta _i\) in the paper. </p>
+      <span class="definition_thmlabel">16</span></div>
+    <div class="thm_thmcontent"><p>   The ‘localField‘ for neuron i in state s is the weighted sum of inputs from other neurons, minus the threshold. This corresponds to \(\sum j Tij Vj - \theta _i\) in the paper. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#localField">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.localField">Lean</a>
     
     
   
@@ -1569,14 +1629,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">30</span></div>
-    <div class="thm_thmcontent"><p> A generic function type representing how a metric (like completion probability or familiarity) decays or changes based on a distance-like value and network size. </p>
+      <span class="definition_thmlabel">31</span></div>
+    <div class="thm_thmcontent"><p>  A generic function type representing how a metric (like completion probability or familiarity) decays or changes based on a distance-like value and network size. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#MetricDecayFunction">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.MetricDecayFunction">Lean</a>
     
     
   
@@ -1599,7 +1659,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">11</span></div>
+      <span class="definition_thmlabel">12</span></div>
     <div class="thm_thmcontent"><p>   Another sampling method we formalize is the Metropolis-Hastings algorithm, introduced by Metropolis et al. <span class="cite">
 	[
 	<a href="sect0003.html#metropolis" >7</a>
@@ -1641,14 +1701,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">66</span></div>
-    <div class="thm_thmcontent"><p>  TO DO </p>
+      <span class="lemma_thmlabel">67</span></div>
+    <div class="thm_thmcontent"><p>   TO DO </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#net_input_at_non_deleted_neuron">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.net_input_at_non_deleted_neuron">Lean</a>
     
     
   
@@ -1709,14 +1769,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">68</span></div>
-    <div class="thm_thmcontent"><p>  TO DO </p>
+      <span class="definition_thmlabel">69</span></div>
+    <div class="thm_thmcontent"><p>   TO DO </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#non_deleted_neuron_maintains_sign_of_activation">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.non_deleted_neuron_maintains_sign_of_activation">Lean</a>
     
     
   
@@ -1739,14 +1799,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">23</span></div>
-    <div class="thm_thmcontent"><p>  The ‘normalizedPattern‘ converts a neural state to a vector with -1/+1 values, matching the \((2V_i - 1)\) term from equation 2 in Hopfield’s paper. </p>
+      <span class="definition_thmlabel">24</span></div>
+    <div class="thm_thmcontent"><p>   The ‘normalizedPattern‘ converts a neural state to a vector with -1/+1 values, matching the \((2V_i - 1)\) term from equation 2 in Hopfield’s paper. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#normalizedPattern">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.normalizedPattern">Lean</a>
     
     
   
@@ -1769,14 +1829,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">45</span></div>
-    <div class="thm_thmcontent"><p>  When m is at most a tenth of total neurons, each pattern is fixed point in the undamaged network </p>
+      <span class="definition_thmlabel">46</span></div>
+    <div class="thm_thmcontent"><p>   When m is at most a tenth of total neurons, each pattern is fixed point in the undamaged network </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#pattern_stability_in_hebbian">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.pattern_stability_in_hebbian">Lean</a>
     
     
   
@@ -1799,14 +1859,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">41</span></div>
-    <div class="thm_thmcontent"><p>  The ‘PatternRetrievalError‘ function computes the probability of an error in pattern retrieval for a network storing m patterns. This increases as m approaches and exceeds 0.15N. This corresponds to the error probability P discussed in Equation 10 of the paper: \( P = \int _{\sigma }^{\infty } \frac{1}{\sqrt{2\pi }} e^{-x^2 / 2} \,  dx = \frac{1}{2} \left(1 - \operatorname {erf}\left(\frac{\sigma }{\sqrt{2}}\right)\right) \), where \( \sigma = \frac{N}{2\sqrt{nN}} \) and \( n \) is the number of patterns. </p>
+      <span class="definition_thmlabel">42</span></div>
+    <div class="thm_thmcontent"><p>   The ‘PatternRetrievalError‘ function computes the probability of an error in pattern retrieval for a network storing m patterns. This increases as m approaches and exceeds 0.15N. This corresponds to the error probability P discussed in Equation 10 of the paper: \( P = \int _{\sigma }^{\infty } \frac{1}{\sqrt{2\pi }} e^{-x^2 / 2} \,  dx = \frac{1}{2} \left(1 - \operatorname {erf}\left(\frac{\sigma }{\sqrt{2}}\right)\right) \), where \( \sigma = \frac{N}{2\sqrt{nN}} \) and \( n \) is the number of patterns. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#PatternRetrievalError">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.PatternRetrievalError">Lean</a>
     
     
   
@@ -1829,14 +1889,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">17</span></div>
-    <div class="thm_thmcontent"><p>  A ‘PhaseSpaceFlow‘ describes how the system state evolves over time. It maps each point in phase space to its successor state after updating one neuron. From the paper (p.2554): "The equations of motion of the system describe a flow in state space." </p>
+      <span class="definition_thmlabel">18</span></div>
+    <div class="thm_thmcontent"><p>   A ‘PhaseSpaceFlow‘ describes how the system state evolves over time. It maps each point in phase space to its successor state after updating one neuron. From the paper (p.2554): "The equations of motion of the system describe a flow in state space." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#PhaseSpaceFlow">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.PhaseSpaceFlow">Lean</a>
     
     
   
@@ -1859,14 +1919,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">14</span></div>
-    <div class="thm_thmcontent"><p>  A ‘PhaseSpacePoint‘ represents a state in the phase space of the Hopfield system. In the paper, this corresponds to the instantaneous state of all neurons (p.2554): "A point in state space then represents the instantaneous condition of the system." </p>
+      <span class="definition_thmlabel">15</span></div>
+    <div class="thm_thmcontent"><p>   A ‘PhaseSpacePoint‘ represents a state in the phase space of the Hopfield system. In the paper, this corresponds to the instantaneous state of all neurons (p.2554): "A point in state space then represents the instantaneous condition of the system." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#PhaseSpacePoint">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.PhaseSpacePoint">Lean</a>
     
     
   
@@ -1889,7 +1949,7 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">7</span></div>
+      <span class="lemma_thmlabel">8</span></div>
     <div class="thm_thmcontent"><p>   The significance of this potential function lies in its relationship to Lyapunov stability566 theory. We prove it is bounded regardless of the network’s configuration. </p>
 </div>
 
@@ -1919,7 +1979,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">6</span></div>
+      <span class="definition_thmlabel">7</span></div>
     <div class="thm_thmcontent"><p>   The potential function for asymmetric Hopfield networks at time step \(k\) represents the energy of the network at time step \(k\), considering that neuron \((k \mod n)\) is being updated. </p>
 </div>
 
@@ -1949,48 +2009,14 @@
       <span class="lemma_thmcaption">
       Lemma
       </span>
-      <span class="lemma_thmlabel">67</span></div>
-    <div class="thm_thmcontent"><p>  TO DO </p>
+      <span class="lemma_thmlabel">68</span></div>
+    <div class="thm_thmcontent"><p>   TO DO </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#product_net_input_activation_at_non_deleted_neuron">LaTeX</a>
     
     
-  
-    
-    
-  
-    
-  </div>
-    
-      </div>
-    </div>
-
-
-    
-    <div class="dep-modal-container" id="Real.erf_modal">
-      <div class="dep-modal-content">
-          <button class="dep-closebtn">
-<svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
-</button>
-        
-  <div class="thm" id="Real.erf" style="display: none">
-    <div class="thm_thmheading">
-      <span class="definition_thmcaption">
-      Definition
-      </span>
-      <span class="definition_thmlabel">40</span></div>
-    <div class="thm_thmcontent"><p> The error function is defined as: </p>
-<div class="displaymath" id="a0000000022">
-  \[  \operatorname {erf}(x) = \frac{2}{\sqrt{\pi }} \int _0^x e^{-t^2} \,  dt  \]
-</div>
-<p> This function is central in probability theory, especially for normal distributions. </p>
-</div>
-
-    <a class="latex_link" href="sect0002.html#Real.erf">LaTeX</a>
-    
-    
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.product_net_input_activation_at_non_deleted_neuron">Lean</a>
     
     
   
@@ -2013,14 +2039,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">28</span></div>
-    <div class="thm_thmcontent"><p>  The ‘retrievalDistance‘ function measures how far from a pattern we can initialize the network and still have it converge to that pattern. From the paper (p.2556): "For distance ≤ 5, the nearest state was reached more than 90% of the time. Beyond that distance, the probability fell off smoothly. </p>
+      <span class="definition_thmlabel">29</span></div>
+    <div class="thm_thmcontent"><p>   The ‘retrievalDistance‘ function measures how far from a pattern we can initialize the network and still have it converge to that pattern. From the paper (p.2556): "For distance ≤ 5, the nearest state was reached more than 90% of the time. Beyond that distance, the probability fell off smoothly. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#retrievalDistance">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.retrievalDistance">Lean</a>
     
     
   
@@ -2043,7 +2069,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">10</span></div>
+      <span class="definition_thmlabel">11</span></div>
     <div class="thm_thmcontent"><p>   We also implement simulated annealing, as introduced by Kirkpatrick et al. <span class="cite">
 	[
 	<a href="sect0003.html#kirk" >4</a>
@@ -2081,15 +2107,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">26</span></div>
-    <div class="thm_thmcontent"><p>  The ‘spin_glass_analogy‘ formalizes the connection between Hopfield networks and physical spin glass systems, as discussed in the paper. </p>
-<p>From the paper (p.2555): "This case is isomorphic with an Ising model." </p>
+      <span class="definition_thmlabel">27</span></div>
+    <div class="thm_thmcontent"><p>   The ‘spin_glass_analogy‘ formalizes the connection between Hopfield networks and physical spin glass systems, as discussed in the paper. From the paper (p.2555): "This case is isomorphic with an Ising model." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#spin_glass_analogy">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.spin_glass_analogy">Lean</a>
     
     
   
@@ -2112,7 +2137,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">13</span></div>
+      <span class="definition_thmlabel">14</span></div>
     <div class="thm_thmcontent"><p>   The stochastic Hopfield Markov process, which models the evolution of Hopfield network states over discrete time steps using Gibbs sampling at fixed temperature. In this simplified model, the transition kernel is time-homogeneous (same for all steps). </p>
 </div>
 
@@ -2142,14 +2167,14 @@
       <span class="theorem_thmcaption">
       Theorem
       </span>
-      <span class="theorem_thmlabel">42</span></div>
-    <div class="thm_thmcontent"><p>  The result from the paper that a Hopfield network can store approximately 0.15N patterns with high reliability, where \(N\) is the number of neurons. This theorem formalizes the key result about storage capacity from the paper, utilizing the Hebbian_stable theorem from the existing codebase. </p>
+      <span class="theorem_thmlabel">43</span></div>
+    <div class="thm_thmcontent"><p>   The result from the paper that a Hopfield network can store approximately 0.15N patterns with high reliability, where \(N\) is the number of neurons. This theorem formalizes the key result about storage capacity from the paper, utilizing the Hebbian_stable theorem from the existing codebase. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#storage_capacity_bound">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.storage_capacity_bound">Lean</a>
     
     
   
@@ -2172,14 +2197,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">39</span></div>
-    <div class="thm_thmcontent"><p> The ‘StorageCapacity‘ of a Hopfield network is the maximum number of patterns that can be stored and reliably retrieved. The paper suggests this is around 0.15N. From the paper (p.2556): "About 0.15 N states can be simultaneously remembered before error in recall is severe." </p>
+      <span class="definition_thmlabel">40</span></div>
+    <div class="thm_thmcontent"><p>  The ‘StorageCapacity‘ of a Hopfield network is the maximum number of patterns that can be stored and reliably retrieved. The paper suggests this is around 0.15N. From the paper (p.2556): "About 0.15 N states can be simultaneously remembered before error in recall is severe." </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#StorageCapacity">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.StorageCapacity">Lean</a>
     
     
   
@@ -2202,7 +2227,7 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">12</span></div>
+      <span class="definition_thmlabel">13</span></div>
     <div class="thm_thmcontent"><p>   To measure convergence to the equilibrium Boltzmann distribution, we use the total variation distance, as described by Levin and Peres <span class="cite">
 	[
 	<a href="sect0003.html#levin" >6</a>
@@ -2239,14 +2264,14 @@
       <span class="definition_thmcaption">
       Definition
       </span>
-      <span class="definition_thmlabel">16</span></div>
-    <div class="thm_thmcontent"><p>  The ‘updateRule‘ defines the neural state update according to the paper’s Equation 1: \(Vi \rightarrow 1 if \sum j Tij Vj {\gt} Ui\) \( Vi \rightarrow 0 if \sum j Tij Vj {\lt} Ui\) In our formalization, we use -1 instead of 0 for the "not firing" state. </p>
+      <span class="definition_thmlabel">17</span></div>
+    <div class="thm_thmcontent"><p>   The ‘updateRule‘ defines the neural state update according to the paper’s Equation 1: \(Vi \rightarrow 1 if \sum j Tij Vj {\gt} Ui\) \( Vi \rightarrow 0 if \sum j Tij Vj {\lt} Ui\) In our formalization, we use -1 instead of 0 for the "not firing" state. </p>
 </div>
 
     <a class="latex_link" href="sect0002.html#updateRule">LaTeX</a>
     
     
-  
+  <a class="lean_link lean_decl" href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/Hopfield82.updateRule">Lean</a>
     
     
   
@@ -2274,7 +2299,7 @@ graphContainer.graphviz({useWorker: true})
     .width(width)
     .height(height)
     .fit(true)
-    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"Asymmetric HopfieldNetwork"	[color=green,		fillcolor="#B0ECA3",		label="Asymmetric HopfieldNetwork",		shape=box,		style=filled];	stochasticHopfieldMarkovProcess	[color=green,		fillcolor="#B0ECA3",		label=stochasticHopfieldMarkovProcess,		shape=box,		style=filled];	PhaseSpacePoint	[color=green,		fillcolor="#B0ECA3",		label=PhaseSpacePoint,		shape=box,		style=filled];	localField	[color=green,		fillcolor="#B0ECA3",		label=localField,		shape=box,		style=filled];	PhaseSpacePoint -> localField	[style=dashed];	FixedPoint	[color=green,		fillcolor="#B0ECA3",		label=FixedPoint,		shape=box,		style=filled];	PhaseSpacePoint -> FixedPoint	[style=dashed];	updateRule	[color=green,		fillcolor="#B0ECA3",		label=updateRule,		shape=box,		style=filled];	PhaseSpacePoint -> updateRule	[style=dashed];	EnergyChange	[color=green,		fillcolor="#B0ECA3",		label=EnergyChange,		shape=box,		style=filled];	PhaseSpacePoint -> EnergyChange	[style=dashed];	retrievalDistance	[color=green,		fillcolor="#B0ECA3",		label=retrievalDistance,		shape=box,		style=filled];	PhaseSpacePoint -> retrievalDistance	[style=dashed];	PhaseSpaceFlow	[color=green,		fillcolor="#B0ECA3",		label=PhaseSpaceFlow,		shape=box,		style=filled];	PhaseSpacePoint -> PhaseSpaceFlow	[style=dashed];	BasinOfAttraction	[color=green,		fillcolor="#B0ECA3",		label=BasinOfAttraction,		shape=box,		style=filled];	FixedPoint -> BasinOfAttraction	[style=dashed];	energy_convergence	[color=blue,		fillcolor="#A3D6FF",		label=energy_convergence,		shape=box,		style=filled];	FixedPoint -> energy_convergence	[style=dashed];	normalizedPattern	[color=green,		fillcolor="#B0ECA3",		label=normalizedPattern,		shape=box,		style=filled];	error_correction_guarantee	[color=green,		fillcolor="#B0ECA3",		label=error_correction_guarantee,		shape=box,		style=filled];	"Real.erf"	[color=green,		fillcolor="#B0ECA3",		label="Real.erf",		shape=box,		style=filled];	hebbian_weight_deleted_neurons_cross_talk_term	[color=green,		fillcolor="#B0ECA3",		label=hebbian_weight_deleted_neurons_cross_talk_term,		shape=box,		style=filled];	"Real.erf" -> hebbian_weight_deleted_neurons_cross_talk_term	[style=dashed];	field_remains_sufficient_for_N_div_5	[color=blue,		label=field_remains_sufficient_for_N_div_5,		shape=ellipse];	"Real.erf" -> field_remains_sufficient_for_N_div_5	[style=dashed];	PatternRetrievalError	[color=green,		fillcolor="#B0ECA3",		label=PatternRetrievalError,		shape=box,		style=filled];	"Real.erf" -> PatternRetrievalError	[style=dashed];	delete_neuron_from_deleted_network	[color=green,		fillcolor="#B0ECA3",		label=delete_neuron_from_deleted_network,		shape=box,		style=filled];	"Real.erf" -> delete_neuron_from_deleted_network	[style=dashed];	hebbian_weight_deleted_neurons_l_eq_k_term	[color=green,		fillcolor="#B0ECA3",		label=hebbian_weight_deleted_neurons_l_eq_k_term,		shape=box,		style=filled];	"Real.erf" -> hebbian_weight_deleted_neurons_l_eq_k_term	[style=dashed];	cross_talk_term_abs_bound_assumption	[color=blue,		label=cross_talk_term_abs_bound_assumption,		shape=ellipse];	hebbian_weight_deleted_neurons_cross_talk_term -> cross_talk_term_abs_bound_assumption	[style=dashed];	deleted_field_product_bound	[color=blue,		label=deleted_field_product_bound,		shape=ellipse];	hebbian_weight_deleted_neurons_cross_talk_term -> deleted_field_product_bound	[style=dashed];	bound_cross_talk_term	[color=blue,		label=bound_cross_talk_term,		shape=ellipse];	hebbian_weight_deleted_neurons_cross_talk_term -> bound_cross_talk_term	[style=dashed];	bound_cross_talk_term_abs	[color=green,		label=bound_cross_talk_term_abs,		shape=ellipse];	cross_talk_term_abs_bound_assumption -> bound_cross_talk_term_abs	[style=dashed];	fault_tolerance_bound	[color=green,		fillcolor="#B0ECA3",		label=fault_tolerance_bound,		shape=box,		style=filled];	deleted_field_product_bound -> fault_tolerance_bound	[style=dashed];	non_deleted_neuron_maintains_sign_of_activation	[label=non_deleted_neuron_maintains_sign_of_activation,		shape=box];	deleted_field_product_bound -> non_deleted_neuron_maintains_sign_of_activation	[style=dashed];	deleted_field_bound	[label=deleted_field_bound,		shape=ellipse];	bound_cross_talk_term -> deleted_field_bound	[style=dashed];	FaultTolerance	[color=green,		fillcolor="#B0ECA3",		label=FaultTolerance,		shape=box,		style=filled];	net_input_at_non_deleted_neuron	[color=blue,		label=net_input_at_non_deleted_neuron,		shape=ellipse];	product_net_input_activation_at_non_deleted_neuron	[label=product_net_input_activation_at_non_deleted_neuron,		shape=ellipse];	net_input_at_non_deleted_neuron -> product_net_input_activation_at_non_deleted_neuron	[style=dashed];	HopfieldNetwork	[color=green,		fillcolor="#B0ECA3",		label=HopfieldNetwork,		shape=box,		style=filled];	HopfieldNetwork -> "Asymmetric HopfieldNetwork"	[style=dashed];	HopfieldNetwork -> stochasticHopfieldMarkovProcess	[style=dashed];	HopfieldNetwork -> PhaseSpacePoint	[style=dashed];	HopfieldNetwork -> normalizedPattern	[style=dashed];	"Total variation"	[color=green,		fillcolor="#B0ECA3",		label="Total variation",		shape=box,		style=filled];	HopfieldNetwork -> "Total variation"	[style=dashed];	isPseudoOrthogonal	[color=green,		fillcolor="#B0ECA3",		label=isPseudoOrthogonal,		shape=box,		style=filled];	HopfieldNetwork -> isPseudoOrthogonal	[style=dashed];	ConvergenceCor	[color=green,		label=ConvergenceCor,		shape=ellipse];	HopfieldNetwork -> ConvergenceCor	[style=dashed];	AbstractFamiliarityMeasure	[color=green,		fillcolor="#B0ECA3",		label=AbstractFamiliarityMeasure,		shape=box,		style=filled];	HopfieldNetwork -> AbstractFamiliarityMeasure	[style=dashed];	PotentialFunction	[color=green,		fillcolor="#B0ECA3",		label=PotentialFunction,		shape=box,		style=filled];	HopfieldNetwork -> PotentialFunction	[style=dashed];	DeleteNeuron	[color=green,		fillcolor="#B0ECA3",		label=DeleteNeuron,		shape=box,		style=filled];	HopfieldNetwork -> DeleteNeuron	[style=dashed];	Convergence	[color=green,		label=Convergence,		shape=ellipse];	HopfieldNetwork -> Convergence	[style=dashed];	GibbsSampling	[color=green,		fillcolor="#B0ECA3",		label=GibbsSampling,		shape=box,		style=filled];	HopfieldNetwork -> GibbsSampling	[style=dashed];	SimulatedAnnealing	[color=green,		fillcolor="#B0ECA3",		label=SimulatedAnnealing,		shape=box,		style=filled];	HopfieldNetwork -> SimulatedAnnealing	[style=dashed];	EnergyLandscape	[color=green,		fillcolor="#B0ECA3",		label=EnergyLandscape,		shape=box,		style=filled];	HopfieldNetwork -> EnergyLandscape	[style=dashed];	storage_capacity_bound	[color=green,		label=storage_capacity_bound,		shape=ellipse];	HopfieldNetwork -> storage_capacity_bound	[style=dashed];	hebbian	[color=green,		fillcolor="#B0ECA3",		label=hebbian,		shape=box,		style=filled];	HopfieldNetwork -> hebbian	[style=dashed];	"Metropolis-Hastings"	[color=green,		fillcolor="#B0ECA3",		label="Metropolis-Hastings",		shape=box,		style=filled];	HopfieldNetwork -> "Metropolis-Hastings"	[style=dashed];	spin_glass_analogy	[color=blue,		fillcolor="#A3D6FF",		label=spin_glass_analogy,		shape=box,		style=filled];	HopfieldNetwork -> spin_glass_analogy	[style=dashed];	"Potential function is bounded"	[color=green,		label="Potential function is bounded",		shape=ellipse];	PotentialFunction -> "Potential function is bounded"	[style=dashed];	delete_empty_neurons_step	[color=green,		fillcolor="#B0ECA3",		label=delete_empty_neurons_step,		shape=box,		style=filled];	DeleteNeuron -> delete_empty_neurons_step	[style=dashed];	delete_single_neuron_step	[color=green,		label=delete_single_neuron_step,		shape=ellipse];	DeleteNeuron -> delete_single_neuron_step	[style=dashed];	hebbian_deleted_threshold_is_zero	[color=blue,		label=hebbian_deleted_threshold_is_zero,		shape=ellipse];	DeleteNeuron -> hebbian_deleted_threshold_is_zero	[style=dashed];	delete_cons_neuron_step	[color=green,		fillcolor="#B0ECA3",		label=delete_cons_neuron_step,		shape=box,		style=filled];	DeleteNeuron -> delete_cons_neuron_step	[style=dashed];	commute_delete_foldl	[color=green,		fillcolor="#B0ECA3",		label=commute_delete_foldl,		shape=box,		style=filled];	DeleteNeuron -> commute_delete_foldl	[style=dashed];	ExponentialDecayMetric	[color=green,		fillcolor="#B0ECA3",		label=ExponentialDecayMetric,		shape=box,		style=filled];	delete_neurons_recursive	[color=green,		fillcolor="#B0ECA3",		label=delete_neurons_recursive,		shape=box,		style=filled];	deleted_neurons_field_effect	[color=green,		fillcolor="#B0ECA3",		label=deleted_neurons_field_effect,		shape=box,		style=filled];	delete_neurons_recursive -> deleted_neurons_field_effect	[style=dashed];	deleted_neurons_field_effect -> net_input_at_non_deleted_neuron	[style=dashed];	convergence_to_fixed_point	[color=green,		fillcolor="#B0ECA3",		label=convergence_to_fixed_point,		shape=box,		style=filled];	AbstractCompletionProbability	[color=green,		fillcolor="#B0ECA3",		label=AbstractCompletionProbability,		shape=box,		style=filled];	foldl_delete_preserves_weights	[color=green,		fillcolor="#B0ECA3",		label=foldl_delete_preserves_weights,		shape=box,		style=filled];	foldl_delete_preserves_weights -> delete_neurons_recursive	[style=dashed];	DeleteNeurons_with_Finset	[color=blue,		fillcolor="#A3D6FF",		label=DeleteNeurons_with_Finset,		shape=box,		style=filled];	Hebbian_stable	[color=green,		label=Hebbian_stable,		shape=ellipse];	Hebbian_stable -> storage_capacity_bound	[style=dashed];	pattern_stability_in_hebbian	[color=green,		fillcolor="#B0ECA3",		label=pattern_stability_in_hebbian,		shape=box,		style=filled];	Hebbian_stable -> pattern_stability_in_hebbian	[style=dashed];	ErrorCorrection	[color=green,		fillcolor="#B0ECA3",		label=ErrorCorrection,		shape=box,		style=filled];	BasinVolume	[color=green,		fillcolor="#B0ECA3",		label=BasinVolume,		shape=box,		style=filled];	delete_singleton_neuron_step	[color=green,		fillcolor="#B0ECA3",		label=delete_singleton_neuron_step,		shape=box,		style=filled];	basin_volume_bound	[color=green,		label=basin_volume_bound,		shape=ellipse];	"BasinOfAttraction'"	[color=green,		fillcolor="#B0ECA3",		label="BasinOfAttraction'",		shape=box,		style=filled];	MetricDecayFunction	[color=green,		fillcolor="#B0ECA3",		label=MetricDecayFunction,		shape=box,		style=filled];	MetricDecayFunction -> ExponentialDecayMetric	[style=dashed];	MetricDecayFunction -> AbstractCompletionProbability	[style=dashed];	StorageCapacity	[color=green,		fillcolor="#B0ECA3",		label=StorageCapacity,		shape=box,		style=filled];	field_remains_sufficient	[color=green,		label=field_remains_sufficient,		shape=ellipse];	NeuralNetwork	[color=green,		fillcolor="#B0ECA3",		label=NeuralNetwork,		shape=box,		style=filled];	NeuralNetwork -> HopfieldNetwork	[style=dashed];	boltzmannDistribution	[color=green,		fillcolor="#B0ECA3",		label=boltzmannDistribution,		shape=box,		style=filled];	boltzmannDistribution -> "Total variation"	[style=dashed];	boltzmannDistribution -> GibbsSampling	[style=dashed];	ContentAddressableMemory	[color=green,		fillcolor="#B0ECA3",		label=ContentAddressableMemory,		shape=box,		style=filled];	ContentAddressableMemory -> error_correction_guarantee	[style=dashed];	ContentAddressableMemory -> ErrorCorrection	[style=dashed];	ContentAddressableMemory -> BasinVolume	[style=dashed];	ContentAddressableMemory -> basin_volume_bound	[style=dashed];	ContentAddressableMemory -> "BasinOfAttraction'"	[style=dashed];}`)
+    .renderDot(`strict digraph "" {	graph [bgcolor=transparent];	node [label="\N",		penwidth=1.8	];	edge [arrowhead=vee];	"Asymmetric HopfieldNetwork"	[color=green,		fillcolor="#B0ECA3",		label="Asymmetric HopfieldNetwork",		shape=box,		style=filled];	stochasticHopfieldMarkovProcess	[color=green,		fillcolor="#B0ECA3",		label=stochasticHopfieldMarkovProcess,		shape=box,		style=filled];	FixedPoint	[color=green,		fillcolor="#B0ECA3",		label=FixedPoint,		shape=box,		style=filled];	BasinOfAttraction	[color=green,		fillcolor="#B0ECA3",		label=BasinOfAttraction,		shape=box,		style=filled];	FixedPoint -> BasinOfAttraction	[style=dashed];	energy_convergence	[color=blue,		fillcolor="#A3D6FF",		label=energy_convergence,		shape=box,		style=filled];	FixedPoint -> energy_convergence	[style=dashed];	convergence_to_fixed_point	[color=green,		fillcolor="#B0ECA3",		label=convergence_to_fixed_point,		shape=box,		style=filled];	normalizedPattern	[color=green,		fillcolor="#B0ECA3",		label=normalizedPattern,		shape=box,		style=filled];	ContentAddressableMemory	[color=green,		fillcolor="#B0ECA3",		label=ContentAddressableMemory,		shape=box,		style=filled];	"BasinOfAttraction'"	[color=green,		fillcolor="#B0ECA3",		label="BasinOfAttraction'",		shape=box,		style=filled];	ContentAddressableMemory -> "BasinOfAttraction'"	[style=dashed];	ErrorCorrection	[color=green,		fillcolor="#B0ECA3",		label=ErrorCorrection,		shape=box,		style=filled];	ContentAddressableMemory -> ErrorCorrection	[style=dashed];	error_correction_guarantee	[color=green,		fillcolor="#B0ECA3",		label=error_correction_guarantee,		shape=box,		style=filled];	ContentAddressableMemory -> error_correction_guarantee	[style=dashed];	BasinVolume	[color=green,		fillcolor="#B0ECA3",		label=BasinVolume,		shape=box,		style=filled];	ContentAddressableMemory -> BasinVolume	[style=dashed];	basin_volume_bound	[color=green,		label=basin_volume_bound,		shape=ellipse];	ContentAddressableMemory -> basin_volume_bound	[style=dashed];	"Hopfield82.Real.erf"	[color=green,		fillcolor="#B0ECA3",		label="Hopfield82.Real.erf",		shape=box,		style=filled];	hebbian_weight_deleted_neurons_l_eq_k_term	[color=green,		fillcolor="#B0ECA3",		label=hebbian_weight_deleted_neurons_l_eq_k_term,		shape=box,		style=filled];	"Hopfield82.Real.erf" -> hebbian_weight_deleted_neurons_l_eq_k_term	[style=dashed];	PatternRetrievalError	[color=green,		fillcolor="#B0ECA3",		label=PatternRetrievalError,		shape=box,		style=filled];	"Hopfield82.Real.erf" -> PatternRetrievalError	[style=dashed];	field_remains_sufficient_for_N_div_5	[color=blue,		label=field_remains_sufficient_for_N_div_5,		shape=ellipse];	"Hopfield82.Real.erf" -> field_remains_sufficient_for_N_div_5	[style=dashed];	delete_neuron_from_deleted_network	[color=green,		fillcolor="#B0ECA3",		label=delete_neuron_from_deleted_network,		shape=box,		style=filled];	"Hopfield82.Real.erf" -> delete_neuron_from_deleted_network	[style=dashed];	hebbian_weight_deleted_neurons_cross_talk_term	[color=green,		fillcolor="#B0ECA3",		label=hebbian_weight_deleted_neurons_cross_talk_term,		shape=box,		style=filled];	"Hopfield82.Real.erf" -> hebbian_weight_deleted_neurons_cross_talk_term	[style=dashed];	bound_cross_talk_term	[color=blue,		label=bound_cross_talk_term,		shape=ellipse];	hebbian_weight_deleted_neurons_cross_talk_term -> bound_cross_talk_term	[style=dashed];	cross_talk_term_abs_bound_assumption	[color=blue,		label=cross_talk_term_abs_bound_assumption,		shape=ellipse];	hebbian_weight_deleted_neurons_cross_talk_term -> cross_talk_term_abs_bound_assumption	[style=dashed];	deleted_field_product_bound	[color=blue,		label=deleted_field_product_bound,		shape=ellipse];	hebbian_weight_deleted_neurons_cross_talk_term -> deleted_field_product_bound	[style=dashed];	deleted_field_bound	[label=deleted_field_bound,		shape=ellipse];	bound_cross_talk_term -> deleted_field_bound	[style=dashed];	bound_cross_talk_term_abs	[color=green,		label=bound_cross_talk_term_abs,		shape=ellipse];	cross_talk_term_abs_bound_assumption -> bound_cross_talk_term_abs	[style=dashed];	fault_tolerance_bound	[color=green,		fillcolor="#B0ECA3",		label=fault_tolerance_bound,		shape=box,		style=filled];	deleted_field_product_bound -> fault_tolerance_bound	[style=dashed];	non_deleted_neuron_maintains_sign_of_activation	[label=non_deleted_neuron_maintains_sign_of_activation,		shape=box];	deleted_field_product_bound -> non_deleted_neuron_maintains_sign_of_activation	[style=dashed];	deleted_neurons_field_effect	[color=green,		fillcolor="#B0ECA3",		label=deleted_neurons_field_effect,		shape=box,		style=filled];	net_input_at_non_deleted_neuron	[color=blue,		label=net_input_at_non_deleted_neuron,		shape=ellipse];	deleted_neurons_field_effect -> net_input_at_non_deleted_neuron	[style=dashed];	product_net_input_activation_at_non_deleted_neuron	[label=product_net_input_activation_at_non_deleted_neuron,		shape=ellipse];	net_input_at_non_deleted_neuron -> product_net_input_activation_at_non_deleted_neuron	[style=dashed];	HopfieldNet_stabilize	[color=green,		label=HopfieldNet_stabilize,		shape=ellipse];	HopfieldNet_stabilize -> ContentAddressableMemory	[style=dashed];	PotentialFunction	[color=green,		fillcolor="#B0ECA3",		label=PotentialFunction,		shape=box,		style=filled];	"Potential function is bounded"	[color=green,		label="Potential function is bounded",		shape=ellipse];	PotentialFunction -> "Potential function is bounded"	[style=dashed];	PhaseSpacePoint	[color=green,		fillcolor="#B0ECA3",		label=PhaseSpacePoint,		shape=box,		style=filled];	PhaseSpacePoint -> FixedPoint	[style=dashed];	PhaseSpaceFlow	[color=green,		fillcolor="#B0ECA3",		label=PhaseSpaceFlow,		shape=box,		style=filled];	PhaseSpacePoint -> PhaseSpaceFlow	[style=dashed];	localField	[color=green,		fillcolor="#B0ECA3",		label=localField,		shape=box,		style=filled];	PhaseSpacePoint -> localField	[style=dashed];	retrievalDistance	[color=green,		fillcolor="#B0ECA3",		label=retrievalDistance,		shape=box,		style=filled];	PhaseSpacePoint -> retrievalDistance	[style=dashed];	EnergyChange	[color=green,		fillcolor="#B0ECA3",		label=EnergyChange,		shape=box,		style=filled];	PhaseSpacePoint -> EnergyChange	[style=dashed];	updateRule	[color=green,		fillcolor="#B0ECA3",		label=updateRule,		shape=box,		style=filled];	PhaseSpacePoint -> updateRule	[style=dashed];	MetricDecayFunction	[color=green,		fillcolor="#B0ECA3",		label=MetricDecayFunction,		shape=box,		style=filled];	ExponentialDecayMetric	[color=green,		fillcolor="#B0ECA3",		label=ExponentialDecayMetric,		shape=box,		style=filled];	MetricDecayFunction -> ExponentialDecayMetric	[style=dashed];	AbstractCompletionProbability	[color=green,		fillcolor="#B0ECA3",		label=AbstractCompletionProbability,		shape=box,		style=filled];	MetricDecayFunction -> AbstractCompletionProbability	[style=dashed];	delete_empty_neurons_step	[color=green,		fillcolor="#B0ECA3",		label=delete_empty_neurons_step,		shape=box,		style=filled];	boltzmannDistribution	[color=green,		fillcolor="#B0ECA3",		label=boltzmannDistribution,		shape=box,		style=filled];	GibbsSampling	[color=green,		fillcolor="#B0ECA3",		label=GibbsSampling,		shape=box,		style=filled];	boltzmannDistribution -> GibbsSampling	[style=dashed];	"Total variation"	[color=green,		fillcolor="#B0ECA3",		label="Total variation",		shape=box,		style=filled];	boltzmannDistribution -> "Total variation"	[style=dashed];	delete_neurons_recursive	[color=green,		fillcolor="#B0ECA3",		label=delete_neurons_recursive,		shape=box,		style=filled];	delete_neurons_recursive -> deleted_neurons_field_effect	[style=dashed];	DeleteNeurons_with_Finset	[color=blue,		fillcolor="#A3D6FF",		label=DeleteNeurons_with_Finset,		shape=box,		style=filled];	delete_single_neuron_step	[color=green,		label=delete_single_neuron_step,		shape=ellipse];	HopfieldNet_convergence_fair	[color=green,		label=HopfieldNet_convergence_fair,		shape=ellipse];	HopfieldNet_convergence_fair -> energy_convergence	[style=dashed];	HopfieldNet_convergence_fair -> convergence_to_fixed_point	[style=dashed];	HopfieldNet_convergence_fair -> HopfieldNet_stabilize	[style=dashed];	HopfieldNetwork	[color=green,		fillcolor="#B0ECA3",		label=HopfieldNetwork,		shape=box,		style=filled];	HopfieldNetwork -> "Asymmetric HopfieldNetwork"	[style=dashed];	HopfieldNetwork -> stochasticHopfieldMarkovProcess	[style=dashed];	HopfieldNetwork -> normalizedPattern	[style=dashed];	HopfieldNetwork -> PotentialFunction	[style=dashed];	HopfieldNetwork -> PhaseSpacePoint	[style=dashed];	HopfieldNetwork -> GibbsSampling	[style=dashed];	HopfieldNetwork -> "Total variation"	[style=dashed];	HopfieldNetwork -> HopfieldNet_convergence_fair	[style=dashed];	AbstractFamiliarityMeasure	[color=green,		fillcolor="#B0ECA3",		label=AbstractFamiliarityMeasure,		shape=box,		style=filled];	HopfieldNetwork -> AbstractFamiliarityMeasure	[style=dashed];	hebbian	[color=green,		fillcolor="#B0ECA3",		label=hebbian,		shape=box,		style=filled];	HopfieldNetwork -> hebbian	[style=dashed];	spin_glass_analogy	[color=blue,		fillcolor="#A3D6FF",		label=spin_glass_analogy,		shape=box,		style=filled];	HopfieldNetwork -> spin_glass_analogy	[style=dashed];	DeleteNeuron	[color=green,		fillcolor="#B0ECA3",		label=DeleteNeuron,		shape=box,		style=filled];	HopfieldNetwork -> DeleteNeuron	[style=dashed];	"Metropolis-Hastings"	[color=green,		fillcolor="#B0ECA3",		label="Metropolis-Hastings",		shape=box,		style=filled];	HopfieldNetwork -> "Metropolis-Hastings"	[style=dashed];	SimulatedAnnealing	[color=green,		fillcolor="#B0ECA3",		label=SimulatedAnnealing,		shape=box,		style=filled];	HopfieldNetwork -> SimulatedAnnealing	[style=dashed];	EnergyLandscape	[color=green,		fillcolor="#B0ECA3",		label=EnergyLandscape,		shape=box,		style=filled];	HopfieldNetwork -> EnergyLandscape	[style=dashed];	isPseudoOrthogonal	[color=green,		fillcolor="#B0ECA3",		label=isPseudoOrthogonal,		shape=box,		style=filled];	HopfieldNetwork -> isPseudoOrthogonal	[style=dashed];	HopfieldNet_convergence_fairCor	[color=green,		label=HopfieldNet_convergence_fairCor,		shape=ellipse];	HopfieldNetwork -> HopfieldNet_convergence_fairCor	[style=dashed];	hebbian -> delete_empty_neurons_step	[style=dashed];	hebbian -> delete_single_neuron_step	[style=dashed];	Hebbian_stable	[color=green,		label=Hebbian_stable,		shape=ellipse];	hebbian -> Hebbian_stable	[style=dashed];	DeleteNeuron -> delete_empty_neurons_step	[style=dashed];	DeleteNeuron -> DeleteNeurons_with_Finset	[style=dashed];	DeleteNeuron -> delete_single_neuron_step	[style=dashed];	commute_delete_foldl	[color=green,		fillcolor="#B0ECA3",		label=commute_delete_foldl,		shape=box,		style=filled];	DeleteNeuron -> commute_delete_foldl	[style=dashed];	FaultTolerance	[color=green,		fillcolor="#B0ECA3",		label=FaultTolerance,		shape=box,		style=filled];	DeleteNeuron -> FaultTolerance	[style=dashed];	hebbian_deleted_threshold_is_zero	[color=blue,		label=hebbian_deleted_threshold_is_zero,		shape=ellipse];	DeleteNeuron -> hebbian_deleted_threshold_is_zero	[style=dashed];	delete_cons_neuron_step	[color=green,		fillcolor="#B0ECA3",		label=delete_cons_neuron_step,		shape=box,		style=filled];	DeleteNeuron -> delete_cons_neuron_step	[style=dashed];	storage_capacity_bound	[color=green,		label=storage_capacity_bound,		shape=ellipse];	Hebbian_stable -> storage_capacity_bound	[style=dashed];	pattern_stability_in_hebbian	[color=green,		fillcolor="#B0ECA3",		label=pattern_stability_in_hebbian,		shape=box,		style=filled];	Hebbian_stable -> pattern_stability_in_hebbian	[style=dashed];	StorageCapacity	[color=green,		fillcolor="#B0ECA3",		label=StorageCapacity,		shape=box,		style=filled];	field_remains_sufficient	[color=green,		label=field_remains_sufficient,		shape=ellipse];	NeuralNetwork	[color=green,		fillcolor="#B0ECA3",		label=NeuralNetwork,		shape=box,		style=filled];	NeuralNetwork -> HopfieldNetwork	[style=dashed];	delete_singleton_neuron_step	[color=green,		fillcolor="#B0ECA3",		label=delete_singleton_neuron_step,		shape=box,		style=filled];	foldl_delete_preserves_weights	[color=green,		fillcolor="#B0ECA3",		label=foldl_delete_preserves_weights,		shape=box,		style=filled];	foldl_delete_preserves_weights -> delete_neurons_recursive	[style=dashed];}`)
     .on("end", interactive);
 
 latexLabelEscaper = function(label) {

@@ -209,17 +209,12 @@
 
   </div>
 </div>
-<div class="theorem_thmwrapper theorem-style-plain" id="Convergence">
+<div class="theorem_thmwrapper theorem-style-plain" id="HopfieldNet_convergence_fair">
   <div class="theorem_thmheading">
     <span class="theorem_thmcaption">
     Theorem
     </span>
     <span class="theorem_thmlabel">3</span>
-    <span class="theorem_thmtitle">Convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
-	[
-	<a href="sect0003.html#comp" >5</a>
-	]
-</span>)</span>
     <div class="thm_header_extras">
 
     
@@ -227,7 +222,7 @@
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0001.html#Convergence">#</a>
+    <a class="icon proof" href="sect0001.html#HopfieldNet_convergence_fair">#</a>
     
     
     <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
@@ -273,16 +268,79 @@
         </div>
   </div>
   <div class="theorem_thmcontent">
-  <p>    If the activations of the neurons of a Hopfield network are updated asynchronously, a stable state is reached in a finite number of steps. </p>
+  <p>   If the activations of the neurons of a Hopfield network are updated asynchronously, a stable state is reached in a finite number of steps. </p>
 
   </div>
 </div>
-<div class="theorem_thmwrapper theorem-style-plain" id="ConvergenceCor">
+<div class="theorem_thmwrapper theorem-style-plain" id="HopfieldNet_stabilize">
   <div class="theorem_thmheading">
     <span class="theorem_thmcaption">
     Theorem
     </span>
     <span class="theorem_thmlabel">4</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="sect0001.html#HopfieldNet_stabilize">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="sect0001.html#HopfieldNet_convergence_fair">Theorem 3</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://mkaratarakis.github.io/HopfieldNet/docs/find/#doc/HopfieldNet_stabilize" class="lean_decl">HopfieldNet_stabilize</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="theorem_thmcontent">
+  <p>   A function that returns the stabilized state after updating. </p>
+
+  </div>
+</div>
+<div class="theorem_thmwrapper theorem-style-plain" id="HopfieldNet_convergence_fairCor">
+  <div class="theorem_thmheading">
+    <span class="theorem_thmcaption">
+    Theorem
+    </span>
+    <span class="theorem_thmlabel">5</span>
     <span class="theorem_thmtitle">Corollary of convergence Theorem for Hopfield networks (Theorem 8.1, <span class="cite">
 	[
 	<a href="sect0003.html#comp" >5</a>
@@ -295,7 +353,7 @@
         </div>
     <div class="thm_header_hidden_extras">
 
-    <a class="icon proof" href="sect0001.html#ConvergenceCor">#</a>
+    <a class="icon proof" href="sect0001.html#HopfieldNet_convergence_fairCor">#</a>
     
     
     <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
@@ -341,7 +399,7 @@
         </div>
   </div>
   <div class="theorem_thmcontent">
-  <p>    If the neurons are traversed in an arbitrary, but fixed cyclic fashion, at most \(n\cdot 2^n\) steps (updates of individual neurons) are needed, where \(n\) is the number of neurons of the network. </p>
+  <p>   If the neurons are traversed in an arbitrary, but fixed cyclic fashion, at most \(n\cdot 2^n\) steps (updates of individual neurons) are needed, where \(n\) is the number of neurons of the network. </p>
 
   </div>
 </div>
@@ -350,7 +408,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">5</span>
+    <span class="definition_thmlabel">6</span>
     <div class="thm_header_extras">
 
     
@@ -413,7 +471,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">6</span>
+    <span class="definition_thmlabel">7</span>
     <div class="thm_header_extras">
 
     
@@ -476,7 +534,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">7</span>
+    <span class="lemma_thmlabel">8</span>
     <div class="thm_header_extras">
 
     
@@ -499,7 +557,7 @@
         
         <ul class="uses">
           
-          <li><a href="sect0001.html#PotentialFunction">Definition 6</a></li>
+          <li><a href="sect0001.html#PotentialFunction">Definition 7</a></li>
           
           <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
           
@@ -541,7 +599,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">8</span>
+    <span class="definition_thmlabel">9</span>
     <div class="thm_header_extras">
 
     
@@ -588,7 +646,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">9</span>
+    <span class="definition_thmlabel">10</span>
     <div class="thm_header_extras">
 
     
@@ -613,7 +671,7 @@
           
           <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
           
-          <li><a href="sect0001.html#boltzmannDistribution">Definition 8</a></li>
+          <li><a href="sect0001.html#boltzmannDistribution">Definition 9</a></li>
           
         </ul>
     
@@ -666,7 +724,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">10</span>
+    <span class="definition_thmlabel">11</span>
     <div class="thm_header_extras">
 
     
@@ -737,7 +795,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">11</span>
+    <span class="definition_thmlabel">12</span>
     <div class="thm_header_extras">
 
     
@@ -812,7 +870,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">12</span>
+    <span class="definition_thmlabel">13</span>
     <div class="thm_header_extras">
 
     
@@ -837,7 +895,7 @@
           
           <li><a href="sect0001.html#HopfieldNetwork">Definition 2</a></li>
           
-          <li><a href="sect0001.html#boltzmannDistribution">Definition 8</a></li>
+          <li><a href="sect0001.html#boltzmannDistribution">Definition 9</a></li>
           
         </ul>
     
@@ -884,7 +942,7 @@
     <span class="definition_thmcaption">
     Definition
     </span>
-    <span class="definition_thmlabel">13</span>
+    <span class="definition_thmlabel">14</span>
     <div class="thm_header_extras">
 
     
