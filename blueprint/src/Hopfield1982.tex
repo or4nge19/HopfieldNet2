@@ -204,7 +204,7 @@ From the paper (p.2555): "State changes will continue until a least (local) E is
 \section{Content Addressable Memory}
 
 \begin{definition}\label{retrievalDistance}
-\lean{Hopfield82.retrievalDistance}
+%\lean{Hopfield82.retrievalDistance}
 \uses{PhaseSpacePoint}
 \leanok
 The `retrievalDistance` function measures how far from a pattern we can initialize
@@ -214,7 +214,7 @@ From the paper (p.2556): "For distance ≤ 5, the nearest state was reached more
 \end{definition}
 
 \begin{definition}\label{ContentAddressableMemory}
-\lean{Hopfield82.ContentAddressableMemory}
+%\lean{Hopfield82.ContentAddressableMemory}
 \uses{HopfieldNet_stabilize}
 \leanok
 A Content Addressable Memory is a system that can retrieve a complete pattern
@@ -226,14 +226,14 @@ memory item on the basis of sufficient partial information.
 \end{definition}
 
 \begin{definition}\label{MetricDecayFunction}
-\lean{Hopfield82.MetricDecayFunction}
+%\lean{Hopfield82.MetricDecayFunction}
 \leanok
 A generic function type representing how a metric (like completion probability or familiarity)
 decays or changes based on a distance-like value and network size.
 \end{definition}
 
 \begin{definition}\label{ExponentialDecayMetric}
-\lean{Hopfield82.ExponentialDecayMetric}
+%\lean{Hopfield82.ExponentialDecayMetric}
 \uses{MetricDecayFunction}
 \leanok
 A specific exponential decay model, often used to model probabilities or familiarity scores.
@@ -241,7 +241,7 @@ This corresponds to `exp(-value / (N/C))` where C is a constant (e.g., 10).
 \end{definition}
 
 \begin{definition}\label{AbstractCompletionProbability}
-\lean{Hopfield82.AbstractCompletionProbability}
+%\lean{Hopfield82.AbstractCompletionProbability}
 \uses{MetricDecayFunction}
 \leanok
 The `AbstractCompletionProbability` measures the likelihood of correctly completing a pattern
@@ -252,16 +252,16 @@ Beyond that distance, the probability fell off smoothly."
 \end{definition}
 
 \begin{definition}\label{ErrorCorrection}
-\lean{Hopfield82.ErrorCorrection}
-\uses{ContentAddressableMemory,HopfieldNet_stabilize}
+%\lean{Hopfield82.ErrorCorrection}
+\uses{ContentAddressableMemory, HopfieldNet_stabilize}
 `ErrorCorrection` quantifies the network's ability to correct errors in the input pattern.
 It's measured as the reduction in Hamming distance to the closest stored pattern after convergence.
 \leanok
 \end{definition}
 
 \begin{definition}\label{error_correction_guarantee}
-\lean{Hopfield82.error_correction_guarantee}
-\uses{ContentAddressableMemory,HopfieldNet_stabilize}
+%\lean{Hopfield82.error_correction_guarantee}
+\uses{ContentAddressableMemory, HopfieldNet_stabilize}
 \leanok
 The `error\_correction\_guarantee` theorem establishes that Hopfield networks
 can correct a substantial fraction of errors in the input pattern.
@@ -270,7 +270,7 @@ This formalizes a key capability of content-addressable memories.
 \end{definition}
 
 \begin{definition}\label{BasinOfAttraction'}
-\lean{Hopfield82.BasinOfAttraction'}
+%\lean{Hopfield82.BasinOfAttraction'}
 \uses{ContentAddressableMemory,HopfieldNet_stabilize}
 \leanok
 The `BasinOfAttraction'` of a pattern is the set of all states that converge to it.
@@ -281,7 +281,7 @@ as at $X = Xa + \Delta,$ it will proceed in time until $X \equiv Xa.$
 \end{definition}
 
 \begin{definition}\label{BasinVolume}
-\lean{Hopfield82.BasinVolume}
+%\lean{Hopfield82.BasinVolume}
 \uses{ContentAddressableMemory,HopfieldNet_stabilize}
 \leanok
 The `BasinVolume` is the "size" of the basin of attraction, measured as the
@@ -291,7 +291,7 @@ This quantifies the robustness of memory retrieval.
 \end{definition}
 
 \begin{theorem}\label{basin_volume_bound}
-\lean{Hopfield82.basin_volume_bound}
+%\lean{Hopfield82.basin_volume_bound}
 \uses{ContentAddressableMemory}
 \leanok
 The `basin\_volume\_bound` theorem establishes that the basin volume decreases
@@ -300,7 +300,7 @@ This formalizes how memory capacity affects retrieval robustness.
 \end{theorem}
 
 \begin{definition}\label{AbstractFamiliarityMeasure}
-\lean{Hopfield82.AbstractFamiliarityMeasure}
+%\lean{Hopfield82.AbstractFamiliarityMeasure}
 \uses{HopfieldNetwork}
 \leanok
 `AbstractFamiliarityMeasure` quantifies how familiar a given state `s` is to the network,
@@ -362,7 +362,7 @@ utilizing the Hebbian\_stable theorem from the existing codebase.
 \section{Fault Tolerance}
 
 \begin{definition}\label{DeleteNeuron}
-\lean{Hopfield82.DeleteNeuron}
+%\lean{Hopfield82.DeleteNeuron}
 \uses{HopfieldNetwork}
 \leanok
 The `DeleteNeuron` function simulates the failure of a neuron by removing its connections.
@@ -372,7 +372,7 @@ details of the modeling or the failure of individual devices."
 \end{definition}
 
 \begin{definition}\label{FaultTolerance}
-\lean{Hopfield82.FaultTolerance}
+%\lean{Hopfield82.FaultTolerance}
 \uses{DeleteNeuron}
 \leanok
 The `FaultTolerance` of a Hopfield network is its ability to maintain function 
@@ -382,7 +382,7 @@ inherently robust to component failures.
 
 
 \begin{definition}\label{pattern_stability_in_hebbian}
-\lean{Hopfield82.pattern_stability_in_hebbian}
+%\lean{Hopfield82.pattern_stability_in_hebbian}
 \uses{Hebbian_stable}
 \leanok
 When m is at most a tenth of total neurons, each pattern is fixed point in the undamaged network
@@ -390,7 +390,7 @@ When m is at most a tenth of total neurons, each pattern is fixed point in the u
 
 
 \begin{lemma}\label{delete_single_neuron_step}
-\lean{Hopfield82.delete_single_neuron_step}
+%\lean{Hopfield82.delete_single_neuron_step}
 \uses{DeleteNeuron,hebbian}
 \leanok
 When deleting a single neuron from a network, the resulting weighted sum for a neuron u
@@ -399,14 +399,14 @@ from the deleted neuron.
 \end{lemma}
 
 \begin{definition}\label{delete_empty_neurons_step}
-\lean{Hopfield82.delete_empty_neurons_step}
+%\lean{Hopfield82.delete_empty_neurons_step}
 \uses{DeleteNeuron,hebbian}
 \leanok
 When deleting neurons from an empty list, the result is the original network
 \end{definition}
 
 \begin{definition}\label{delete_cons_neuron_step}
-\lean{Hopfield82.delete_cons_neuron_step}
+%\lean{Hopfield82.delete_cons_neuron_step}
 \uses{DeleteNeuron}
 \leanok
 When deleting a list of neurons with a new neuron added at the front, the effect 
@@ -415,13 +415,13 @@ deleting the rest of the list.
 \end{definition}
 
 \begin{definition}\label{delete_singleton_neuron_step}
-\lean{Hopfield82.delete_singleton_neuron_step}
+%\lean{Hopfield82.delete_singleton_neuron_step}
 For a singleton list, the effect matches the single neuron deletion case.
 \leanok
 \end{definition}
 
 \begin{definition}\label{delete_neuron_from_deleted_network}
-\lean{Hopfield82.delete_neuron_from_deleted_network}
+%\lean{Hopfield82.delete_neuron_from_deleted_network}
 \uses{Hopfield82.Real.erf}
 \leanok
 The effect of deleting a neuron from an already deleted network on a neuron u that
@@ -429,7 +429,7 @@ is not in the deleted set.
 \end{definition}
 
 \begin{definition}\label{commute_delete_foldl}
-\lean{Hopfield82.commute_delete_foldl}
+%\lean{Hopfield82.commute_delete_foldl}
 \uses{DeleteNeuron}
 \leanok
 Helper lemma: DeleteNeuron commutes with foldl of DeleteNeuron if the neuron is not in the list.
@@ -437,13 +437,13 @@ Helper lemma: DeleteNeuron commutes with foldl of DeleteNeuron if the neuron is 
 
 
 \begin{definition}\label{foldl_delete_preserves_weights}
-\lean{Hopfield82.foldl_delete_preserves_weights}
+%\lean{Hopfield82.foldl_delete_preserves_weights}
 \leanok
 Helper lemma: Weights are preserved by foldl if indices are not in the list
 \end{definition}
 
 \begin{definition}\label{delete_neurons_recursive}
-\lean{Hopfield82.delete_neurons_recursive}
+%\lean{Hopfield82.delete_neurons_recursive}
 \uses{foldl_delete_preserves_weights}
 \leanok
 Helper lemma: Deleting a list of neurons recursively subtracts their contributions.
@@ -451,7 +451,7 @@ Helper lemma: Deleting a list of neurons recursively subtracts their contributio
 \end{definition}
 
 \begin{definition}\label{deleted_neurons_field_effect}
-\lean{Hopfield82.deleted_neurons_field_effect}
+%\lean{Hopfield82.deleted_neurons_field_effect}
 \uses{delete_neurons_recursive}
 \leanok
 DeleteNeurons removes weights connected to deleted neurons.
@@ -460,7 +460,7 @@ DeleteNeurons removes weights connected to deleted neurons.
 \section{Lemmas for Bounding Field Reduction due to Neuron Deletion}
 
 \begin{definition}\label{hebbian_weight_deleted_neurons_l_eq_k_term}
-\lean{Hopfield82.hebbian_weight_deleted_neurons_l_eq_k_term}
+%\lean{Hopfield82.hebbian_weight_deleted_neurons_l_eq_k_term}
 \uses{Hopfield82.Real.erf}
 \leanok
 Calculates the contribution to the deleted field sum from the target pattern `k` itself
@@ -468,7 +468,7 @@ in the Hebbian weight definition.
 \end{definition}
 
 \begin{definition}\label{hebbian_weight_deleted_neurons_cross_talk_term}
-\lean{Hopfield82.hebbian_weight_deleted_neurons_cross_talk_term}
+%\lean{Hopfield82.hebbian_weight_deleted_neurons_cross_talk_term}
 \uses{Hopfield82.Real.erf}
 \leanok
 Defines the cross-talk contribution to the deleted field sum.
@@ -477,7 +477,7 @@ over the set of deleted neurons.
 \end{definition}
 
 \begin{lemma}\label{cross_talk_term_abs_bound_assumption}
-\lean{Hopfield82.cross_talk_term_abs_bound_assumption}
+%\lean{Hopfield82.cross_talk_term_abs_bound_assumption}
 \uses{hebbian_weight_deleted_neurons_cross_talk_term}
 Axiom stating the bound on the absolute value of the cross-talk term.
 This encapsulates the statistical argument from Hopfield's paper that for
@@ -485,7 +485,7 @@ random-like patterns, the sum of interfering terms is bounded.
 \end{lemma}
 
 \begin{lemma}\label{Hebbian_stable}
-\lean{Hopfield82.Hebbian_stable}
+%\lean{Hopfield82.Hebbian_stable}
 \uses{hebbian}
 \leanok
 Decomposes the total sum representing the field reduction into the contribution
@@ -496,7 +496,7 @@ The `Hebbian` definition in `HN.lean` implements this by subtracting `m • 1`.
 \end{lemma}
 
 \begin{lemma}\label{bound_cross_talk_term}
-\lean{Hopfield82.bound_cross_talk_term}
+%\lean{Hopfield82.bound_cross_talk_term}
 \uses{hebbian_weight_deleted_neurons_cross_talk_term}
 Placeholder lemma for bounding the cross-talk term.
 Proving a tight bound likely requires assumptions beyond simple orthogonality,
@@ -506,20 +506,20 @@ The bound likely depends on `m` (number of patterns) and `N` (number of neurons)
 \end{lemma}
 
 \begin{lemma}\label{deleted_field_bound}
-\lean{Hopfield82.deleted_field_bound}
+%\lean{Hopfield82.deleted_field_bound}
 \uses{bound_cross_talk_term}
 The field reduction from deleting neurons has a bounded effect.
 This version uses the decomposition and the (unproven) cross-talk bound.
 \end{lemma}
 
 \begin{lemma}\label{field_remains_sufficient}
-\lean{Hopfield82.field_remains_sufficient}
+%\lean{Hopfield82.field_remains_sufficient}
 \leanok
 With constrained m and limited deleted neurons, the field remains strong enough
 \end{lemma}
 
 \begin{lemma}\label{bound_cross_talk_term_abs}
-\lean{Hopfield82.bound_cross_talk_term_abs}
+%\lean{Hopfield82.bound_cross_talk_term_abs}
 \uses{cross_talk_term_abs_bound_assumption}
 \leanok
 For random orthogonal patterns, the cross-talk term has a bounded absolute value.
@@ -527,51 +527,55 @@ This is a fundamental assumption from Hopfield's paper about how patterns intera
 \end{lemma}
 
 \begin{lemma}\label{deleted_field_product_bound}
-\lean{Hopfield82.deleted_field_product_bound}
+%\lean{Hopfield82.deleted_field_product_bound}
 \uses{hebbian_weight_deleted_neurons_cross_talk_term}
 TO DO
 \end{lemma}
 
 \begin{lemma}\label{field_remains_sufficient_for_N_div_5}
-\lean{Hopfield82.field_remains_sufficient_for_N_div_5}
+%\lean{Hopfield82.field_remains_sufficient_for_N_div_5}
 \uses{Hopfield82.Real.erf}
 With bounded numbers of patterns and deleted neurons, the field remains strong enough
     to maintain the pattern stability, adjusted for N/5 bound.
 \end{lemma}
 
 \begin{lemma}\label{hebbian_deleted_threshold_is_zero}
-\lean{Hopfield82.hebbian_deleted_threshold_is_zero}
+%\lean{Hopfield82.hebbian_deleted_threshold_is_zero}
 \uses{DeleteNeuron}
+\notready
 TO DO
 \end{lemma}
 
 \begin{lemma}\label{net_input_at_non_deleted_neuron}
-\lean{Hopfield82.net_input_at_non_deleted_neuron}
+%\lean{Hopfield82.net_input_at_non_deleted_neuron}
 \uses{deleted_neurons_field_effect}
+\notready
 TO DO
 \end{lemma}
 
 \begin{lemma}\label{product_net_input_activation_at_non_deleted_neuron}
-\lean{Hopfield82.product_net_input_activation_at_non_deleted_neuron}
+%\lean{Hopfield82.product_net_input_activation_at_non_deleted_neuron}
 \uses{net_input_at_non_deleted_neuron}
+\notready
 TO DO
 \end{lemma}
 
 \begin{definition}\label{non_deleted_neuron_maintains_sign_of_activation}
-\lean{Hopfield82.non_deleted_neuron_maintains_sign_of_activation}
+%\lean{Hopfield82.non_deleted_neuron_maintains_sign_of_activation}
 \uses{deleted_field_product_bound}
+\notready
 TO DO
 \end{definition}
 
 \begin{definition}\label{DeleteNeurons_with_Finset}
-\lean{Hopfield82.DeleteNeurons_with_Finset}
+%\lean{Hopfield82.DeleteNeurons_with_Finset}
 \uses{DeleteNeuron}
 When deleting neurons from a Finset, we can use Finset.toList to convert the Finset to a List.
 This matches the API needed by DeleteNeurons.
 \end{definition}
 
 \begin{definition}\label{fault_tolerance_bound}
-\lean{Hopfield82.fault_tolerance_bound}
+%\lean{Hopfield82.fault_tolerance_bound}
 \uses{deleted_field_product_bound}
 \leanok
 A Hopfield network can tolerate the failure of up to 10\% of its neurons
