@@ -26,6 +26,7 @@ Hopfield82.hebbian
 Hopfield82.isPseudoOrthogonal
 Hopfield82.spin_glass_analogy
 Hopfield82.energy_convergence
+Hopfield82.retrievalDistance
 Hopfield82.StorageCapacity
 Hopfield82.Real.erf
 Hopfield82.PatternRetrievalError
