@@ -34,7 +34,8 @@ Additionally, it provides several helper lemmas to support proofs of correctness
   to guide the network into a low-energy configuration.
 - Various lemmas (such as `single_site_difference`, `updateNeuron_preserves`, and
   `gibbs_probs_sum_one`) ensuring correctness and consistency of the update schemes.
-- Utility definitions and proofs, including creation of valid parameters (`mkArray_creates_valid_hopfield_params`),
+- Utility definitions and proofs, including creation of valid parameters
+  (`mkArray_creates_valid_hopfield_params`),
   verification of adjacency (`all_nodes_adjacent`), total variation distance
   (`total_variation_distance`), partition function (`partitionFunction`), and more.
 -/
@@ -51,7 +52,8 @@ lemma State.ext {R U : Type} [Zero R] {NN : NeuralNetwork R U}
   apply funext
   exact h
 
-instance decidableEqState {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :
+instance decidableEqState {R U : Type} [Field R] [LinearOrder R]
+    [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :
   DecidableEq ((HopfieldNetwork R U).State) := by
   intro s₁ s₂
   apply decidable_of_iff (∀ u, s₁.act u = s₂.act u)
@@ -98,7 +100,8 @@ def NN.State.metropolisDecision
     The update probability depends on the energy change associated with flipping the neuron's state,
     parameterized by the temperature `T`. -/
 noncomputable def NN.State.gibbsUpdateNeuron
-  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
+    [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State) (u : U)
   : PMF ((HopfieldNetwork R U).State) :=
   let h_u := s.net wθ u
@@ -125,8 +128,10 @@ noncomputable def NN.State.gibbsUpdateNeuron
     PMF.pure $ if should_flip then s.Up wθ u else s
 
 /-- Function to set a specific neuron state -/
-def NN.State.updateNeuron {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
-  (s : (HopfieldNetwork R U).State) (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) : (HopfieldNetwork R U).State :=
+def NN.State.updateNeuron {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+   [DecidableEq U] [Fintype U] [Nonempty U]
+  (s : (HopfieldNetwork R U).State) (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) :
+   (HopfieldNetwork R U).State :=
 { act := fun u' => if u' = u then val else s.act u',
   hp := by
     intro u'
@@ -138,7 +143,8 @@ def NN.State.updateNeuron {R U : Type} [Field R] [LinearOrder R] [IsStrictOrdere
 
 /-- Update a single neuron according to Gibbs sampling rule -/
 noncomputable def NN.State.gibbsUpdateSingleNeuron
-  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+    [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Calculate local field for the neuron
@@ -161,8 +167,10 @@ noncomputable def NN.State.gibbsUpdateSingleNeuron
         refine ENNReal.inv_ne_top.mp ?_
         have h_exp_pos := Real.exp_pos (local_field * 1 / T)
         have h := ENNReal.ofReal_pos.mpr h_exp_pos
-        simp_all only [mul_one, ENNReal.ofReal_pos, mul_ite, mul_neg, ↓reduceIte, Bool.false_eq_true, ne_eq,
-          ENNReal.inv_eq_top, add_eq_zero, ENNReal.ofReal_eq_zero, not_and, not_le, isEmpty_Prop, IsEmpty.forall_iff,
+        simp_all only [mul_one, ENNReal.ofReal_pos, mul_ite, mul_neg, ↓reduceIte,
+          Bool.false_eq_true, ne_eq,
+          ENNReal.inv_eq_top, add_eq_zero, ENNReal.ofReal_eq_zero, not_and,
+          not_le, isEmpty_Prop, IsEmpty.forall_iff,
           local_field, total, probs]}
       have h_total_ne_top : total ≠ ⊤ := by {simp [probs, total]}
       have h_sum : Finset.sum Finset.univ norm_probs = 1 := by
@@ -182,7 +190,8 @@ of Gibbs sampling by:
 2. Updating that neuron's state according to the Gibbs distribution
 -/
 noncomputable def NN.State.gibbsSamplingStep
-  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+  {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+     [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
   : PMF ((HopfieldNetwork R U).State) :=
   -- Uniform random selection of neuron
@@ -238,8 +247,8 @@ lemma Array.mkArray_creates_valid_hopfield_params {n : ℕ} [Nonempty (Fin n)] :
 In a Hopfield network, two neurons are adjacent if and only if they are different.
 This formalizes the fully connected nature of Hopfield networks.
 -/
-lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
-    [Nonempty U] [Fintype U] (u v : U) :
+lemma HopfieldNetwork.all_nodes_adjacent {R U : Type} [Field R] [LinearOrder R]
+  [IsStrictOrderedRing R] [DecidableEq U] [Nonempty U] [Fintype U] (u v : U) :
     ¬(HopfieldNetwork R U).Adj u v → u = v := by
   intro h
   unfold HopfieldNetwork at h
@@ -1274,7 +1283,8 @@ lemma gibbsUpdate_prob_positive {R U : Type}
     simp only [mul_ite, mul_one, mul_neg, ↓reduceIte, Bool.false_eq_true, total, probs, Z]
   have h_result := pmf_map_update_one s u (fun b => probs b / total) (by
     have h_sum : ∑ b : Bool, probs b / total = (probs true + probs false) / total := by
-      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false, not_false_eq_true,sum_insert, sum_singleton, total, probs, Z]
+      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false,
+        not_false_eq_true,sum_insert, sum_singleton, total, probs, Z]
       exact
         ENNReal.div_add_div_same
     rw [h_sum]

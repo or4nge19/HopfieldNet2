@@ -12,7 +12,8 @@ import Mathlib
 open Finset Matrix NeuralNetwork State ENNReal Real
 open PMF MeasureTheory ProbabilityTheory.Kernel Set
 
-variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
+  [Fintype U] [Nonempty U]
 variable [Coe R ℝ]
 
 noncomputable instance : Fintype ((BoltzmannMachine R U).State) := by
@@ -54,7 +55,8 @@ noncomputable instance : Fintype (StateBM R U) := by
 
 namespace BoltzmannMachine
 
-instance (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] :
+instance (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+  [DecidableEq U] [Fintype U] [Nonempty U] :
   MeasurableSpace ((BoltzmannMachine R U).State) := ⊤
 
 instance : MeasurableSpace (StateBM R U) := inferInstance

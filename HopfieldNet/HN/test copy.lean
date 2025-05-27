@@ -4,15 +4,23 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michail Karatarakis
 -/
 import HopfieldNet.HN.Core
+import HopfieldNet.CompReals2
 
 set_option linter.unusedVariables false
 set_option maxHeartbeats 500000
 
 open Mathlib Finset
 
+#check CReal
+
 /-- A 3x3 matrix of rational numbers. --/
 def test.M : Matrix (Fin 3) (Fin 3) ℚ := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
 
+/-- A 2x2 matrix of computable real numbers. --/
+def test.M' : Matrix (Fin 2) (Fin 2) CReal :=
+  Matrix.of ![![(realBase 0), (realBase 0)], ![(realBase 0), (realBase 4)]]
+
+#exit
 def test : NeuralNetwork ℚ (Fin 3) where
   Adj := test.M.Adj
   Ui := {0,1}

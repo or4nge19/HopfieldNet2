@@ -396,7 +396,7 @@ def mkAsymmetricParams (w : Matrix U U R) (θ : U → Vector R 1) [Nonempty U]
   hw := hw
   hw' := hasym  -- The asymmetric decomposition property
   θ := θ
-  σ := fun _ => Vector.mkEmpty 0
+  σ := fun _ => Vector.emptyWithCapacity 0
 
 /--
 Attempts to find a stable state of an asymmetric Hopfield network by running a fixed number of updates.

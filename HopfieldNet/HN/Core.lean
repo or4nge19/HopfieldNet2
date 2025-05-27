@@ -117,7 +117,7 @@ def Hebbian {m : ℕ} (ps : Fin m → (HopfieldNetwork R U).State) : Params (Hop
   /- The threshold function, which is set to a constant value of 0 for all units. -/
   θ u := ⟨#[0], rfl⟩
   /- The state function, which is set to an empty vector. -/
-  σ _ := Vector.mkEmpty 0
+  σ _ := Vector.emptyWithCapacity 0
   /- A proof that the weight matrix is symmetric and satisfies the Hebbian learning rule. -/
   hw u v huv := by
     simp only [sub_apply, smul_apply, smul_eq_mul]

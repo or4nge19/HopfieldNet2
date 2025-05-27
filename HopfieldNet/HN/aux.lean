@@ -8,9 +8,19 @@ import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.LinearAlgebra.Matrix.Symmetric
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 set_option checkBinderAnnotations false
-variable {U : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
+
+variable {U : Type*} [Field R] --[LinearOrder R] [IsStrictOrderedRing R]
 open Finset Fintype Matrix
+
+@[simp]
+lemma isSymm_sum (f : Fin m → Matrix U U R) (hi : ∀ i, (f i).IsSymm) :
+  (∑ x : Fin m, f x).IsSymm := by
+  rw [Matrix.IsSymm]
+  simp only [Matrix.transpose_sum]
+  apply Finset.sum_congr rfl
+  intro x _
+  exact hi x
 
 --def fair' (sseq : Nat → NN.State) : Prop := ∀ n, ∃ m > n, sseq (m + 1) ≠ sseq m
 
@@ -90,15 +100,6 @@ lemma sum_over_subset (f : α → β) (s : Finset α) [Fintype α] [AddCommMonoi
   ∑ x ∈ s, f x = ∑ x, if x ∈ s then f x else 0 := by
   simp_rw [← sum_filter]; congr;
   ext; simp only [mem_filter, mem_univ, true_and]
-
-@[simp]
-lemma isSymm_sum (f : Fin m → Matrix U U R) (hi : ∀ i, (f i).IsSymm) :
-  (∑ x : Fin m, f x).IsSymm := by
-  rw [Matrix.IsSymm]
-  simp only [Matrix.transpose_sum]
-  apply Finset.sum_congr rfl
-  intro x _
-  exact hi x
 
 /-- Convert telescope sum to filtered sum --/
 @[simp]
