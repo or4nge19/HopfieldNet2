@@ -42,7 +42,7 @@ def matC2 : Matrix (Fin 2) (Fin 2) CReal :=
 -- #eval (matQ * matQ2) 0 0
 -- #eval (matC * matC2) 0 0
 
-def test : NeuralNetwork CReal (Fin 3) where
+def test : NeuralNetwork ℚ (Fin 3) where
   Adj := test.M.Adj
   Ui := {0,1}
   Uo := {2}
