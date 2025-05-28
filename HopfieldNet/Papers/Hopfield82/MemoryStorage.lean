@@ -32,8 +32,6 @@ def hebbian {m : ℕ} [DecidableEq R] [DecidableEq U]
 The `pseudoOrthogonality` property from Hopfield's paper (Equations 3-4) states:
 For random patterns, the dot product between different patterns is approximately 0,
 while the dot product of a pattern with itself is approximately N.
-
-This property is essential for understanding the storage capacity of Hopfield networks.
 -/
 def isPseudoOrthogonal {m : ℕ} [DecidableEq R] [DecidableEq U]
   (ps : Fin m → (HopfieldNetwork R U).State) : Prop :=
