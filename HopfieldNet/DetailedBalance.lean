@@ -85,7 +85,8 @@ lemma gibbs_single_site_tsum {R U : Type}
     probability is the product of the probability of selecting u and the probability
     of updating u to the new value --/--/
 lemma gibbs_single_site_transition_prob {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Field ℕ] [CommGroup ℕ] [Coe R ℝ] [HDiv ℕ ℕ ℝ] [Inv ℕ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
+    [Nonempty U] [Field ℕ] [CommGroup ℕ] [Coe R ℝ] [HDiv ℕ ℕ ℝ] [Inv ℕ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
@@ -93,7 +94,8 @@ lemma gibbs_single_site_transition_prob {R U : Type}
   ENNReal.toReal (((1 : ENNReal) / (Fintype.card U : ENNReal)) *
   (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u))) := by
   have h_eq := gibbs_single_site_tsum wθ T s s' u h_diff_at_u h_same_elsewhere
-  have h_rewrite : ∑' (a : U), (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U)) (by exact uniform_neuron_selection_prob_valid)) a *
+  have h_rewrite : ∑' (a : U), (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U))
+    (by exact uniform_neuron_selection_prob_valid)) a *
                       (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' =
                       1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron s wθ T u)
                       (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) := h_eq
@@ -570,7 +572,8 @@ lemma gibbsSamplingStep_prob_zero_if_multi_site {R U : Type}
 
 -- Main lemma
 lemma gibbs_multi_site_transition {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ] [Inv ℕ] [Coe ℕ ℝ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
+    [Nonempty U] [Coe R ℝ] [Inv ℕ] [Coe ℕ ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) :
   (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
   gibbsTransitionProb wθ T s s' = 0 := by
