@@ -10,12 +10,16 @@ This repository contains Lean formalizations related to Hopfield Networks writte
 
 Below is a brief overview of the key files:
 
-- **`Asym.lean`** – Formalization of asymmetric Hopfield networks.  
+- **`HN.Core.lean`** – Formalization of general neural networks.  
+- **`HN.Asym.lean`** – Formalization of asymmetric Hopfield networks.  
 - **`HN.lean`** – Formalization of symmetric Hopfield networks.  
-- **`NN.lean`** – Formalization of General neural networks.  
 - **`Stochastic.lean`** – Formalization of stochastic algorithms.  
-- **`aux.lean`** – Auxiliary lemmas.  
-- **`test.lean`** – Computations and implementation of the Hebbian learning algorithm.
+- **`HN.aux.lean`** – Auxiliary lemmas.  
+- **`HN.test.lean`** – Computations and implementation of the Hebbian learning algorithm.
+- **`DetailedBalance.lean`** – Formalization of the detailed balance property for Hopfield networks.
+- **`HN.aux.lean`** – Markov Chain Framework. 
+- **`BM.Core.lean`** – Formalization of Boltzmann Machines (BMs).
+- **`BM.Markov.lean`** – Formalization of probability distributions for Boltzmann Machines.
 
 For more details, see the individual files.
 

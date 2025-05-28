@@ -2,7 +2,6 @@ import HopfieldNet.Stochastic
 import Mathlib.Analysis.Normed.Field.Instances
 import Mathlib.Data.ENNReal.Basic
 
-
 open Finset Matrix NeuralNetwork State
 
 lemma sum_univ_eq_tsum_uniform {U : Type} [Fintype U] [DecidableEq U]

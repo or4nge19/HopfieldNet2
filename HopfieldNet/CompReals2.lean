@@ -169,6 +169,7 @@ structure CReal where
   intApprox : ℤ
 deriving Nonempty
 
+
 /--
 Compute a bound for a constructive real number.
 This is `1 + |intApprox x|` as a rational.
@@ -205,7 +206,6 @@ def compress (x : Complete Base) : Complete Base :=
 def squish (x : CReal) : Complete Base :=
   compress x.approx
 
-
 -- instance Show CReal where
 -- show x = error "Cannot show a CReal"
 -- Russell O’Connor 17
@@ -216,7 +216,6 @@ instance : ToString CReal where
 -- Alternatively, to show a few approximations:
 -- toString x := toString (List.map
   --(fun n => squish x { val := (1/2)^n, property := by positivity }) (List.range 5))
-
 
 /--
 Construct a `CReal` from a rational number.
@@ -342,6 +341,17 @@ def multBaseCts (a : ℚ) : UniformCts ℚ ℚ :=
       ⟩
     forgetUniformCts := λ x => a * x
   }
+
+instance : AddCommMonoid CReal := sorry
+  -- add := realPlus
+  -- add_assoc := _
+  -- zero := _
+  -- zero_add := _
+  -- add_zero := _
+  -- nsmul := _
+  -- nsmul_zero := _
+  -- nsmul_succ := _
+  -- add_comm := _
 
 /--
 Scale a constructive real number by a rational constant.

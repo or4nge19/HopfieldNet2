@@ -9,6 +9,9 @@ import HopfieldNet.CompReals2
 set_option linter.unusedVariables false
 set_option maxHeartbeats 500000
 
+-- Provide Zero instance for CReal
+instance : Zero CReal := ⟨realBase 0⟩
+
 open Mathlib Finset
 
 #check CReal
@@ -16,12 +19,30 @@ open Mathlib Finset
 /-- A 3x3 matrix of rational numbers. --/
 def test.M : Matrix (Fin 3) (Fin 3) ℚ := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
 
-/-- A 2x2 matrix of computable real numbers. --/
-def test.M' : Matrix (Fin 2) (Fin 2) CReal :=
-  Matrix.of ![![(realBase 0), (realBase 0)], ![(realBase 0), (realBase 4)]]
+-- def test.M : Matrix (Fin 2) (Fin 2) CReal :=
+--   Matrix.of ![![(realBase 0), (realBase 0)], ![(realBase 0), (realBase 4)]]
 
-#exit
-def test : NeuralNetwork ℚ (Fin 3) where
+/-- Example: Matrix multiplication with ℚ and CReal, and comparison. --/
+def matQ : Matrix (Fin 2) (Fin 2) ℚ :=
+  Matrix.of ![![1, 2], ![3, 4]]
+
+def matQ2 : Matrix (Fin 2) (Fin 2) ℚ :=
+  Matrix.of ![![5, 6], ![7, 8]]
+
+def matC : Matrix (Fin 2) (Fin 2) CReal :=
+  Matrix.of ![![realBase 1, realBase 2], ![realBase 3, realBase 4]]
+
+def matC2 : Matrix (Fin 2) (Fin 2) CReal :=
+  Matrix.of ![![realBase 5, realBase 6], ![realBase 7, realBase 8]]
+
+-- #eval matQ * matQ2
+-- #eval matC realMult matC2
+
+-- /-- Compare the (0,0) entry of the products as an example. --/
+-- #eval (matQ * matQ2) 0 0
+-- #eval (matC * matC2) 0 0
+
+def test : NeuralNetwork CReal (Fin 3) where
   Adj := test.M.Adj
   Ui := {0,1}
   Uo := {2}
