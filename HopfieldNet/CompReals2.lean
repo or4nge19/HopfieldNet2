@@ -6,8 +6,7 @@ Authors: Michail Karatarakis
 import Mathlib.Analysis.RCLike.Basic
 
 /- This code is a Lean 4 port of "Few Digits", a Haskell implementation of computable
-reals by Russell O'Connor.
-Original source: https://r6.ca/FewDigits/ -/
+reals by Russell O'Connor. Original source: https://r6.ca/FewDigits/ -/
 
 /-- A Gauge is a strictly positive rational number. -/
 structure Gauge where
@@ -37,7 +36,6 @@ def completeComplete {a : Type} (f : Complete (Complete a)) : Complete a :=
   }
                 { val := eps.val / 2--, property := by linarith [eps.property]
                 }
-
 
 -- A uniformly continuous function on some subset of a to b
 -- Hopefully the name of the function gives an indication of
@@ -283,8 +281,6 @@ Construct a `CReal` by applying a binary uniformly continuous function to two `C
 def makeCRealBinFun (f : UniformCts Base (UniformCts Base Base)) (x y : CReal) : CReal :=
   makeCReal (evalBinaryUniformCts f (squish x) (squish y))
 
-
-
 /--
 Uniformly continuous negation on Base.
 -/
@@ -325,6 +321,12 @@ def realPlus (x y : CReal) : CReal :=
 instance : BEq CReal where
   beq a b := proveNonZero (realPlus a (realNegate b)) = 0
 
+
+-- /--
+-- Associativity of addition for CReals.
+-- -/
+-- theorem realPlus_assoc (x y z : CReal) :
+--   realPlus (realPlus x y) z = realPlus x (realPlus y z) := by sorry
 /--
 Uniformly continuous multiplication by zero on Base.
 -/
@@ -342,16 +344,16 @@ def multBaseCts (a : ℚ) : UniformCts ℚ ℚ :=
     forgetUniformCts := λ x => a * x
   }
 
-instance : AddCommMonoid CReal := sorry
-  -- add := realPlus
-  -- add_assoc := _
-  -- zero := _
-  -- zero_add := _
-  -- add_zero := _
-  -- nsmul := _
-  -- nsmul_zero := _
-  -- nsmul_succ := _
-  -- add_comm := _
+-- instance : AddCommMonoid CReal := sorry
+--   -- add := realPlus
+--   -- add_assoc := _
+--   -- zero := _
+--   -- zero_add := _
+--   -- add_zero := _
+--   -- nsmul := _
+--   -- nsmul_zero := _
+--   -- nsmul_succ := _
+--   -- add_comm := _
 
 /--
 Scale a constructive real number by a rational constant.
@@ -396,6 +398,9 @@ def realAbs (x : CReal) : CReal :=
 
 instance : Add CReal where
   add := realPlus
+
+instance : Sub CReal where
+  sub x y := realPlus x (realNegate y)
 
 instance : Mul CReal where
   mul := realMult
@@ -614,7 +619,8 @@ def rationalSmallExp (x : Base) : CReal :=
 -- | otherwise = realPowerInt (rationalExp tol (x/2)) 2
 /--
 Compute exp(x) as a constructive real, with error control parameter `tol`.
-If `|x| ≤ tol`, uses the Taylor series; otherwise, recursively halves the argument and squares the result.
+If `|x| ≤ tol`, uses the Taylor series; otherwise, recursively
+halves the argument and squares the result.
 -/
 def rationalExpAux (tol x : Base) (fuel : Nat) : CReal :=
   if fuel = 0 then
@@ -692,13 +698,11 @@ partial def rationalSin (tol x : Base) : CReal :=
       zipped.map (fun (t, _) => t)
     makeCReal (alternatingSeries series)
 
-
 /--
 Uniformly continuous sine function on Base, returning a complete value.
 -/
 def sinCts : UniformCts Base (Complete Base) :=
   { modulus := id, forgetUniformCts := fun x => (rationalSin radius x).approx }
-
 
 /--
 A "slow" sine function on constructive real numbers,
@@ -727,35 +731,22 @@ computed directly from the Taylor series.
 def realSlowCos : CReal → CReal :=
   makeCRealFun2 cosCts
 
--- realSin :: CReal -> CReal
--- realSin x | 0==m = realSlowSin x’
--- | 1==m = realSlowCos x’
--- | 2==m = negate $ realSlowSin x’
--- | 3==m = negate $ realSlowCos x’
--- where
--- n = intApprox (x / realPi2)
--- m = n ‘mod‘ 4
--- x’ = x - (realScale (fromInteger n) realPi2)
-
-
--- realCos :: CReal -> CReal
--- realCos x | 3==m = realSlowSin x’
--- | 0==m = realSlowCos x’
--- | 1==m = negate $ realSlowSin x’
--- | 2==m = negate $ realSlowCos x’
--- where
--- n = intApprox (x / realPi2)
--- m = n ‘mod‘ 4
--- x’ = x - (realScale (fromInteger n) realPi2)
-
-
--- {- computes ln(x). only valid for 1<=x<2 -}
--- rationalSmallLn :: Base -> CReal
--- rationalSmallLn x = assert (1<=x && x<=(3/2)) $
--- makeCReal $
--- alternatingSeries (zipWith (*) (poly 1) (tail (powers (x-1))))
--- where
--- poly n = (1/n):(-1/(n+1)):(poly (n+2))
+/--
+Compute ln(x) for 1 ≤ x ≤ 3/2 using the alternating series expansion.
+That is, ln(x) = sum_{n=1}^∞ [(-1)^{n+1} (x-1)^n / n]
+This version is non-recursive and truncates after `nTerms` terms.
+-/
+def rationalSmallLn (x : Base) : CReal :=
+  if (1 : ℚ) ≤ x ∧ x ≤ (3/2 : ℚ) then
+    let nTerms := 100
+    let coeffs := List.range nTerms |>.map
+      (fun k => ((if k % 2 = 0 then 1 else -1) : ℚ) / ((k + 1 : Nat) : ℚ))
+    let powersList := (powers (x - 1) (nTerms + 1)).tail
+    let terms := List.zipWith (· * ·) coeffs powersList
+    makeCReal (alternatingSeries terms)
+  else
+    -- Out of domain, just return 0 (or could throw an error)
+    realBase 0
 
 -- {- requires that 0<=x -}
 -- rationalLn :: Base -> CReal
@@ -817,49 +808,112 @@ def realLn (x : CReal) : CReal :=
   realLnWitness x (proveNonZero x)
 
 
--- {- only valid for (abs x) < 1 -}
--- rationalSmallArcTan :: Base -> CReal
--- rationalSmallArcTan x = assert ((abs x)<(1/2)) $ makeCReal $
--- alternatingSeries (zipWith (\x y->x*(y^2)) (series 0) (powers x))
--- where
--- series n = (x/(n+1)):(-x/(n+3)):(series (n+4))
+/--
+Compute a Taylor approximation of arctangent for |x| < 1, as a CReal.
+Uses the alternating series expansion:
+  arctan(x) = x - x^3/3 + x^5/5 - x^7/7 + ...
+That is, sum_{n=0}^∞ [ (-1)^n x^{2n+1} / (2n+1) ]
+This version only defined for |x| < 1/2 (tightest domain for convergence/practical error).
+-/
+def rationalSmallArcTan (x : Base) : CReal :=
+  if |x| < (1/2 : ℚ) then
+    let n := 100  -- number of terms to use; increase for more precision
+    let signs := List.range n |>.map (fun k => if k % 2 = 0 then 1 else -1)
+    let numerators := List.range n |>.map (fun k => x ^ (2 * k + 1))
+    let denominators := List.range n |>.map (fun k => (2 * k + 1 : ℚ))
+    let terms := List.zipWith3 (fun s num den => s * num / den) signs numerators denominators
+    makeCReal (alternatingSeries terms)
+  else
+    -- Out of domain: fallback
+    realBase 0
 
+-- Example: Evaluate arctan(1/3) at gauge 1/100
+#eval (rationalSmallArcTan (1/3)).approx { val := 1/100 }  -- Should be close to 0.32175
 
--- rationalArcTan :: Base -> CReal
--- rationalArcTan x | x <= (-1/2) = negate $ posArcTan $ negate x
--- | otherwise = posArcTan x
--- where
--- {-requires (-1/2) < x-}
--- posArcTan x | 2 < x = realPi2 - rationalSmallArcTan (recip x)
--- | (1/2) <= x = realPi4 + rationalSmallArcTan y
--- | otherwise = rationalSmallArcTan x
--- where
--- y = (x-1)/(x+1)
+-- Print the result as a string for easier comparison:
+#eval toString ((rationalSmallArcTan (1/3)).approx { val := 1/100 })
 
+/--
+Uniformly continuous arctangent function on Base, returning a complete value.
+Currently a stub using rationalSmallArcTan for |x| < 1/2.
+-/
+def arcTanCts : UniformCts Base (Complete Base) :=
+  { modulus := id, forgetUniformCts := fun x => (rationalSmallArcTan x).approx }
 
--- arcTanCts :: UniformCts Base (Complete Base)
--- arcTanCts = UniformCts id (approx . rationalArcTan)
--- realArcTan :: CReal -> CReal
--- realArcTan = makeCRealFun2 arcTanCts
+/--
+Arctangent function on constructive real numbers.
+-/
+def realArcTan : CReal → CReal :=
+  makeCRealFun2 arcTanCts
 
--- {- Computes x * Pi -}
--- scalePi :: Base -> CReal
--- scalePi x =
--- ((realScale (x*48) (rationalSmallArcTan (1/38))) +
--- (realScale (x*80) (rationalSmallArcTan (1/57)))) +
--- ((realScale (x*28) (rationalSmallArcTan (1/239))) +
--- (realScale (x*96) (rationalSmallArcTan (1/268))))
-
+/--
+Computes x * Pi using Machin-like formulas.
+-/
 def scalePi (x : Base) : CReal :=
-  ((realScale (x * 48) (realBase 0)) +  -- TODO: rationalSmallArcTan (1/38)
-   (realScale (x * 80) (realBase 0))) + -- TODO: rationalSmallArcTan (1/57)
-  ((realScale (x * 28) (realBase 0)) +  -- TODO: rationalSmallArcTan (1/239)
-   (realScale (x * 96) (realBase 0)))   -- TODO: rationalSmallArcTan (1/268)
+  ((realScale (x * 48) (rationalSmallArcTan (1/38))) +
+   (realScale (x * 80) (rationalSmallArcTan (1/57)))) +
+  ((realScale (x * 28) (rationalSmallArcTan (1/239))) +
+   (realScale (x * 96) (rationalSmallArcTan (1/268))))
 
 def real2Pi : CReal := scalePi 2
 def realPi : CReal := scalePi 1
 def realPi2 : CReal := scalePi (1/2)
 def realPi4 : CReal := scalePi (1/4)
+
+/--
+Compute arctangent of a rational number as a CReal, using argument reduction and recursion.
+Implements the following logic:
+- If x ≤ -1/2, use arctan(x) = -arctan(-x)
+- If x > 2, use arctan(x) = π/2 - arctan(1/x)
+- If 1/2 ≤ x ≤ 2, use arctan(x) = π/4 + arctan((x-1)/(x+1))
+- Otherwise, use the Taylor series for |x| < 1/2.
+-/
+partial def rationalArcTan : Base → CReal
+| x =>
+  if x ≤ (-1/2 : ℚ) then
+    realNegate (rationalArcTan (-x))
+  else
+    posArcTan x
+where
+  /-- Helper for positive x > -1/2 -/
+  posArcTan : Base → CReal
+  | x =>
+    if (2 : ℚ) < x then
+      realPi2 - rationalArcTan (x⁻¹)
+    else if (1/2 : ℚ) ≤ x then
+      realPi4 + rationalArcTan ((x - 1) / (x + 1))
+    else
+      rationalSmallArcTan x
+
+/--
+Sine function on constructive real numbers, using argument reduction.
+Implements the periodicity and symmetry of sine via reduction modulo 2π.
+-/
+def realSin (x : CReal) : CReal :=
+  let n : ℤ := ((x * realPi2⁻¹).intApprox)
+  let m : Nat := (n % 4).natAbs
+  let x' : CReal := x - realScale n realPi2
+  match m with
+  | 0 => realSlowSin x'
+  | 1 => realSlowCos x'
+  | 2 => realNegate (realSlowSin x')
+  | 3 => realNegate (realSlowCos x')
+  | _ => realSlowSin x' -- fallback, should not happen
+
+/--
+Cosine function on constructive real numbers, using argument reduction.
+Implements the periodicity and symmetry of cosine via reduction modulo 2π.
+-/
+def realCos (x : CReal) : CReal :=
+  let n : ℤ := ((x * realPi2⁻¹).intApprox)
+  let m : Nat := (n % 4).natAbs
+  let x' : CReal := x - realScale n realPi2
+  match m with
+  | 3 => realSlowSin x'
+  | 0 => realSlowCos x'
+  | 1 => realNegate (realSlowSin x')
+  | 2 => realNegate (realSlowCos x')
+  | _ => realSlowCos x' -- fallback, should not happen
 
 /--
 Given a list of pairs `(lb, ub)`, returns a complete function that,

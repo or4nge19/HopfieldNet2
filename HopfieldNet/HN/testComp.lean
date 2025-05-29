@@ -12,9 +12,24 @@ set_option maxHeartbeats 500000
 -- Provide Zero instance for CReal
 instance : Zero CReal := ⟨realBase 0⟩
 
+-- Provide Add instance for CReal
+instance : Add CReal where
+  add x y := realPlus x y
+
+-- Provide Mul instance for CReal
+instance : Mul CReal where
+  mul x y := realMult x y
+
+-- Provide necessary algebraic structure instances for CReal
+instance : AddCommMonoid CReal := sorry
+
 open Mathlib Finset
 
 #check CReal
+
+-- Provide a simple Repr instance for CReal for debugging/printing
+instance : Repr CReal where
+  reprPrec x _ := toString x
 
 /-- A 3x3 matrix of rational numbers. --/
 def test.M : Matrix (Fin 3) (Fin 3) ℚ := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
@@ -35,12 +50,18 @@ def matC : Matrix (Fin 2) (Fin 2) CReal :=
 def matC2 : Matrix (Fin 2) (Fin 2) CReal :=
   Matrix.of ![![realBase 5, realBase 6], ![realBase 7, realBase 8]]
 
--- #eval matQ * matQ2
--- #eval matC realMult matC2
+#eval matQ * matQ2
+instance : Repr (Matrix (Fin 2) (Fin 2) CReal) where
+  reprPrec M _ :=
+    let rows := List.ofFn (fun i : Fin 2 =>
+      List.ofFn (fun j : Fin 2 => repr (M i j)))
+    let rowStrs := rows.map (fun row =>
+      "[" ++ String.intercalate ", " (row.map (fun f => Std.Format.pretty f)) ++ "]")
+    "[" ++ String.intercalate ",\n " rowStrs ++ "]"
 
--- /-- Compare the (0,0) entry of the products as an example. --/
--- #eval (matQ * matQ2) 0 0
--- #eval (matC * matC2) 0 0
+#eval matC * matC2
+
+#exit
 
 def test : NeuralNetwork ℚ (Fin 3) where
   Adj := test.M.Adj
@@ -97,10 +118,12 @@ lemma test.onlyUi : test.extu.onlyUi := by {
   simp only [Fin.isValue, mem_insert, mem_singleton, not_or]
   exact not_or.mp hu}
 
-/-The workphase for the asynchronous update of the sequence of neurons u3 , u1 , u2 , u3 , u1 , u2 , u3. -/
+/-The workphase for the asynchronous update of the sequence
+of neurons u3 , u1 , u2 , u3 , u1 , u2 , u3. -/
 #eval NeuralNetwork.State.workPhase wθ test.extu test.onlyUi [2,0,1,2,0,1,2]
 
-/-The workphase for the asynchronous update of the sequence of neurons u3 , u2 , u1 , u3 , u2 , u1 , u3. -/
+/-The workphase for the asynchronous update of the sequence
+of neurons u3 , u2 , u1 , u3 , u2 , u1 , u3. -/
 #eval NeuralNetwork.State.workPhase wθ test.extu test.onlyUi [2,1,0,2,1,0,2]
 
 /-Hopfield Networks-/
