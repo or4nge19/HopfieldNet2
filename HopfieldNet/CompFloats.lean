@@ -359,426 +359,215 @@ theorem Req_bool_spec {α : Type*} [Ord α] [BEq α] (x y : α) :
   --     have : compare x y = Ordering.eq := compare_eq_iff_eq.mpr h
   --     contradiction)
 
--- Theorem Req_bool_true :
---   forall x y,
---   (x = y)%R -> Req_bool x y = true.
--- Proof.
--- intros x y Hxy.
--- case Req_bool_spec ; intros H.
--- apply refl_equal.
--- contradict H.
--- exact Hxy.
--- Qed.
+theorem Req_bool_true {α : Type*} [Ord α] [BEq α] (x y : α) (h : x = y) : Req_bool x y = true := by
+  unfold Req_bool
+  sorry
+  --rw [compare_eq_iff_eq.mpr h]
 
--- Theorem Req_bool_false :
---   forall x y,
---   (x <> y)%R -> Req_bool x y = false.
--- Proof.
--- intros x y Hxy.
--- case Req_bool_spec ; intros H.
--- contradict Hxy.
--- exact H.
--- apply refl_equal.
--- Qed.
+theorem Req_bool_false {α : Type*} [Ord α] [BEq α] (x y : α) (h : x ≠ y) : Req_bool x y = false := by
+  unfold Req_bool
+  cases compare x y with
+  | eq => sorry
+  | lt | gt => rfl
 
+end Req_bool
 -- End Req_bool.
 
--- Section Floor_Ceil.
+noncomputable section Floor_Ceil
 
--- (** Zfloor and Zceil *)
--- Definition Zfloor (x : R) := (up x - 1)%Z.
+open Int Real
 
--- Theorem Zfloor_lb :
---   forall x : R,
---   (IZR (Zfloor x) <= x)%R.
--- Proof.
--- intros x.
--- unfold Zfloor.
--- rewrite minus_IZR.
--- simpl.
--- apply Rplus_le_reg_r with (1 - x)%R.
--- ring_simplify.
--- exact (proj2 (archimed x)).
--- Qed.
+/-- The floor of a real number as an integer. -/
+def Zfloor (x : ℝ) : ℤ := Int.floor x
 
--- Theorem Zfloor_ub :
---   forall x : R,
---   (x < IZR (Zfloor x) + 1)%R.
--- Proof.
--- intros x.
--- unfold Zfloor.
--- rewrite minus_IZR.
--- unfold Rminus.
--- rewrite Rplus_assoc.
--- rewrite Rplus_opp_l, Rplus_0_r.
--- exact (proj1 (archimed x)).
--- Qed.
+/-- The ceiling of a real number as an integer. -/
+def Zceil (x : ℝ) : ℤ := Int.ceil x
 
--- Theorem Zfloor_lub :
---   forall n x,
---   (IZR n <= x)%R ->
---   (n <= Zfloor x)%Z.
--- Proof.
--- intros n x Hnx.
--- apply Zlt_succ_le.
--- apply lt_IZR.
--- apply Rle_lt_trans with (1 := Hnx).
--- unfold Z.succ.
--- rewrite plus_IZR.
--- apply Zfloor_ub.
--- Qed.
+theorem Zfloor_lb (x : ℝ) : (Zfloor x : ℝ) ≤ x :=
+  Int.floor_le x
 
--- Theorem Zfloor_imp :
---   forall n x,
---   (IZR n <= x < IZR (n + 1))%R ->
---   Zfloor x = n.
--- Proof.
--- intros n x Hnx.
--- apply Zle_antisym.
--- apply Zlt_succ_le.
--- apply lt_IZR.
--- apply Rle_lt_trans with (2 := proj2 Hnx).
--- apply Zfloor_lb.
--- now apply Zfloor_lub.
--- Qed.
+theorem Zfloor_ub (x : ℝ) : x < (Zfloor x : ℝ) + 1 :=
+  Int.lt_floor_add_one x
 
--- Theorem Zfloor_IZR :
---   forall n,
---   Zfloor (IZR n) = n.
--- Proof.
--- intros n.
--- apply Zfloor_imp.
--- split.
--- apply Rle_refl.
--- apply IZR_lt.
--- apply Zlt_succ.
--- Qed.
+theorem Zfloor_lub (n : ℤ) (x : ℝ) (h : (n : ℝ) ≤ x) : n ≤ Zfloor x := sorry
+  --Int.le_floor h
 
--- Theorem Zfloor_le :
---   forall x y, (x <= y)%R ->
---   (Zfloor x <= Zfloor y)%Z.
--- Proof.
--- intros x y Hxy.
--- apply Zfloor_lub.
--- apply Rle_trans with (2 := Hxy).
--- apply Zfloor_lb.
--- Qed.
+theorem Zfloor_imp (n : ℤ) (x : ℝ) (h : (n : ℝ) ≤ x ∧ x < (n + 1 : ℝ)) : Zfloor x = n :=
+  Int.floor_eq_iff.mpr h
 
--- Definition Zceil (x : R) := (- Zfloor (- x))%Z.
+theorem Zfloor_IZR (n : ℤ) : Zfloor (n : ℝ) = n := sorry
+  --Int.floor_coe n
 
--- Theorem Zceil_ub :
---   forall x : R,
---   (x <= IZR (Zceil x))%R.
--- Proof.
--- intros x.
--- unfold Zceil.
--- rewrite opp_IZR.
--- apply Ropp_le_cancel.
--- rewrite Ropp_involutive.
--- apply Zfloor_lb.
--- Qed.
+theorem Zfloor_le (x y : ℝ) (h : x ≤ y) : Zfloor x ≤ Zfloor y :=
+  Int.floor_mono h
 
--- Theorem Zceil_lb :
---   forall x : R,
---   (IZR (Zceil x) < x + 1)%R.
--- Proof.
--- intros x.
--- unfold Zceil.
--- rewrite opp_IZR.
--- rewrite <-(Ropp_involutive (x + 1)), Ropp_plus_distr.
--- apply Ropp_lt_contravar, (Rplus_lt_reg_r 1); ring_simplify.
--- apply Zfloor_ub.
--- Qed.
+theorem Zceil_ub (x : ℝ) : x ≤ (Zceil x : ℝ) :=
+  Int.le_ceil x
 
--- Theorem Zceil_glb :
---   forall n x,
---   (x <= IZR n)%R ->
---   (Zceil x <= n)%Z.
--- Proof.
--- intros n x Hnx.
--- unfold Zceil.
--- apply Zopp_le_cancel.
--- rewrite Z.opp_involutive.
--- apply Zfloor_lub.
--- rewrite opp_IZR.
--- now apply Ropp_le_contravar.
--- Qed.
+theorem Zceil_lb (x : ℝ) : ((Zceil x : ℝ)) < x + 1 :=
+  by stop
+    rw [←Int.cast_add, Int.ceil_add_one]
+    exact Int.floor_lt x
 
--- Theorem Zceil_imp :
---   forall n x,
---   (IZR (n - 1) < x <= IZR n)%R ->
---   Zceil x = n.
--- Proof.
--- intros n x Hnx.
--- unfold Zceil.
--- rewrite <- (Z.opp_involutive n).
--- apply f_equal.
--- apply Zfloor_imp.
--- split.
--- rewrite opp_IZR.
--- now apply Ropp_le_contravar.
--- rewrite <- (Z.opp_involutive 1).
--- rewrite <- Zopp_plus_distr.
--- rewrite opp_IZR.
--- now apply Ropp_lt_contravar.
--- Qed.
+theorem Zceil_glb (n : ℤ) (x : ℝ) (h : x ≤ (n : ℝ)) : Zceil x ≤ n := by stop
+  exact Int.ceil_le h
 
--- Theorem Zceil_IZR :
---   forall n,
---   Zceil (IZR n) = n.
--- Proof.
--- intros n.
--- unfold Zceil.
--- rewrite <- opp_IZR, Zfloor_IZR.
--- apply Z.opp_involutive.
--- Qed.
+theorem Zceil_imp (n : ℤ) (x : ℝ) (h : ((n - 1 : ℝ)) < x ∧ x ≤ (n : ℝ)) : Zceil x = n := by stop
+  exact Int.ceil_eq_iff.mpr h
 
--- Theorem Zceil_le :
---   forall x y, (x <= y)%R ->
---   (Zceil x <= Zceil y)%Z.
--- Proof.
--- intros x y Hxy.
--- apply Zceil_glb.
--- apply Rle_trans with (1 := Hxy).
--- apply Zceil_ub.
--- Qed.
+theorem Zceil_IZR (n : ℤ) : Zceil (n : ℝ) = n := by stop
+  exact Int.ceil_coe n
 
--- Theorem Zceil_floor_neq :
---   forall x : R,
---   (IZR (Zfloor x) <> x)%R ->
---   (Zceil x = Zfloor x + 1)%Z.
--- Proof.
--- intros x Hx.
--- apply Zceil_imp.
--- split.
--- ring_simplify (Zfloor x + 1 - 1)%Z.
--- apply Rnot_le_lt.
--- intros H.
--- apply Hx.
--- apply Rle_antisym.
--- apply Zfloor_lb.
--- exact H.
--- apply Rlt_le.
--- rewrite plus_IZR.
--- apply Zfloor_ub.
--- Qed.
+theorem Zceil_le (x y : ℝ) (h : x ≤ y) : Zceil x ≤ Zceil y :=
+  Int.ceil_mono h
 
--- Definition Ztrunc x := if Rlt_bool x 0 then Zceil x else Zfloor x.
+theorem Zceil_floor_neq (x : ℝ) (h : (Zfloor x : ℝ) ≠ x) : Zceil x = Zfloor x + 1 :=
+  by stop
+    have : (Zfloor x : ℝ) < x ∨ x < (Zfloor x : ℝ) + 1 := by
+      left; exact lt_of_le_of_ne (Int.floor_le x) h
+    rw [Int.ceil_eq_iff]
+    constructor
+    · linarith [Int.floor_le x]
+    · linarith [Int.lt_floor_add_one x]
 
--- Theorem Ztrunc_IZR :
---   forall n,
---   Ztrunc (IZR n) = n.
--- Proof.
--- intros n.
--- unfold Ztrunc.
--- case Rlt_bool_spec ; intro H.
--- apply Zceil_IZR.
--- apply Zfloor_IZR.
--- Qed.
+/-- Truncate a real to the nearest integer toward zero. -/
+def Ztrunc (x : ℝ) : ℤ := if x < 0 then Zceil x else Zfloor x
 
--- Theorem Ztrunc_floor :
---   forall x,
---   (0 <= x)%R ->
---   Ztrunc x = Zfloor x.
--- Proof.
--- intros x Hx.
--- unfold Ztrunc.
--- case Rlt_bool_spec ; intro H.
--- elim Rlt_irrefl with x.
--- now apply Rlt_le_trans with R0.
--- apply refl_equal.
--- Qed.
+theorem Ztrunc_IZR (n : ℤ) : Ztrunc (n : ℝ) = n :=
+  by
+    dsimp [Ztrunc]
+    split_ifs with h
+    · exact Zceil_IZR n
+    · exact Zfloor_IZR n
 
--- Theorem Ztrunc_ceil :
---   forall x,
---   (x <= 0)%R ->
---   Ztrunc x = Zceil x.
--- Proof.
--- intros x Hx.
--- unfold Ztrunc.
--- case Rlt_bool_spec ; intro H.
--- apply refl_equal.
--- rewrite (Rle_antisym _ _ Hx H).
--- rewrite Zceil_IZR.
--- apply Zfloor_IZR.
--- Qed.
+theorem Ztrunc_floor (x : ℝ) (h : 0 ≤ x) : Ztrunc x = Zfloor x :=
+  by
+    dsimp [Ztrunc]
+    split_ifs with h'
+    · exfalso; linarith
+    · rfl
 
--- Theorem Ztrunc_le :
---   forall x y, (x <= y)%R ->
---   (Ztrunc x <= Ztrunc y)%Z.
--- Proof.
--- intros x y Hxy.
--- unfold Ztrunc at 1.
--- case Rlt_bool_spec ; intro Hx.
--- unfold Ztrunc.
--- case Rlt_bool_spec ; intro Hy.
--- now apply Zceil_le.
--- apply Z.le_trans with 0%Z.
--- apply Zceil_glb.
--- now apply Rlt_le.
--- now apply Zfloor_lub.
--- rewrite Ztrunc_floor.
--- now apply Zfloor_le.
--- now apply Rle_trans with x.
--- Qed.
+theorem Ztrunc_ceil (x : ℝ) (h : x ≤ 0) : Ztrunc x = Zceil x :=
+  by stop
+    dsimp [Ztrunc]
+    split_ifs with h'
+    · rfl
+    · have : x = 0 := le_antisymm h (not_lt.mp h')
+      rw [this, Zceil_IZR 0, Zfloor_IZR 0]
 
--- Theorem Ztrunc_opp :
---   forall x,
---   Ztrunc (- x) = Z.opp (Ztrunc x).
--- Proof.
--- intros x.
--- unfold Ztrunc at 2.
--- case Rlt_bool_spec ; intros Hx.
--- rewrite Ztrunc_floor.
--- apply sym_eq.
--- apply Z.opp_involutive.
--- rewrite <- Ropp_0.
--- apply Ropp_le_contravar.
--- now apply Rlt_le.
--- rewrite Ztrunc_ceil.
--- unfold Zceil.
--- now rewrite Ropp_involutive.
--- rewrite <- Ropp_0.
--- now apply Ropp_le_contravar.
--- Qed.
+theorem Ztrunc_le (x y : ℝ) (h : x ≤ y) : Ztrunc x ≤ Ztrunc y :=
+  by stop
+    dsimp [Ztrunc]
+    by_cases hx : x < 0
+    · by_cases hy : y < 0
+      · exact Zceil_le x y h
+      · have : x < 0 ∧ 0 ≤ y := ⟨hx, le_of_not_lt hy⟩
+        have : Zceil x ≤ 0 := Zceil_glb 0 x (le_of_lt hx)
+        have : 0 ≤ Zfloor y := Zfloor_lb y
+        linarith
+    · have : 0 ≤ x := le_of_not_lt hx
+      by_cases hy : y < 0
+      · have : x ≤ 0 := h.trans (le_of_lt hy)
+        rw [Ztrunc_ceil x this, Ztrunc_floor y (le_of_not_lt hy)]
+        exact Zceil_le x y h
+      · exact Zfloor_le x y h
 
--- Theorem Ztrunc_abs :
---   forall x,
---   Ztrunc (Rabs x) = Z.abs (Ztrunc x).
--- Proof.
--- intros x.
--- rewrite Ztrunc_floor. 2: apply Rabs_pos.
--- unfold Ztrunc.
--- case Rlt_bool_spec ; intro H.
--- rewrite Rabs_left with (1 := H).
--- rewrite Zabs_non_eq.
--- apply sym_eq.
--- apply Z.opp_involutive.
--- apply Zceil_glb.
--- now apply Rlt_le.
--- rewrite Rabs_pos_eq with (1 := H).
--- apply sym_eq.
--- apply Z.abs_eq.
--- now apply Zfloor_lub.
--- Qed.
+theorem Ztrunc_opp (x : ℝ) : Ztrunc (-x) = -Ztrunc x :=
+  by stop
+    dsimp [Ztrunc]
+    by_cases hx : x < 0
+    · rw [if_pos (lt_of_lt_of_le (neg_neg_of_pos hx) (le_refl _))]
+      rw [if_neg hx]
+      rw [Zceil, Zfloor]
+      simp [Int.ceil_neg, Int.floor_neg]
+    · rw [if_neg (not_lt.mpr (le_of_not_lt hx))]
+      rw [if_pos (neg_neg_of_nonneg (le_of_not_lt hx))]
+      rw [Zceil, Zfloor]
+      simp [Int.ceil_neg, Int.floor_neg]
 
--- Theorem Ztrunc_lub :
---   forall n x,
---   (IZR n <= Rabs x)%R ->
---   (n <= Z.abs (Ztrunc x))%Z.
--- Proof.
--- intros n x H.
--- rewrite <- Ztrunc_abs.
--- rewrite Ztrunc_floor. 2: apply Rabs_pos.
--- now apply Zfloor_lub.
--- Qed.
+/-- Truncate away from zero. -/
+def Zaway (x : ℝ) : ℤ := if x < 0 then Zfloor x else Zceil x
 
--- Definition Zaway x := if Rlt_bool x 0 then Zfloor x else Zceil x.
+theorem Zaway_IZR (n : ℤ) : Zaway (n : ℝ) = n :=
+  by
+    dsimp [Zaway]
+    split_ifs with h
+    · exact Zfloor_IZR n
+    · exact Zceil_IZR n
 
--- Theorem Zaway_IZR :
---   forall n,
---   Zaway (IZR n) = n.
--- Proof.
--- intros n.
--- unfold Zaway.
--- case Rlt_bool_spec ; intro H.
--- apply Zfloor_IZR.
--- apply Zceil_IZR.
--- Qed.
+theorem Zaway_ceil (x : ℝ) (h : 0 ≤ x) : Zaway x = Zceil x :=
+  by
+    dsimp [Zaway]
+    split_ifs with h'
+    · exfalso; linarith
+    · rfl
 
--- Theorem Zaway_ceil :
---   forall x,
---   (0 <= x)%R ->
---   Zaway x = Zceil x.
--- Proof.
--- intros x Hx.
--- unfold Zaway.
--- case Rlt_bool_spec ; intro H.
--- elim Rlt_irrefl with x.
--- now apply Rlt_le_trans with R0.
--- apply refl_equal.
--- Qed.
+theorem Zaway_floor (x : ℝ) (h : x ≤ 0) : Zaway x = Zfloor x :=
+  by stop
+    dsimp [Zaway]
+    split_ifs with h'
+    · rfl
+    · have : x = 0 := le_antisymm h (not_lt.mp h')
+      rw [this, Zceil_IZR 0, Zfloor_IZR 0]
 
--- Theorem Zaway_floor :
---   forall x,
---   (x <= 0)%R ->
---   Zaway x = Zfloor x.
--- Proof.
--- intros x Hx.
--- unfold Zaway.
--- case Rlt_bool_spec ; intro H.
--- apply refl_equal.
--- rewrite (Rle_antisym _ _ Hx H).
--- rewrite Zfloor_IZR.
--- apply Zceil_IZR.
--- Qed.
+theorem Zaway_le (x y : ℝ) (h : x ≤ y) : Zaway x ≤ Zaway y :=
+  by stop
+    dsimp [Zaway]
+    by_cases hx : x < 0
+    · by_cases hy : y < 0
+      · exact Zfloor_le x y h
+      · have : x < 0 ∧ 0 ≤ y := ⟨hx, le_of_not_lt hy⟩
+        have : Zfloor x ≤ 0 := Zfloor_lub 0 x (le_of_lt hx)
+        have : 0 ≤ Zceil y := Zceil_ub y
+        linarith
+    · have : 0 ≤ x := le_of_not_lt hx
+      by_cases hy : y < 0
+      · have : x ≤ 0 := h.trans (le_of_lt hy)
+        rw [Zaway_floor x this, Zaway_ceil y (le_of_not_lt hy)]
+        exact Zfloor_le x y h
+      · exact Zceil_le x y h
 
--- Theorem Zaway_le :
---   forall x y, (x <= y)%R ->
---   (Zaway x <= Zaway y)%Z.
--- Proof.
--- intros x y Hxy.
--- unfold Zaway at 1.
--- case Rlt_bool_spec ; intro Hx.
--- unfold Zaway.
--- case Rlt_bool_spec ; intro Hy.
--- now apply Zfloor_le.
--- apply le_IZR.
--- apply Rle_trans with 0%R.
--- apply Rlt_le.
--- apply Rle_lt_trans with (2 := Hx).
--- apply Zfloor_lb.
--- apply Rle_trans with (1 := Hy).
--- apply Zceil_ub.
--- rewrite Zaway_ceil.
--- now apply Zceil_le.
--- now apply Rle_trans with x.
--- Qed.
+theorem Zaway_opp (x : ℝ) : Zaway (-x) = -Zaway x :=
+  by stop
+    dsimp [Zaway]
+    by_cases hx : x < 0
+    · rw [if_pos (lt_of_lt_of_le (neg_neg_of_pos hx) (le_refl _))]
+      rw [if_neg hx]
+      rw [Zceil, Zfloor]
+      simp [Int.ceil_neg, Int.floor_neg]
+    · rw [if_neg (not_lt.mpr (le_of_not_lt hx))]
+      rw [if_pos (neg_neg_of_nonneg (le_of_not_lt hx))]
+      rw [Zceil, Zfloor]
+      simp [Int.ceil_neg, Int.floor_neg]
 
--- Theorem Zaway_opp :
---   forall x,
---   Zaway (- x) = Z.opp (Zaway x).
--- Proof.
--- intros x.
--- unfold Zaway at 2.
--- case Rlt_bool_spec ; intro H.
--- rewrite Zaway_ceil.
--- unfold Zceil.
--- now rewrite Ropp_involutive.
--- apply Rlt_le.
--- now apply Ropp_0_gt_lt_contravar.
--- rewrite Zaway_floor.
--- apply sym_eq.
--- apply Z.opp_involutive.
--- rewrite <- Ropp_0.
--- now apply Ropp_le_contravar.
--- Qed.
 
--- Theorem Zaway_abs :
---   forall x,
---   Zaway (Rabs x) = Z.abs (Zaway x).
--- Proof.
--- intros x.
--- rewrite Zaway_ceil. 2: apply Rabs_pos.
--- unfold Zaway.
--- case Rlt_bool_spec ; intro H.
--- rewrite Rabs_left with (1 := H).
--- rewrite Zabs_non_eq.
--- apply (f_equal (fun v => - Zfloor v)%Z).
--- apply Ropp_involutive.
--- apply le_IZR.
--- apply Rlt_le.
--- apply Rle_lt_trans with (2 := H).
--- apply Zfloor_lb.
--- rewrite Rabs_pos_eq with (1 := H).
--- apply sym_eq.
--- apply Z.abs_eq.
--- apply le_IZR.
--- apply Rle_trans with (1 := H).
--- apply Zceil_ub.
--- Qed.
+theorem Zaway_abs (x : ℝ) : Zaway (|x|) = Int.natAbs (Zaway x) := by stop
+  dsimp [Zaway]
+  by_cases hx : x < 0
+  · -- Case: x < 0
+    have h_abs : |x| = -x := abs_of_neg hx
+    rw [h_abs]
+    -- Zaway (-x) = if -x < 0 then Zfloor (-x) else Zceil (-x)
+    have h_negx_nonneg : 0 ≤ -x := by linarith
+    rw [if_neg (not_lt.mpr h_negx_nonneg)]
+    -- Zaway x = Zfloor x
+    rw [if_pos hx]
+    -- Int.natAbs (Zfloor x) = Int.natAbs (Zceil (-x))
+    rw [Int.natAbs_of_nonpos (Zfloor x) (Int.floor_nonpos_of_neg hx)]
+    -- Zceil (-x) = -Zfloor x
+    rw [Int.ceil_neg, Int.natAbs_neg]
+    rfl
+  · -- Case: x ≥ 0
+    have h_abs : |x| = x := abs_of_nonneg (le_of_not_lt hx)
+    rw [h_abs]
+    -- Zaway x = Zceil x
+    rw [if_neg hx]
+    -- Zaway (|x|) = Zceil x
+    rw [if_neg (not_lt.mpr (le_of_not_lt hx))]
+    -- Int.natAbs (Zceil x) = Int.natAbs (Zceil x)
+    rfl
 
--- End Floor_Ceil.
+end Floor_Ceil
 
 -- Theorem Rcompare_floor_ceil_middle :
 --   forall x,

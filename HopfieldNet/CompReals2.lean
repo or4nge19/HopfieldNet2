@@ -235,32 +235,30 @@ def approxRange (x : CReal) (eps : Gauge) : Base × Base :=
   let r := x.approx eps
   (r - eps, r + eps)
 
-
 /--
 Finds some `y` such that `0 < |y| ≤ |x|`, starting from a given gauge.
 If the interval returned by `approxRange r g` is entirely negative, returns the upper bound.
 If entirely positive, returns the lower bound.
 Otherwise, recursively halves the gauge.
-Warning: does not terminate if the input is 0.
+Terminates after `fuel` steps to ensure termination.
 -/
-partial def proveNonZeroFrom (g : Gauge) (r : CReal) : Base :=
-  let (low, high) := approxRange r g
-  if high < 0 then high
-  else if 0 < low then low
-  else proveNonZeroFrom { val := g.val / 2,
-  --property := by linarith [g.property]
-  } r
-#eval proveNonZeroFrom { val := 1,
---property := by norm_num
-} (realBase 2)
+def proveNonZeroFrom (fuel : Nat) (g : Gauge) (r : CReal) : Base :=
+  if fuel = 0 then
+    0 -- fallback value if not found in given steps
+  else
+    let (low, high) := approxRange r g
+    if high < 0 ∧ low < 0 then high
+    else if 0 < low ∧ 0 < high then low
+    else proveNonZeroFrom (fuel - 1) { val := g.val / 2 } r
+
+#eval proveNonZeroFrom 10 { val := 1 } (realBase 2)
+
 /--
 Finds some `y` such that `0 < |y| ≤ |x|`, starting from gauge 1.
 Warning: does not terminate if the input is 0.
 -/
 def proveNonZero (r : CReal) : Base :=
-  proveNonZeroFrom { val := 1,
-  --property := by norm_num
-  } r
+  proveNonZeroFrom 10 { val := 1 } r
 
 /--
 Construct a `CReal` by applying a uniformly continuous function to a `CReal`.
@@ -506,34 +504,34 @@ def realPowerInt (x : CReal) (n : ℕ) : CReal :=
 /--
 A polynomial over `a` is represented as a list of coefficients.
 -/
-abbrev Polynomial (a : Type) := List a
+abbrev polynomial (a : Type) := List a
 
 /--
 Evaluate a polynomial at a given value.
 Given a list of coefficients `[a₀, a₁, ..., aₙ]` and `x`, computes `a₀ + a₁*x + ... + aₙ*xⁿ`.
 -/
-def evalPolynomial {a : Type} [Add a] [Mul a] [OfNat a 0] (p : Polynomial a) (x : a) : a :=
+def evalPolynomial {a : Type} [Add a] [Mul a] [OfNat a 0] (p : polynomial a) (x : a) : a :=
   p.foldr (fun a acc => a + x * acc) 0
 
 -- Example: 2 + 3x + 4x^2 at x = 5
-#eval evalPolynomial ([2, 3, 4] : Polynomial ℚ) 5
+#eval evalPolynomial ([2, 3, 4] : polynomial ℚ) 5
 
 /--
 Compute the formal derivative of a polynomial.
 Given a list of coefficients `[a₀, a₁, ..., aₙ]`, returns `[a₁, 2*a₂, 3*a₃, ..., n*aₙ]`.
 -/
-def diffPolynomial {a : Type} [Add a] [Mul a] [OfNat a 1] [NatCast a] (p : Polynomial a) : Polynomial a :=
+def diffPolynomial {a : Type} [Add a] [Mul a] [OfNat a 1] [NatCast a] (p : polynomial a) : polynomial a :=
   p.tail.zipWith (fun coeff idx => coeff * idx) (List.range p.length |>.map (fun n => (n + 1 : a)))
 
 -- Example: The derivative of 2 + 3x + 4x^2 is 3 + 8x
-#eval diffPolynomial ([2, 3, 4] : Polynomial ℚ)  -- Output: [3, 8]
+#eval diffPolynomial ([2, 3, 4] : polynomial ℚ)  -- Output: [3, 8]
 
 /--
 Given a bound `maxx` and a polynomial `p`, returns a uniformly continuous function
 that evaluates the polynomial at a given input.
 The modulus is determined by the maximum slope of the polynomial on `[−maxx, maxx]`.
 -/
-def polynomialUniformCts (maxx : Base) (p : Polynomial Base) : UniformCts Base Base :=
+def polynomialUniformCts (maxx : Base) (p : polynomial Base) : UniformCts Base Base :=
   if p = [] then
     { modulus := fun _ => ⟨1 --, by norm_num
     ⟩, forgetUniformCts := fun _ => 0 }
@@ -563,7 +561,7 @@ def polynomialUniformCts (maxx : Base) (p : Polynomial Base) : UniformCts Base B
 Construct a `CReal` by evaluating a polynomial with rational
 coefficients at a `CReal`.
 -/
-def realBasePolynomial (p : Polynomial Base) (x : CReal) : CReal :=
+def realBasePolynomial (p : polynomial Base) (x : CReal) : CReal :=
   makeCRealFun (polynomialUniformCts (bound x) p) x
 
 -- factorials = fact 1 1
@@ -680,23 +678,32 @@ def alternatingSeries (a : List Base) : Complete Base :=
     partSeries.sum
 
 /--
-Compute sin(x) as a constructive real, with error control parameter `tol`.
+Compute sin(x) as a constructive real, with error control parameter `tol` and recursion limit `fuel`.
 If `|x| ≥ tol`, reduces the argument using the triple-angle identity:
   sin(x) = 3 sin(x/3) - 4 sin^3(x/3)
-Otherwise, computes the alternating series expansion for sin(x).
+Otherwise, computes the alternating series expansion for sin(x) up to `fuel` terms.
 -/
-partial def rationalSin (tol x : Base) : CReal :=
-  if tol ≤ |x| then
+def rationalSinAux (tol x : Base) (fuel : Nat) : CReal :=
+  if fuel = 0 then
+    realBase 0
+  else if tol ≤ |x| then
     -- Use triple-angle identity: sin(x) = 3 sin(x/3) - 4 sin^3(x/3)
-    realBasePolynomial [0, 3, 0, -4] (rationalSin tol (x / 3))
+    realBasePolynomial [0, 3, 0, -4] (rationalSinAux tol (x / 3) (fuel - 1))
   else
     -- Use Taylor series: sin(x) = x - x^3/6 + x^5/120 - ...
-    let series : List Base :=
-      let rec terms (t : Base) (n : ℚ) : List (Base × ℚ) :=
-        (t, n) :: terms (-(t * x * x) / (n * (n + 1))) (n + 2)
-      let zipped := terms x 2
-      zipped.map (fun (t, _) => t)
+    let nTerms := fuel
+    let rec terms (t : Base) (n : ℚ) (k : Nat) : List (Base × ℚ) :=
+      if k = 0 then [] else (t, n) :: terms (-(t * x * x) / (n * (n + 1))) (n + 2) (k - 1)
+    let zipped := terms x 2 nTerms
+    let series := zipped.map (fun (t, _) => t)
     makeCReal (alternatingSeries series)
+
+/--
+Compute sin(x) as a constructive real, with error control parameter `tol`.
+This is a wrapper for `rationalSinAux` with a fixed recursion limit.
+-/
+def rationalSin (tol x : Base) : CReal :=
+  rationalSinAux tol x 100
 
 /--
 Uniformly continuous sine function on Base, returning a complete value.
@@ -807,7 +814,6 @@ Warning: does not terminate if the input is zero.
 def realLn (x : CReal) : CReal :=
   realLnWitness x (proveNonZero x)
 
-
 /--
 Compute a Taylor approximation of arctangent for |x| < 1, as a CReal.
 Uses the alternating series expansion:
@@ -868,22 +874,30 @@ Implements the following logic:
 - If 1/2 ≤ x ≤ 2, use arctan(x) = π/4 + arctan((x-1)/(x+1))
 - Otherwise, use the Taylor series for |x| < 1/2.
 -/
-partial def rationalArcTan : Base → CReal
-| x =>
+def rationalArcTanAux : Nat → Base → CReal
+| 0, x => rationalSmallArcTan x -- fallback for termination
+| fuel + 1, x =>
   if x ≤ (-1/2 : ℚ) then
-    realNegate (rationalArcTan (-x))
+    realNegate (rationalArcTanAux fuel (-x))
   else
-    posArcTan x
+    posArcTan fuel x
 where
   /-- Helper for positive x > -1/2 -/
-  posArcTan : Base → CReal
-  | x =>
+  posArcTan : Nat → Base → CReal
+  | 0, x => rationalSmallArcTan x
+  | fuel + 1, x =>
     if (2 : ℚ) < x then
-      realPi2 - rationalArcTan (x⁻¹)
+      realPi2 - rationalArcTanAux fuel (x⁻¹)
     else if (1/2 : ℚ) ≤ x then
-      realPi4 + rationalArcTan ((x - 1) / (x + 1))
+      realPi4 + rationalArcTanAux fuel ((x - 1) / (x + 1))
     else
       rationalSmallArcTan x
+
+/--
+Safe wrapper for rationalArcTanAux with default fuel.
+-/
+def rationalArcTan (x : Base) : CReal :=
+  rationalArcTanAux 100 x
 
 /--
 Sine function on constructive real numbers, using argument reduction.
