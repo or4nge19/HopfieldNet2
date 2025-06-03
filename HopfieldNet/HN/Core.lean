@@ -12,8 +12,7 @@ import HopfieldNet.HN.aux
 
 open Finset Matrix NeuralNetwork State
 
-variable {R U : Type} [Field R] [LinearOrder R]
-  [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
 
 /--
 `HNfnet` computes the weighted sum of predictions for all elements in `U`, excluding `u`.
@@ -46,8 +45,7 @@ abbrev HNfout (act : R) : R := act
 - `R`: A linear ordered field.
 - `U`: A finite, nonempty set of neurons with decidable equality.
 -/
-abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R]
-   [IsStrictOrderedRing R] [DecidableEq U]
+abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
    [Nonempty U] [Fintype U] : NeuralNetwork R U where
   /- The adjacency relation between neurons `u` and `v`, defined as `u ≠ v`. -/
   Adj u v := u ≠ v
@@ -74,7 +72,7 @@ abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R]
   /- The network function for neuron `u`, given weights `w` and predecessor states `pred`. -/
   fnet u w pred _ := HNfnet u w pred
   /- The activation function for neuron `u`, given input and threshold `θ`. -/
-  fact u input θ := HNfact (θ.get 0) input
+  fact u _ net_input_val θ_vec := HNfact (θ_vec.get 0) net_input_val -- Ignoring the current_act_val argument
   /- The output function, given the activation state `act`. -/
   fout _ act := HNfout act
   /- A predicate that the activation state `act` is either 1 or -1. -/
@@ -119,7 +117,7 @@ def Hebbian {m : ℕ} (ps : Fin m → (HopfieldNetwork R U).State) : Params (Hop
   /- The threshold function, which is set to a constant value of 0 for all units. -/
   θ u := ⟨#[0], rfl⟩
   /- The state function, which is set to an empty vector. -/
-  σ _ := Vector.emptyWithCapacity 0
+  σ _ := Vector.mkEmpty 0
   /- A proof that the weight matrix is symmetric and satisfies the Hebbian learning rule. -/
   hw u v huv := by
     simp only [sub_apply, smul_apply, smul_eq_mul]
@@ -145,6 +143,7 @@ variable (wθ : Params (HopfieldNetwork R U))
 lemma act_up_def : (s.Up wθ u).act u =
     (if (wθ.θ u : Vector R ((HopfieldNetwork R U).κ2 u)).get 0 ≤ s.net wθ u then 1 else -1) := by
   simp only [Up, reduceIte, Fin.isValue]
+  rfl
 
 @[simp]
 lemma act_of_non_up (huv : v2 ≠ u) : (s.Up wθ u).act v2 = s.act v2 := by
@@ -872,7 +871,7 @@ lemma stateisStablecondition (ps : Fin m → (HopfieldNetwork R U).State)
   (s : (HopfieldNetwork R U).State) c (hc : 0 < c)
   (hw : ∀ u, ((Hebbian ps).w).mulVec s.act u = c * s.act u) : s.isStable (Hebbian ps) := by
   intros u
-  unfold Up net out
+  unfold Up out
   simp only [reduceIte, Fin.isValue]
   rw [HNfnet_eq]
   simp_rw [mulVec, dotProduct] at hw u
