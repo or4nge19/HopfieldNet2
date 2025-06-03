@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 Matteo Cipollina. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Matteo Cipollina
+-/
+
 import HopfieldNet.Stochastic
 import Mathlib.Analysis.Normed.Field.Instances
 import Mathlib.Data.ENNReal.Basic
@@ -31,8 +37,8 @@ lemma mul_div_cancel_of_ne_zero {α : Type*} [Field α] (a b : α) (h : b ≠ 0)
 
 /-- In a tsum over all neurons, only the neuron where s and s' differ contributes --/
 lemma gibbs_single_site_tsum {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [HDiv ℕ ℕ ℝ]
-  [Nonempty U] [Coe R ℝ] [Inv ℕ] [CommGroup ℕ] [Field ℕ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
+  [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
@@ -86,7 +92,7 @@ lemma gibbs_single_site_tsum {R U : Type}
     of updating u to the new value --/--/
 lemma gibbs_single_site_transition_prob {R U : Type}
   [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
-    [Nonempty U] [Field ℕ] [CommGroup ℕ] [Coe R ℝ] [HDiv ℕ ℕ ℝ] [Inv ℕ]
+    [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
@@ -412,7 +418,7 @@ lemma gibbs_update_single_neuron_formula {R U : Type}
   gibbs_update_single_neuron_prob wθ T s u val hval
 
 lemma gibbs_single_site_transition_explicit {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ][HDiv ℕ ℕ ℝ] [CommGroup ℕ] [Field ℕ]
+  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]--[HDiv ℕ ℕ ℝ] [CommGroup ℕ] [Field ℕ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (_ : θ' (wθ.θ u) = 0) (_ : T > 0) (h_neq : s ≠ s') :
