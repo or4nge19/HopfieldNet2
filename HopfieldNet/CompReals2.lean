@@ -1006,3 +1006,19 @@ def rationalSqrt (x : Base) : CReal :=
 -- sumRealList l = makeCReal (\eps -> sum (map (\x -> approx x (eps/n)) l))
 -- where
 -- n = fromIntegral $ length l
+
+/--
+Sum a list of constructive real numbers.
+-/
+def sumRealList (l : List CReal) : CReal :=
+  if l.isEmpty then realBase 0
+  else
+    makeCReal (fun eps =>
+      let n : ℚ := l.length
+      (l.map (fun x => x.approx { val := eps.val / n })).sum)
+
+/-- Example: Sum the constructive real numbers 1/3, 1/4, and 1/5. -/
+def exampleSum : CReal :=
+  sumRealList [realBase (1/3), realBase (1/4), realBase (1/5)]
+
+#eval exampleSum.approx { val := 1/100 }

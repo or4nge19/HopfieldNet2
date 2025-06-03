@@ -1,4 +1,4 @@
-import NeuralNetworks.LLM.GPT2.TensorView.Lemmas
+import HopfieldNet.LLM.GPT2.TensorView.Lemmas
 
 open LLM.GPT2
 open Batteries
@@ -50,7 +50,7 @@ lemma computeHelper_eq_ok_iff_rel
           simp_all [k_val, current_idx_val_safe, current_dim_val_safe]
           split at h_compute_ok_main
           next h =>
-            simp_all only [Nat.sub_eq_zero_of_le, self_eq_add_left, AddLeftCancelMonoid.add_eq_zero, one_ne_zero, and_false]
+            simp_all only [Nat.sub_eq_zero_of_le, right_eq_add, AddLeftCancelMonoid.add_eq_zero, one_ne_zero, and_false]
           next h => simp_all only [not_le, reduceCtorEq]
         cases h_error_branch_is_taken
       · -- Case 2: indices[k_val]! < shape[k_val]! (Recursive call case in computeHelper)

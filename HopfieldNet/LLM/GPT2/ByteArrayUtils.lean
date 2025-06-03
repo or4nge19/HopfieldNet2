@@ -1,4 +1,4 @@
-import NeuralNetworks.LLM.GPT2.Core
+import HopfieldNet.LLM.GPT2.Core
 
 namespace LLM.GPT2.ByteArray
 

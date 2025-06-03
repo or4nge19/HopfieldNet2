@@ -569,123 +569,147 @@ theorem Zaway_abs (x : ℝ) : Zaway (|x|) = Int.natAbs (Zaway x) := by stop
 
 end Floor_Ceil
 
--- Theorem Rcompare_floor_ceil_middle :
---   forall x,
---   IZR (Zfloor x) <> x ->
---   Rcompare (x - IZR (Zfloor x)) (/ 2) = Rcompare (x - IZR (Zfloor x)) (IZR (Zceil x) - x).
--- Proof.
--- intros x Hx.
--- rewrite Zceil_floor_neq with (1 := Hx).
--- rewrite plus_IZR.
--- destruct (Rcompare_spec (x - IZR (Zfloor x)) (/ 2)) as [H1|H1|H1] ; apply sym_eq.
--- (* . *)
--- apply Rcompare_Lt.
--- apply Rplus_lt_reg_l with (x - IZR (Zfloor x))%R.
--- replace (x - IZR (Zfloor x) + (x - IZR (Zfloor x)))%R with ((x - IZR (Zfloor x)) * 2)%R by ring.
--- replace (x - IZR (Zfloor x) + (IZR (Zfloor x) + 1 - x))%R with (/2 * 2)%R by field.
--- apply Rmult_lt_compat_r with (2 := H1).
--- now apply IZR_lt.
--- (* . *)
--- apply Rcompare_Eq.
--- replace (IZR (Zfloor x) + 1 - x)%R with (1 - (x - IZR (Zfloor x)))%R by ring.
--- rewrite H1.
--- field.
--- (* . *)
--- apply Rcompare_Gt.
--- apply Rplus_lt_reg_l with (x - IZR (Zfloor x))%R.
--- replace (x - IZR (Zfloor x) + (x - IZR (Zfloor x)))%R with ((x - IZR (Zfloor x)) * 2)%R by ring.
--- replace (x - IZR (Zfloor x) + (IZR (Zfloor x) + 1 - x))%R with (/2 * 2)%R by field.
--- apply Rmult_lt_compat_r with (2 := H1).
--- now apply IZR_lt.
--- Qed.
+/--
+If `Zfloor x ≠ x`, then
+`compare (x - Zfloor x) (1/2) = compare (x - Zfloor x) (Zceil x - x)`.
+-/
+theorem Rcompare_floor_ceil_middle (x : ℝ) (h : (Zfloor x : ℝ) ≠ x) :
+  compare (x - (Zfloor x : ℝ)) (1/2) = compare (x - (Zfloor x : ℝ)) ((Zceil x : ℝ) - x) := by
+  -- Use Zceil_floor_neq to rewrite Zceil x
+  have hZceil : (Zceil x : ℝ) = (Zfloor x : ℝ) + 1 := sorry--Zceil_floor_neq x h
+  rw [hZceil]
+  -- Now compare (x - Zfloor x) (1/2) = compare (x - Zfloor x) ((Zfloor x + 1) - x)
+  -- Let d := x - Zfloor x, so (Zfloor x + 1) - x = 1 - d
+  let d := x - (Zfloor x : ℝ)
+  have : (Zfloor x : ℝ) + 1 - x = 1 - d := by ring
+  rw [this]
+  -- Now, compare d (1/2) = compare d (1 - d)
+  -- Do case analysis on compare d (1/2)
+  cases compare d (1/2) with
+  | lt =>
+    -- d < 1/2, so 2*d < 1, so d < 1 - d
+    have : d < 1 - d := by sorry
+    rw [Rcompare_Lt d (1 - d) this]
+  | eq =>
+    -- d = 1/2, so 1 - d = 1/2, so compare d (1 - d) = eq
+    have heq : d = 1 - d := by sorry--linarith
+    rw [Rcompare_Eq d (1 - d) heq]
+  | gt =>
+    -- d > 1/2, so d > 1 - d
+    have : 1 - d < d := by sorry --linarith
+    rw [Rcompare_Gt d (1 - d) this]
 
--- Theorem Rcompare_ceil_floor_middle :
---   forall x,
---   IZR (Zfloor x) <> x ->
---   Rcompare (IZR (Zceil x) - x) (/ 2) = Rcompare (IZR (Zceil x) - x) (x - IZR (Zfloor x)).
--- Proof.
--- intros x Hx.
--- rewrite Zceil_floor_neq with (1 := Hx).
--- rewrite plus_IZR.
--- destruct (Rcompare_spec (IZR (Zfloor x) + 1 - x) (/ 2)) as [H1|H1|H1] ; apply sym_eq.
--- (* . *)
--- apply Rcompare_Lt.
--- apply Rplus_lt_reg_l with (IZR (Zfloor x) + 1 - x)%R.
--- replace (IZR (Zfloor x) + 1 - x + (IZR (Zfloor x) + 1 - x))%R with ((IZR (Zfloor x) + 1 - x) * 2)%R by ring.
--- replace (IZR (Zfloor x) + 1 - x + (x - IZR (Zfloor x)))%R with (/2 * 2)%R by field.
--- apply Rmult_lt_compat_r with (2 := H1).
--- now apply IZR_lt.
--- (* . *)
--- apply Rcompare_Eq.
--- replace (x - IZR (Zfloor x))%R with (1 - (IZR (Zfloor x) + 1 - x))%R by ring.
--- rewrite H1.
--- field.
--- (* . *)
--- apply Rcompare_Gt.
--- apply Rplus_lt_reg_l with (IZR (Zfloor x) + 1 - x)%R.
--- replace (IZR (Zfloor x) + 1 - x + (IZR (Zfloor x) + 1 - x))%R with ((IZR (Zfloor x) + 1 - x) * 2)%R by ring.
--- replace (IZR (Zfloor x) + 1 - x + (x - IZR (Zfloor x)))%R with (/2 * 2)%R by field.
--- apply Rmult_lt_compat_r with (2 := H1).
--- now apply IZR_lt.
--- Qed.
-
--- Theorem Zfloor_div :
---   forall x y,
---   y <> Z0 ->
---   Zfloor (IZR x / IZR y) = (x / y)%Z.
--- Proof.
--- intros x y Zy.
--- generalize (Z.div_mod x y Zy).
--- intros Hx.
--- rewrite Hx at 1.
--- assert (Zy': IZR y <> 0%R).
--- contradict Zy.
--- now apply eq_IZR.
--- unfold Rdiv.
--- rewrite plus_IZR, Rmult_plus_distr_r, mult_IZR.
--- replace (IZR y * IZR (x / y) * / IZR y)%R with (IZR (x / y)) by now field.
--- apply Zfloor_imp.
--- rewrite plus_IZR.
--- assert (0 <= IZR (x mod y) * / IZR y < 1)%R.
--- (* *)
--- assert (forall x' y', (0 < y')%Z -> 0 <= IZR (x' mod y') * / IZR y' < 1)%R.
--- (* . *)
--- clear.
--- intros x y Hy.
--- split.
--- apply Rmult_le_pos.
--- apply IZR_le.
--- refine (proj1 (Z_mod_lt _ _ _)).
--- now apply Z.lt_gt.
--- apply Rlt_le.
--- apply Rinv_0_lt_compat.
--- now apply IZR_lt.
--- apply Rmult_lt_reg_r with (IZR y).
--- now apply IZR_lt.
--- rewrite Rmult_1_l, Rmult_assoc, Rinv_l, Rmult_1_r.
--- apply IZR_lt.
--- eapply Z_mod_lt.
--- now apply Z.lt_gt.
--- apply Rgt_not_eq.
--- now apply IZR_lt.
--- (* . *)
--- destruct (Z_lt_le_dec y 0) as [Hy|Hy].
--- rewrite <- Rmult_opp_opp.
--- rewrite Ropp_inv_permute with (1 := Zy').
--- rewrite <- 2!opp_IZR.
--- rewrite <- Zmod_opp_opp.
--- apply H.
--- clear -Hy ; lia.
--- apply H.
--- clear -Zy Hy ; lia.
--- (* *)
--- split.
--- pattern (IZR (x / y)) at 1 ; rewrite <- Rplus_0_r.
--- apply Rplus_le_compat_l.
--- apply H.
--- apply Rplus_lt_compat_l.
--- apply H.
--- Qed.
+/--
+If `Zfloor x ≠ x`, then
+`compare ((Zceil x : ℝ) - x) (1/2) = compare ((Zceil x : ℝ) - x) (x - (Zfloor x : ℝ))`.
+-/
+theorem Rcompare_ceil_floor_middle (x : ℝ) (h : (Zfloor x : ℝ) ≠ x) :
+  compare ((Zceil x : ℝ) - x) (1/2) = compare ((Zceil x : ℝ) - x) (x - (Zfloor x : ℝ)) := by
+  -- Use Zceil_floor_neq to rewrite Zceil x
+  have hZceil : (Zceil x : ℝ) = (Zfloor x : ℝ) + 1 := by
+    -- This is true by Zceil_floor_neq
+    sorry
+  rw [hZceil]
+  -- Let d := (Zfloor x : ℝ) + 1 - x
+  let d := (Zfloor x : ℝ) + 1 - x
+  -- x - (Zfloor x : ℝ) = 1 - d
+  have h_sub : x - (Zfloor x : ℝ) = 1 - d := by ring
+  rw [h_sub]
+  -- Now, compare d (1/2) = compare d (1 - d)
+  cases compare d (1/2) with
+  | lt =>
+    -- d < 1/2 → d < 1 - d
+    have : d < 1 - d := by sorry--linarith
+    rw [Rcompare_Lt d (1 - d) this]
+  | eq =>
+    -- d = 1/2 → 1 - d = 1/2
+    have : d = 1 - d := by sorry--linarith
+    rw [Rcompare_Eq d (1 - d) this]
+  | gt =>
+    -- d > 1/2 → 1 - d < d
+    have : 1 - d < d := by sorry--linarith
+    rw [Rcompare_Gt d (1 - d) this]
+#exit
+/--
+For integers `x` and nonzero `y`, the floor of `x / y` as a real is the integer quotient.
+-/
+theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) = x / y := by stop
+  -- Use division with remainder: x = (x / y) * y + (x % y)
+  have hdiv : x = (x / y) * y + (x % y) := sorry--Int.ediv_add_emod x y
+  -- (x : ℝ) / (y : ℝ) = (x / y : ℝ) + (x % y : ℝ) / (y : ℝ)
+  have hyR : (y : ℝ) ≠ 0 := by exact_mod_cast hy
+  have : ((x : ℝ) / (y : ℝ)) = (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) := by sorry
+    --rw [← Int.cast_add, ← Int.cast_mul, hdiv, add_div, mul_div_cancel_left _ hyR]
+  rw [this]
+  -- Now, show that (x / y : ℝ) ≤ (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) < (x / y : ℝ) + 1
+  apply Zfloor_imp
+  constructor
+  · -- Lower bound: (x / y : ℝ) ≤ (x / y : ℝ) + (x % y : ℝ) / (y : ℝ)
+    apply le_add_of_nonneg_right
+    -- 0 ≤ (x % y : ℝ) / (y : ℝ) if y > 0, or (x % y : ℝ) / (y : ℝ) ≤ 0 if y < 0
+    cases lt_or_gt_of_ne hy with hlt hgt
+    · -- y < 0
+      have hy_neg : (y : ℝ) < 0 := by exact_mod_cast hlt
+      have hmod_le_0 : (x % y : ℝ) ≤ 0 := by
+        have := Int.emod_lt x y hlt
+        rw [Int.emod_def] at this
+        -- emod always has same sign as y, so ≤ 0
+        exact_mod_cast Int.emod_nonpos x y hlt
+      have hdiv_nonneg : (x % y : ℝ) / (y : ℝ) ≥ 0 := by
+        rw [div_nonneg_iff]
+        left; constructor
+        · exact hmod_le_0
+        · exact le_of_lt hy_neg
+      exact hdiv_nonneg
+    · -- y > 0
+      have hy_pos : (0 : ℤ) < y := hgt
+      have hmod_ge_0 : 0 ≤ (x % y : ℝ) := by
+        have := Int.emod_nonneg x y hy_pos
+        exact_mod_cast this
+      have hyR_pos : (0 : ℝ) < (y : ℝ) := by exact_mod_cast hy_pos
+      have hdiv_nonneg : 0 ≤ (x % y : ℝ) / (y : ℝ) := by
+        apply div_nonneg hmod_ge_0 (le_of_lt hyR_pos)
+      exact hdiv_nonneg
+  · -- Upper bound: (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) < (x / y : ℝ) + 1
+    -- So, (x % y : ℝ) / (y : ℝ) < 1
+    cases lt_or_gt_of_ne hy with hlt hgt
+    · -- y < 0
+      have hy_neg : (y : ℝ) < 0 := by exact_mod_cast hlt
+      have hmod_gt_y : (y : ℝ) < (x % y : ℝ) := by
+        have := Int.emod_lt x y hlt
+        exact_mod_cast this
+      have hdiv_lt_1 : (x % y : ℝ) / (y : ℝ) < 1 := by
+        -- (x % y) < 0, y < 0, so (x % y) / y > 1? Actually, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
+        -- But since y < 0, (x % y) ≤ 0, (x % y) > y
+        -- So (x % y) / y > 1? Actually, (x % y) / y > 1 if (x % y) < y, but (x % y) > y
+        -- Let's use that (x % y) > y, so (x % y) / y > 1, but (x % y) ≤ 0, so (x % y) / y ≥ 0
+        -- But in fact, for y < 0, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
+        have hy_neg' : (y : ℝ) < 0 := by exact_mod_cast hlt
+        have hmod_le_0 : (x % y : ℝ) ≤ 0 := by exact_mod_cast Int.emod_nonpos x y hlt
+        have hmod_gt_y : (y : ℝ) < (x % y : ℝ) := by exact_mod_cast Int.emod_lt x y hlt
+        have : (x % y : ℝ) / (y : ℝ) < 1 := by
+          -- (x % y) < 0, y < 0, so (x % y) / y > 0
+          -- (x % y) < 0, y < 0, so (x % y) / y > 0
+          -- But (x % y) > y, so (x % y) / y > 1
+          -- Actually, since y < 0, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
+          -- Let's show (x % y : ℝ) / (y : ℝ) < 1
+          have h : (x % y : ℝ) < (y : ℝ) * 1 := by
+            rw [mul_one]
+            exact hmod_gt_y
+          rw [div_lt_one hy_neg']
+          exact h
+        exact this
+      exact hdiv_lt_1
+    · -- y > 0
+      have hy_pos : (0 : ℤ) < y := hgt
+      have hmod_lt_y : (x % y : ℝ) < (y : ℝ) := by
+        have := Int.emod_lt x y hy_pos
+        exact_mod_cast this
+      have hyR_pos : (0 : ℝ) < (y : ℝ) := by exact_mod_cast hy_pos
+      have hdiv_lt_1 : (x % y : ℝ) / (y : ℝ) < 1 := by
+        rw [div_lt_one hyR_pos]
+        exact hmod_lt_y
+      exact hdiv_lt_1
 
 -- Theorem Ztrunc_div :
 --   forall x y, y <> 0%Z ->

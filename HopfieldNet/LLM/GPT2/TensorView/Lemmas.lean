@@ -1,4 +1,4 @@
-import NeuralNetworks.LLM.GPT2.TensorView.Defs
+import HopfieldNet.LLM.GPT2.TensorView.Defs
 
 open LLM.GPT2 -- For Core types like TensorError, bytesPerFloat
 open Batteries
@@ -739,7 +739,7 @@ lemma extract_prefix_product_positive (shape : Array Nat) (rank : Nat) (i : Nat)
     have h_get_take_p_eq_x : (List.take i shape.toList).get p = x := hp
     let j := p.val
     have h_j_lt_i : j < i := by
-        have h_take_len : (List.take i shape.toList).length = min i shape.toList.length := List.length_take i shape.toList
+        have h_take_len : (List.take i shape.toList).length = min i shape.toList.length := List.length_take
         have h_p_lt_min : p.val < min i shape.toList.length := by
           rw [← h_take_len]
           exact h_p_lt_drop_len
@@ -825,7 +825,8 @@ lemma extract_sub_array_product_positive (shape : Array Nat) (rank_param : Nat) 
   have h_x_eq_shape_original_idx_bang : x = shape[original_idx]! := by
     rw [←h_get_eq_x]
     rw [List.get_eq_getElem, Array.getElem_toList]
-    have h_get_extract : extracted_arr[idx_in_extract_val]'h_idx_lt_extracted_size = shape[original_idx]'h_original_idx_lt_shape_size := by
+    have h_get_extract : extracted_arr[idx_in_extract_val]'h_idx_lt_extracted_size =
+        shape[original_idx]'h_original_idx_lt_shape_size := by
       simp only [extracted_arr, original_idx]
       rw [Array.getElem_extract]
     rw [h_get_extract]
@@ -914,7 +915,8 @@ lemma flatIndexRel_bound_for_i_rev_zero_recursive_call
     apply Nat.lt_of_lt_of_le h_index_val_lt_dim_size
     exact Nat.le_mul_of_pos_right dim_size h_prefix_product_pos
   let arr_for_fold := shape.extract 0 (rank - 1)
-  have h_fold_equiv : Array.foldl (· * ·) 1 arr_for_fold 0 ((rank - 1) ⊓ shape.size) = Array.foldl (· * ·) 1 arr_for_fold := by
+  have h_fold_equiv : Array.foldl (· * ·) 1 arr_for_fold 0 ((rank - 1) ⊓ shape.size) =
+      Array.foldl (· * ·) 1 arr_for_fold := by
     have h_stop_arg_eq_arr_size : ((rank - 1) ⊓ shape.size) = arr_for_fold.size := by
       rw [Array.size_extract]
       simp only [tsub_zero]

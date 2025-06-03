@@ -23,7 +23,21 @@ structure Dim where
 instance : Coe Dim Nat where
   coe := Dim.val
 
-/-- Errors during Initialization or Tensor Access. -/
+/--
+`TensorError` represents possible errors that can occur during tensor initialization or access operations.
+
+Variants:
+- `nameNotFound`: Raised when a tensor with the specified name cannot be found.
+- `shapeMismatch`: Raised when the actual tensor rank does not match the expected rank.
+- `negativeDimension`: Raised when a tensor shape contains a negative dimension.
+- `indexOutOfBounds`: Raised when provided indices are out of bounds for the given tensor shape.
+- `offsetNotAligned`: Raised when a memory offset is not aligned to the required boundary.
+- `bufferSizeMismatch`: Raised when the buffer size does not match the expected size.
+- `bufferSizeNotDivisible`: Raised when the buffer size is not divisible by a required divisor.
+- `writeOutOfBounds`: Raised when a write operation exceeds the bounds of the underlying storage.
+
+This type is useful for robust error handling in tensor-related computations.
+-/
 inductive TensorError where
   | nameNotFound (name : String) : TensorError
   | shapeMismatch (expectedRank : Nat) (gotRank : Nat) : TensorError

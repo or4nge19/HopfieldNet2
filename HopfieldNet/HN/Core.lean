@@ -12,7 +12,8 @@ import HopfieldNet.HN.aux
 
 open Finset Matrix NeuralNetwork State
 
-variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
+variable {R U : Type} [Field R] [LinearOrder R]
+  [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
 
 /--
 `HNfnet` computes the weighted sum of predictions for all elements in `U`, excluding `u`.
@@ -45,7 +46,8 @@ abbrev HNfout (act : R) : R := act
 - `R`: A linear ordered field.
 - `U`: A finite, nonempty set of neurons with decidable equality.
 -/
-abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
+abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R]
+   [IsStrictOrderedRing R] [DecidableEq U]
    [Nonempty U] [Fintype U] : NeuralNetwork R U where
   /- The adjacency relation between neurons `u` and `v`, defined as `u ≠ v`. -/
   Adj u v := u ≠ v

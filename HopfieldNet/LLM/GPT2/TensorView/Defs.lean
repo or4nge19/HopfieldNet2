@@ -1,5 +1,5 @@
-import NeuralNetworks.LLM.GPT2.Core
-import NeuralNetworks.LLM.GPT2.ByteArrayUtils
+import HopfieldNet.LLM.GPT2.Core
+import HopfieldNet.LLM.GPT2.ByteArrayUtils
 import Mathlib.Algebra.Order.BigOperators.Group.List
 import Mathlib.Algebra.Order.BigOperators.GroupWithZero.List
 import Mathlib.Algebra.Order.Ring.Nat
@@ -23,10 +23,30 @@ It defines the shape, rank, and offset of the tensor data within the storage.
 This structure is designed to work within a stateful context `s`
 because it holds a reference (`ST.Ref`) to the underlying `ByteArray`.
 
+A `ByteArray` in Lean is a mutable, fixed-size array of bytes (8-bit unsigned integers).
+It is used for efficient storage and manipulation of raw binary data, such as the contents of files,
+serialized objects, or memory buffers. In this context, the `ByteArray` holds the raw tensor data,
+typically representing a sequence of floating-point numbers encoded as bytes.
+
 Key properties:
 - The `rank` (number of dimensions) is explicitly stored and proven to be equal to `shape.size`.
 - The `offsetBytes` into the storage is proven to be aligned to `bytesPerFloat`.
 - All dimension sizes in `shape` are proven to be positive.
+
+# Example
+
+Suppose you have a 2x3 matrix of floats stored in a `ByteArray` (6 floats in total).
+You can create a `TensorView` for this matrix as follows:
+
+- `shape = #[2, 3]` (2 rows, 3 columns)
+- `rank = 2`
+- `storageRef` points to the `ByteArray` containing the data
+- `offsetBytes = 0` (starts at the beginning)
+- `h_offset_aligned` proves that `0 % bytesPerFloat = 0`
+- `h_rank_eq_size` proves that `rank = shape.size`
+- `h_dims_positive` proves that both 2 and 3 are > 0
+
+This `TensorView` lets you treat the underlying bytes as a 2x3 matrix, with all accesses and indexing checked for safety.
 -/
 structure TensorView (s : Type) where
   /-- Shape of the tensor, as an array of dimension sizes. Validated > 0. -/
@@ -49,7 +69,15 @@ structure TensorView (s : Type) where
       }) > 0
   -- No Inhabited instance needed or desirable
 
-/-- Total number of elements in the tensor view. Guaranteed > 0 since dims > 0. -/
+/--
+Total number of elements in the tensor view. Guaranteed > 0 since dims > 0.
+
+# Example
+
+Suppose `tv.shape = #[2, 3, 4]`. Then `tv.elementCount = 2 * 3 * 4 = 24`.
+
+This means the tensor view represents a 3-dimensional tensor with 2 × 3 × 4 = 24 elements.
+-/
 @[inline] def TensorView.elementCount {s : Type} (tv : TensorView s) : Nat :=
   -- Foldl starts with 1, and all shape[i] > 0, so result > 0
   tv.shape.foldl (· * ·) 1
@@ -59,9 +87,18 @@ namespace Array
 /--
 If an index `i` is within the bounds of an array `arr`, then `arr[i]!` (unsafe get)
 is equal to `arr[i]` (safe get, written as `arr[i]'h_bounds`).
+
+# Example
+
+Suppose `arr : Array Nat := #[10, 20, 30]` and `i = 1`.
+Since `1 < arr.size`, we have:
+- `arr[1]! = 20`
+- `arr[1]'(by decide) = 20`
+Therefore, `arr[1]! = arr[1]'(by decide)`.
+
 -/
 lemma getElem_eq_get! {α : Type} [Inhabited α] {arr : Array α} {i : Nat} (h_bounds : i < arr.size) :
-    arr[i]! = arr[i]'h_bounds := by
+  arr[i]! = arr[i]'h_bounds := by
   exact getElem!_pos arr i h_bounds
 
 end Array
@@ -69,6 +106,7 @@ end Array
 /--
 This lemma is similar to `Array.getElem_of_mem`, but it provides the equality with `arr[i]!`
 instead of `arr[i]`.
+Suppose `arr : Array Nat := #[4, 7, 9]` and `x = 7`. Since `7 ∈ arr`, there exists `i = 1` such that `arr[1]! = 7`.
 -/
 lemma exists_index_of_mem_with_get_bang
     {α : Type} [Inhabited α]
@@ -80,7 +118,9 @@ lemma exists_index_of_mem_with_get_bang
     exact h_get
   exact ⟨i, h_i_lt, h_get_bang⟩
 
-/-- Proof that the element count is positive. -/
+/-- Proof that the element count is positive.
+Suppose we have a `TensorView` with shape `[2, 3, 4]`. Then the element count is `2 * 3 * 4 = 24`, which is greater than zero.
+-/
 lemma TensorView.elementCount_pos {s : Type} (tv : TensorView s) : tv.elementCount > 0 := by
   rw [TensorView.elementCount]
   have h_array_to_list : tv.shape.foldl (· * ·) 1 = List.foldl (· * ·) 1 tv.shape.toList := by
