@@ -10,8 +10,7 @@ import Mathlib.Data.ENNReal.Basic
 
 open Finset Matrix NeuralNetwork State
 
-lemma sum_univ_eq_tsum_uniform {U : Type} [Fintype U] [DecidableEq U]
-  [Nonempty U] :
+lemma sum_univ_eq_tsum_uniform {U : Type} [Fintype U] [DecidableEq U] [Nonempty U] :
   Summable (fun (_ : U) => (1 : ℝ) / ↑(Fintype.card U)) ∧
   ∑' (_ : U), (1 : ℝ) / ↑(Fintype.card U) = Finset.sum Finset.univ (fun (_ : U) => (1 : ℝ) / ↑(Fintype.card U)) :=
 by
@@ -35,11 +34,12 @@ lemma mul_div_cancel_of_ne_zero {α : Type*} [Field α] (a b : α) (h : b ≠ 0)
   rw [div_eq_mul_inv]
   rw [propext (mul_inv_eq_iff_eq_mul₀ h)]
 
-/-- In a tsum over all neurons, only the neuron where s and s' differ contributes --/
-lemma gibbs_single_site_tsum {R U : Type}
+variable {R U : Type}
   [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
-  [Nonempty U] [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
+  [Nonempty U] (T : ℝ)
+/-- In a tsum over all neurons, only the neuron where s and s' differ contributes --/
+lemma gibbs_single_site_tsum [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑' (a : U),
@@ -90,16 +90,14 @@ lemma gibbs_single_site_tsum {R U : Type}
     For a state transition involving change at exactly one site u, the Gibbs transition
     probability is the product of the probability of selecting u and the probability
     of updating u to the new value --/--/
-lemma gibbs_single_site_transition_prob {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
-    [Nonempty U] [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
+lemma gibbs_single_site_transition_prob [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   gibbsTransitionProb wθ T s s' =
   ENNReal.toReal (((1 : ENNReal) / (Fintype.card U : ENNReal)) *
   (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u))) := by
-  have h_eq := gibbs_single_site_tsum wθ T s s' u h_diff_at_u h_same_elsewhere
+  have h_eq := gibbs_single_site_tsum T wθ s s' u h_diff_at_u h_same_elsewhere
   have h_rewrite : ∑' (a : U), (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U))
     (by exact uniform_neuron_selection_prob_valid)) a *
                       (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' =
@@ -109,8 +107,7 @@ lemma gibbs_single_site_transition_prob {R U : Type}
     Eq.symm (Real.ext_cauchy (congrArg Real.cauchy (congrArg ENNReal.toReal (id (Eq.symm h_eq)))))
 
 /-- When states differ only at site u, the energy terms that involve pairs of sites other than u are equal --/
-lemma energy_terms_without_u_equal {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+lemma energy_terms_without_u_equal
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v1 ∈ univ.erase u, ∑ v2 ∈ {v2 | v2 ≠ v1 ∧ v2 ≠ u}, wθ.w v1 v2 * s'.act v1 * s'.act v2 =
@@ -127,8 +124,7 @@ lemma energy_terms_without_u_equal {R U : Type}
     rw [hs'_v1_eq_s_v1, hs'_v2_eq_s_v2]
 
 /-- The energy difference for terms involving site u when states differ only at u --/
-lemma energy_terms_with_u_diff {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+lemma energy_terms_with_u_diff
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v2 ∈ Finset.filter (fun v2 => v2 ≠ u) univ, wθ.w u v2 * s'.act u * s'.act v2 -
@@ -158,8 +154,7 @@ lemma energy_terms_with_u_diff {R U : Type}
   rw [h_sum_eq]
   rw [Finset.mul_sum]
 
-lemma weight_energy_diff_term_v1_eq_u {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
+lemma weight_energy_diff_term_v1_eq_u
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v2 ∈ filter (fun v2 => v2 ≠ u) univ, (wθ.w u v2 * s'.act u * s'.act v2 - wθ.w u v2 * s.act u * s.act v2) =
@@ -182,8 +177,7 @@ lemma weight_energy_diff_term_v1_eq_u {R U : Type}
   rw [h_sum_eq]
   rw [mul_sum]
 
-lemma weight_energy_diff_term_v1_ne_u {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
+lemma weight_energy_diff_term_v1_ne_u
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v1 ∈ filter (fun v1 => v1 ≠ u) univ, ∑ v2 ∈ filter (fun v2 => v2 ≠ v1) univ,
@@ -221,8 +215,7 @@ lemma weight_energy_diff_term_v1_ne_u {R U : Type}
   rw [sum_congr rfl h_fun_eq]
   rw [← mul_sum]
 
-lemma weight_sum_symmetry {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
+lemma weight_sum_symmetry
   (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State)
   (u : U) (h_symm : ∀ v1 v2 : U, wθ.w v1 v2 = wθ.w v2 v1) :
   ∑ v1 ∈ filter (fun v1 => v1 ≠ u) univ, wθ.w v1 u * s.act v1 =
@@ -233,8 +226,7 @@ lemma weight_sum_symmetry {R U : Type}
   simp only [mem_erase] at hv
   rw [h_symm v u]
 
-lemma weight_energy_sum_split {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [DecidableEq R]
+lemma weight_energy_sum_split
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) (h_symm : ∀ v1 v2 : U, wθ.w v1 v2 = wθ.w v2 v1) :
   ∑ v1 ∈ univ, ∑ v2 ∈ filter (fun v2 => v2 ≠ v1) univ, wθ.w v1 v2 * s'.act v1 * s'.act v2 -
@@ -296,17 +288,14 @@ lemma weight_energy_sum_split {R U : Type}
 
 /-- For a Hopfield network with states differing at a single site, the activation
     at that site is related to the weighted sum of other activations --/
-lemma local_field_relation {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State) (u : U) :
+lemma local_field_relation (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State) (u : U) :
   s.net wθ u = ∑ v2 ∈ {v2 | v2 ≠ u}, wθ.w u v2 * s.act v2 := by
   simp only [NeuralNetwork.State.net, HopfieldNetwork, NeuralNetwork.fnet, HNfnet,
              NeuralNetwork.State.out, NeuralNetwork.fout, HNfout]
 
 /-- When states differ at a single site, the energy difference in the weight component
     is proportional to the local field and activation difference --/
-lemma weight_energy_single_site_diff {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+lemma weight_energy_single_site_diff
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   s'.Ew wθ - s.Ew wθ = (s.act u - s'.act u) * s.net wθ u := by
@@ -323,8 +312,7 @@ lemma weight_energy_single_site_diff {R U : Type}
 
 /-- When states differ at a single site, the energy difference in the bias component
     is proportional to the activation difference --/
-lemma bias_energy_single_site_diff {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+lemma bias_energy_single_site_diff
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   s'.Eθ wθ - s.Eθ wθ = θ' (wθ.θ u) * (s'.act u - s.act u) := by
@@ -343,8 +331,7 @@ lemma bias_energy_single_site_diff {R U : Type}
 
 /-- Energy difference for single-site updates with specified bias term.
     This is a general formulation that allows different bias configurations. --/
-lemma energy_single_site_diff_with_bias {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+lemma energy_single_site_diff_with_bias
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (h_bias : θ' (wθ.θ u) = 1/2 * s.net wθ u) :
@@ -356,8 +343,7 @@ lemma energy_single_site_diff_with_bias {R U : Type}
     rw [h_bias]
     ring_nf
 
-lemma energy_single_site_diff {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
+lemma energy_single_site_diff
   (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (h_bias : θ' (wθ.θ u) = 0) : -- Added hypothesis for standard Hopfield case
@@ -383,32 +369,27 @@ lemma ENNReal.natCast_eq_ofReal (n : ℕ) : (n : ENNReal) = ENNReal.ofReal n := 
     · exact Nat.cast_nonneg n
     · norm_num
 
-lemma gibbs_transition_sum_single_site {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U]
-  [Coe R ℝ][Field ℕ] [CommGroup ℕ] [Inv ℕ] [HDiv ℕ ℕ ℝ] -- Removed Field ℕ etc. constraints
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
+lemma gibbs_transition_sum_single_site -- Removed Field ℕ etc. constraints
+  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) [Coe R ℝ]
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (h_diff : s.act u ≠ s'.act u) :
   ∑' (a : U), ((1 : ENNReal) / (Fintype.card U : ENNReal)) * -- Use ENNReal probability
     (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' =
   ((1 : ENNReal) / (Fintype.card U : ENNReal)) * (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' := by
-  have h_tsum := gibbs_single_site_tsum wθ T s s' u h_diff h_same_elsewhere
+  have h_tsum := gibbs_single_site_tsum T wθ s s' u h_diff h_same_elsewhere
   have h_update : s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) :=
     single_site_difference_as_update s s' u h_diff h_same_elsewhere
   rw [← h_update] at h_tsum
   exact h_tsum
 
-lemma single_site_update_eq {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (s s' : (HopfieldNetwork R U).State) (u : U)
+lemma single_site_update_eq (s s' : (HopfieldNetwork R U).State) (u : U) [Coe R ℝ]
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (h_diff : s.act u ≠ s'.act u) :
   s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) :=
   single_site_difference_as_update s s' u h_diff h_same_elsewhere
 
-lemma gibbs_update_single_neuron_formula {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s : (HopfieldNetwork R U).State)
+lemma gibbs_update_single_neuron_formula
+  (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State) [Coe R ℝ]
   (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) :
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
@@ -417,9 +398,8 @@ lemma gibbs_update_single_neuron_formula {R U : Type}
     else ENNReal.ofReal (Real.exp (-local_field / T)) / Z :=
   gibbs_update_single_neuron_prob wθ T s u val hval
 
-lemma gibbs_single_site_transition_explicit {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]--[HDiv ℕ ℕ ℝ] [CommGroup ℕ] [Field ℕ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State)
+lemma gibbs_single_site_transition_explicit
+  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State) [Coe R ℝ]
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (_ : θ' (wθ.θ u) = 0) (_ : T > 0) (h_neq : s ≠ s') :
   gibbsTransitionProb wθ T s s' =
@@ -434,7 +414,7 @@ lemma gibbs_single_site_transition_explicit {R U : Type}
 by
   have h_diff : s.act u ≠ s'.act u := by
     intro contra; exact h_neq (State.ext (fun v => if hv : v = u then by rw [hv]; exact contra else h_same_elsewhere v hv))
-  have h_prob := gibbs_single_site_transition_prob wθ T s s' u h_diff h_same_elsewhere
+  have h_prob := gibbs_single_site_transition_prob T wθ s s' u h_diff h_same_elsewhere
   rw [h_prob]
   have h_upd := single_site_difference_as_update s s' u h_diff h_same_elsewhere
   let local_field := s.net wθ u
@@ -489,7 +469,7 @@ by
     rw [h_upd]
     have h_update_eq : (NN.State.updateNeuron s u (s'.act u) (s'.hp u)).act u = s'.act u := by
       simp only [NN.State.updateNeuron, act]; exact rfl
-    have h_formula_raw := gibbs_update_single_neuron_formula wθ T s u (s'.act u) (s'.hp u)
+    have h_formula_raw := gibbs_update_single_neuron_formula T wθ s u (s'.act u) (s'.hp u)
     have h_formula_rewritten : (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) =
       if (NN.State.updateNeuron s u (s'.act u) (s'.hp u)).act u = 1 then
         ENNReal.ofReal (Real.exp (local_field / T)) / Z
@@ -521,9 +501,8 @@ by
   · exact h_final
 
 /-- Multi-site transitions have zero probability --/
-lemma gibbsUpdateSingleNeuron_support {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U)
+lemma gibbsUpdateSingleNeuron_support [Coe R ℝ]
+  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (u : U)
   (s' : (HopfieldNetwork R U).State) :
   s' ∈ (NN.State.gibbsUpdateSingleNeuron s wθ T u).support →
   s' = NN.State.updateNeuron s u 1 (by exact Or.inl rfl) ∨
@@ -534,9 +513,8 @@ lemma gibbsUpdateSingleNeuron_support {R U : Type}
     exact (PMF.apply_pos_iff (NN.State.gibbsUpdateSingleNeuron s wθ T u) s').mpr h_mem_support
   exact gibbsUpdate_possible_states wθ T s u s' h_pos
 
-lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
-  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (u : U)
+lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update [Coe R ℝ]
+  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (u : U)
   (s' : (HopfieldNetwork R U).State) :
   ¬(s' = NN.State.updateNeuron s u 1 (by exact Or.inl rfl) ∨
     s' = NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)) →
@@ -545,11 +523,10 @@ lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update {R U : Type}
   -- Use the contrapositive of the support lemma
   rw [PMF.apply_eq_zero_iff]
   contrapose! h_not_update -- This assumes s' is in the support
-  exact gibbsUpdateSingleNeuron_support s wθ T u s' h_not_update
+  exact gibbsUpdateSingleNeuron_support T s wθ u s' h_not_update
 
-lemma gibbsSamplingStep_prob_zero_if_multi_site {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ] [Inv ℕ] [Coe ℕ ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) :
+lemma gibbsSamplingStep_prob_zero_if_multi_site [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State) :
   (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
   (NN.State.gibbsSamplingStep wθ T s) s' = 0 := by
   intro h_multi_site
@@ -573,19 +550,17 @@ lemma gibbsSamplingStep_prob_zero_if_multi_site {R U : Type}
       rw [h_eq_update_neg_one]
       exact Eq.symm (updateNeuron_preserves s u v (-1) (Or.inr rfl) hv)
   have h_update_prob_zero : (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' = 0 :=
-    gibbsUpdateSingleNeuron_prob_zero_if_not_update s wθ T u s' h_s'_not_update_at_u
+    gibbsUpdateSingleNeuron_prob_zero_if_not_update T s wθ u s' h_s'_not_update_at_u
   exact mul_eq_zero_of_right _ h_update_prob_zero
 
 -- Main lemma
-lemma gibbs_multi_site_transition {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
-    [Nonempty U] [Coe R ℝ] [Inv ℕ] [Coe ℕ ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) :
+lemma gibbs_multi_site_transition [Coe R ℝ]
+  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State) :
   (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
   gibbsTransitionProb wθ T s s' = 0 := by
   intro h_multi_site
   unfold gibbsTransitionProb
   have h_step_prob_zero : (NN.State.gibbsSamplingStep wθ T s) s' = 0 :=
-    gibbsSamplingStep_prob_zero_if_multi_site wθ T s s' h_multi_site
+    gibbsSamplingStep_prob_zero_if_multi_site T wθ s s' h_multi_site
   rw [h_step_prob_zero]
   exact rfl
