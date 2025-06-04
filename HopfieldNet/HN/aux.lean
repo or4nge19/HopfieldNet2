@@ -246,3 +246,31 @@ lemma pmf_map_pos_iff_exists_pos {α β : Type}
     rw [hx_eq]
     rw [← hx_eq]
     use x
+lemma Array.mkArray_size {α : Type} (n : ℕ) (a : α) :
+  (Array.replicate n a).size = n := by simp only [size_replicate]
+
+lemma Array.mkArray_get {α : Type} (n : ℕ) (a : α) (i : Nat) (h : i < n) :
+  (Array.replicate n a)[i]'(by rw [Array.size_replicate]; exact h) = a :=
+    getElem_replicate (Eq.mpr (id (congrArg (fun _a ↦ i < _a) size_replicate)) h)
+
+/--
+Proves that `Array.mkArray` creates valid parameters for a Hopfield network.
+Given a vertex `u` in a Hopfield network with `n` nodes, this lemma establishes that:
+1. The array `σ_u` has size equal to `κ1 u`
+2. The array `θ_u` has size equal to `κ2 u`
+3. All elements in `σ_u` are initialized to 0
+4. All elements in `θ_u` are initialized to 0
+where `κ1` and `κ2` are dimension functions defined in the `HopfieldNetwork` structure.
+-/
+lemma Array.mkArray_creates_valid_nn_params {α : Type} (κ₁ κ₂ : α → ℕ) (u : α) (a₁ a₂ : ℝ) :
+  let σ_u := Array.replicate (κ₁ u) a₁
+  let θ_u := Array.replicate (κ₂ u) a₂
+  σ_u.size = κ₁ u ∧
+  θ_u.size = κ₂ u ∧
+  (∀ i : Nat, ∀ h : i < κ₁ u, σ_u[i]'(by { simp only [σ_u]; rw [Array.mkArray_size]; exact h }) = a₁) ∧
+  (∀ i : Nat, ∀ h : i < κ₂ u, θ_u[i]'(by { simp only [θ_u]; rw [Array.mkArray_size]; exact h }) = a₂) := by
+  let σ_u := Array.replicate (κ₁ u) a₁
+  let θ_u := Array.replicate (κ₂ u) a₂
+  refine ⟨Array.size_replicate .., Array.size_replicate .., ?_, ?_⟩
+  · intro i h; exact Array.getElem_replicate ..
+  · intro i h; exact Array.getElem_replicate ..

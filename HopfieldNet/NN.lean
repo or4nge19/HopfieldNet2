@@ -66,6 +66,17 @@ structure State (NN : NeuralNetwork R U) where
   act : U → R
   hp : ∀ u : U, NN.pact (act u)
 
+/-- Extensionality lemma for neural network states -/
+@[ext]
+lemma ext {R U : Type} [Zero R] {NN : NeuralNetwork R U}
+    {s₁ s₂ : NN.State} : (∀ u, s₁.act u = s₂.act u) → s₁ = s₂ := by
+  intro h
+  cases s₁
+  cases s₂
+  simp only [NeuralNetwork.State.mk.injEq]
+  apply funext
+  exact h
+
 namespace State
 
 variable {NN : NeuralNetwork R U} (wσθ : Params NN) (s : NN.State)

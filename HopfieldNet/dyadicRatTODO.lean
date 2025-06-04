@@ -1,3 +1,4 @@
+import Mathlib.Analysis.RCLike.Basic
 
 --TO DO : port dyadics from Coq
 -- (**
@@ -12,23 +13,37 @@
 --   MathClasses.interfaces.additional_operations MathClasses.interfaces.orders
 --   MathClasses.orders.minmax MathClasses.orders.integers MathClasses.orders.rationals
 --   MathClasses.implementations.nonneg_integers_naturals MathClasses.implementations.stdlib_rationals
---   MathClasses.theory.rationals MathClasses.theory.shiftl MathClasses.theory.int_pow MathClasses.theory.nat_pow MathClasses.theory.abs.
+--   MathClasses.theory.rationals MathClasses.theory.shiftl
+--   MathClasses.theory.int_pow MathClasses.theory.nat_pow MathClasses.theory.abs.
 
 -- Record Dyadic Z := dyadic { mant: Z; expo: Z }.
 -- Arguments dyadic {Z} _ _.
 -- Arguments mant {Z} _.
 -- Arguments expo {Z} _.
 
--- Infix "▼" := dyadic (at level 80) : mc_scope.
+structure Dyadic where
+  mant : ℤ
+  expo : ℤ
+deriving Repr, DecidableEq
 
--- Section dyadics.
--- Context `{Integers Z} `{Apart Z} `{!TrivialApart Z} `{!FullPseudoSemiRingOrder Zle Zlt}
---   `{equiv_dec : ∀ (x y : Z), Decision (x = y)}
---   `{le_dec : ∀ (x y : Z), Decision (x ≤ y)}
---   `{!ShiftLSpec Z (Z⁺) sl}.
+-- In Coq, "▼" is used as an infix notation for the dyadic constructor.
 
--- Notation Dyadic := (Dyadic Z).
--- Add Ring Z: (rings.stdlib_ring_theory Z).
+notation mant "▼" expo => Dyadic.mk mant expo
+
+-- Section for dyadics.
+-- We assume ℤ is the integers, with its standard order and apartness.
+-- In Lean 4, these are available from Mathlib.
+-- We also assume decidable equality and order, and shift left specification.
+
+open Int
+
+variable [DecidableEq ℤ]
+variable [DecidableRel (· ≤ · : ℤ → ℤ → Prop)]
+variable [DecidableRel (· < · : ℤ → ℤ → Prop)]
+
+-- In Lean 4, the type synonym is not needed; Dyadic is already defined as a structure.
+-- The equivalent of "Add Ring Z: (rings.stdlib_ring_theory Z)." is not needed in Lean 4,
+-- as ℤ is already a ring in Mathlib.
 
 -- Global Program Instance dy_plus: Plus Dyadic := λ x y,
 --   if decide_rel (≤) (expo x) (expo y)
@@ -37,11 +52,20 @@
 -- Next Obligation. now apply rings.flip_nonneg_minus. Qed.
 -- Next Obligation. apply rings.flip_nonneg_minus. now apply orders.le_flip. Qed.
 
--- Global Instance dy_inject: Cast Z Dyadic := λ x, x ▼ 0.
--- Global Instance dy_negate: Negate Dyadic := λ x, -mant x ▼ expo x.
--- Global Instance dy_mult: Mult Dyadic := λ x y, mant x * mant y ▼ expo x + expo y.
--- Global Instance dy_0: Zero Dyadic := ('0 : Dyadic).
--- Global Instance dy_1: One Dyadic := ('1 : Dyadic).
+instance : Coe ℤ Dyadic where
+  coe x := Dyadic.mk x 0
+
+instance : Neg Dyadic where
+  neg x := Dyadic.mk (-x.mant) x.expo
+
+instance : Mul Dyadic where
+  mul x y := Dyadic.mk (x.mant * y.mant) (x.expo + y.expo)
+
+instance : Zero Dyadic where
+  zero := Dyadic.mk 0 0
+
+instance : One Dyadic where
+  one := Dyadic.mk 1 0
 
 -- (*
 -- We define equality on the dyadics by injecting them into the rationals.
@@ -54,14 +78,19 @@
 -- the equality relation, we will define the embedding for arbitrary rationals
 -- implementations first.
 -- *)
--- Section DtoQ_slow.
---   Context `{Rationals Q} `{Pow Q Z} (ZtoQ: Z → Q).
---   Definition DtoQ_slow  (x : Dyadic) := ZtoQ (mant x) * 2 ^ (expo x).
--- End DtoQ_slow.
+-- Slow embedding of Dyadic into ℚ (Rat)
+def DtoQ_slow (x : Dyadic) : ℚ :=
+  (x.mant : ℚ) * (2 : ℚ) ^ x.expo
 
 -- Section with_rationals.
---   Context `{Rationals Q} `{!IntPowSpec Q Z ipw} `{!SemiRing_Morphism (ZtoQ: Z → Q)}.
---   Add Ring Q: (rings.stdlib_ring_theory Q).
+-- In Lean 4, we can express the context as variables or parameters.
+-- Here, Q is the rational numbers ℚ.
+
+-- ZtoQ is the canonical embedding from ℤ to ℚ
+def ZtoQ : ℤ → ℚ := Rat.ofInt
+
+-- We assume Q has the necessary structure for rationals, integer powers, and is a semiring morphism.
+-- In Mathlib, these are available for Rat.
 
 --   Notation DtoQ_slow' := (DtoQ_slow ZtoQ).
 

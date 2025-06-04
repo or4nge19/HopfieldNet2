@@ -86,6 +86,30 @@ abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRi
 variable [Nonempty U]
 
 /--
+In a Hopfield network, two neurons are adjacent if and only if they are different.
+This formalizes the fully connected nature of Hopfield networks.
+-/
+lemma HopfieldNetwork.all_nodes_adjacent (u v : U) :
+    ¬(HopfieldNetwork R U).Adj u v → u = v := by
+  intro h
+  unfold HopfieldNetwork at h
+  simp only [ne_eq] at h
+  simp_all only [Decidable.not_not]
+
+/-- In a Hopfield network, activation values can only be 1 or -1. -/
+lemma hopfield_value_dichotomy
+  (val : R) (hval : (HopfieldNetwork R U).pact val) :
+  val ≠ 1 → val = -1 := by
+  intro h_not_one
+  unfold HopfieldNetwork at hval
+  simp only at hval
+  cases hval with
+  | inl h_eq_one =>
+    contradiction
+  | inr h_eq_neg_one =>
+    exact h_eq_neg_one
+
+/--
 Extracts the first element from a vector of length 1.
 -/
 def θ' : Vector R ((HopfieldNetwork R U).κ2 u) → R := fun (θ : Vector R 1) => θ.get 0
@@ -104,6 +128,13 @@ variable {s : (HopfieldNetwork R U).State}
 
 lemma NeuralNetwork.State.act_one_or_neg_one (u : U) : s.act u = 1 ∨ s.act u = -1 := s.hp u
 
+/-- Instances o establish decidability of equality for network states
+  under certain conditions. -/
+instance decidableEqState :
+  DecidableEq ((HopfieldNetwork R U).State) := by
+  intro s₁ s₂
+  apply decidable_of_iff (∀ u, s₁.act u = s₂.act u) ⟨fun h ↦ ext h, fun h u ↦ by rw [h]⟩
+
 /--
 Defines the Hebbian learning rule for a Hopfield Network.
 
@@ -117,7 +148,7 @@ def Hebbian {m : ℕ} (ps : Fin m → (HopfieldNetwork R U).State) : Params (Hop
   /- The threshold function, which is set to a constant value of 0 for all units. -/
   θ u := ⟨#[0], rfl⟩
   /- The state function, which is set to an empty vector. -/
-  σ _ := Vector.mkEmpty 0
+  σ _ := Vector.emptyWithCapacity 0
   /- A proof that the weight matrix is symmetric and satisfies the Hebbian learning rule. -/
   hw u v huv := by
     simp only [sub_apply, smul_apply, smul_eq_mul]

@@ -8,9 +8,14 @@ import HopfieldNet.Stochastic
 import Mathlib.Analysis.Normed.Field.Instances
 import Mathlib.Data.ENNReal.Basic
 
+set_option maxHeartbeats 1000000
+
 open Finset Matrix NeuralNetwork State
 
-lemma sum_univ_eq_tsum_uniform {U : Type} [Fintype U] [DecidableEq U] [Nonempty U] :
+variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [Fintype U]
+  [Nonempty U] (T : ℝ) [Coe R ℝ]
+
+lemma sum_univ_eq_tsum_uniform  :
   Summable (fun (_ : U) => (1 : ℝ) / ↑(Fintype.card U)) ∧
   ∑' (_ : U), (1 : ℝ) / ↑(Fintype.card U) = Finset.sum Finset.univ (fun (_ : U) => (1 : ℝ) / ↑(Fintype.card U)) :=
 by
@@ -34,18 +39,15 @@ lemma mul_div_cancel_of_ne_zero {α : Type*} [Field α] (a b : α) (h : b ≠ 0)
   rw [div_eq_mul_inv]
   rw [propext (mul_inv_eq_iff_eq_mul₀ h)]
 
-variable {R U : Type}
-  [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U]
-  [Nonempty U] (T : ℝ)
+variable [DecidableEq U] (wθ : Params (HopfieldNetwork R U))
 /-- In a tsum over all neurons, only the neuron where s and s' differ contributes --/
-lemma gibbs_single_site_tsum [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
+lemma gibbs_single_site_tsum  (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑' (a : U),
-    (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U)) (by exact uniform_neuron_selection_prob_valid)) a
-    * (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' =
-  1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron s wθ T u)
+    (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U)) ( uniform_neuron_selection_prob_valid)) a
+    * (NN.State.gibbsUpdateSingleNeuron wθ s T a) s' =
+  1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron wθ s T u)
     (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) := by
   have h_s'_as_update : s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) := by
     apply single_site_difference_as_update s s' u h_diff_at_u h_same_elsewhere
@@ -56,10 +58,10 @@ lemma gibbs_single_site_tsum [Coe R ℝ]
   have h_s'_as_update : s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) := by
     apply single_site_difference_as_update s s' u h_diff_at_u h_same_elsewhere
 
-  have h_tsum_to_sum : ∑' (a : U), (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U)) (by exact uniform_neuron_selection_prob_valid)) a *
-                      (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' =
-                      ∑ a ∈ Finset.univ, (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U)) (by exact uniform_neuron_selection_prob_valid)) a *
-                      (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' := by
+  have h_tsum_to_sum : ∑' (a : U), (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U)) (uniform_neuron_selection_prob_valid)) a *
+                      (NN.State.gibbsUpdateSingleNeuron wθ s T a) s' =
+                      ∑ a ∈ Finset.univ, (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U)) (uniform_neuron_selection_prob_valid)) a *
+                      (NN.State.gibbsUpdateSingleNeuron wθ s T a) s' := by
     apply tsum_eq_sum
     · intro a ha
       simp only [Finset.mem_univ] at ha
@@ -67,13 +69,13 @@ lemma gibbs_single_site_tsum [Coe R ℝ]
   rw [h_tsum_to_sum]
   rw [h_s'_as_update]
   have h_zero_other_sites : ∀ a ∈ Finset.univ, a ≠ u →
-                           (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' = 0 := by
+                           (NN.State.gibbsUpdateSingleNeuron wθ s T a) s' = 0 := by
     intro a _ ha
     exact gibbs_update_zero_other_sites wθ T s s' u a h_same_elsewhere h_diff_at_u ha
   rw [Finset.sum_eq_single u]
   · simp only [uniform_neuron_selection_prob]
-    have h_update_eq : (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' =
-                      (NN.State.gibbsUpdateSingleNeuron s wθ T u)
+    have h_update_eq : (NN.State.gibbsUpdateSingleNeuron wθ s T u) s' =
+                      (NN.State.gibbsUpdateSingleNeuron wθ s T u)
                       (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) := by
       rw [h_s'_as_update]
       congr
@@ -86,29 +88,28 @@ lemma gibbs_single_site_tsum [Coe R ℝ]
     absurd (Finset.mem_univ u)
     exact h_not_in
 
+
   /-- Main lemma for Gibbs transition probability with single site update :
     For a state transition involving change at exactly one site u, the Gibbs transition
     probability is the product of the probability of selecting u and the probability
     of updating u to the new value --/--/
-lemma gibbs_single_site_transition_prob [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
+lemma gibbs_single_site_transition_prob (s s' : (HopfieldNetwork R U).State)
   (u : U) (h_diff_at_u : s.act u ≠ s'.act u)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   gibbsTransitionProb wθ T s s' =
   ENNReal.toReal (((1 : ENNReal) / (Fintype.card U : ENNReal)) *
-  (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u))) := by
+  (NN.State.gibbsUpdateSingleNeuron wθ s T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u))) := by
   have h_eq := gibbs_single_site_tsum T wθ s s' u h_diff_at_u h_same_elsewhere
   have h_rewrite : ∑' (a : U), (PMF.ofFintype (fun x => 1 / ↑(Fintype.card U))
-    (by exact uniform_neuron_selection_prob_valid)) a *
-                      (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' =
-                      1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron s wθ T u)
+    ( uniform_neuron_selection_prob_valid)) a *
+                      (NN.State.gibbsUpdateSingleNeuron wθ s T a) s' =
+                      1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron wθ s T u)
                       (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) := h_eq
   exact
     Eq.symm (Real.ext_cauchy (congrArg Real.cauchy (congrArg ENNReal.toReal (id (Eq.symm h_eq)))))
 
 /-- When states differ only at site u, the energy terms that involve pairs of sites other than u are equal --/
-lemma energy_terms_without_u_equal
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
+lemma energy_terms_without_u_equal (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v1 ∈ univ.erase u, ∑ v2 ∈ {v2 | v2 ≠ v1 ∧ v2 ≠ u}, wθ.w v1 v2 * s'.act v1 * s'.act v2 =
   ∑ v1 ∈ univ.erase u, ∑ v2 ∈ {v2 | v2 ≠ v1 ∧ v2 ≠ u}, wθ.w v1 v2 * s.act v1 * s.act v2 := by
@@ -124,8 +125,7 @@ lemma energy_terms_without_u_equal
     rw [hs'_v1_eq_s_v1, hs'_v2_eq_s_v2]
 
 /-- The energy difference for terms involving site u when states differ only at u --/
-lemma energy_terms_with_u_diff
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
+lemma energy_terms_with_u_diff (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v2 ∈ Finset.filter (fun v2 => v2 ≠ u) univ, wθ.w u v2 * s'.act u * s'.act v2 -
   ∑ v2 ∈ Finset.filter (fun v2 => v2 ≠ u) univ, wθ.w u v2 * s.act u * s.act v2 =
@@ -154,8 +154,7 @@ lemma energy_terms_with_u_diff
   rw [h_sum_eq]
   rw [Finset.mul_sum]
 
-lemma weight_energy_diff_term_v1_eq_u
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
+lemma weight_energy_diff_term_v1_eq_u (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v2 ∈ filter (fun v2 => v2 ≠ u) univ, (wθ.w u v2 * s'.act u * s'.act v2 - wθ.w u v2 * s.act u * s.act v2) =
   (s'.act u - s.act u) * ∑ v2 ∈ filter (fun v2 => v2 ≠ u) univ, wθ.w u v2 * s.act v2 := by
@@ -173,12 +172,10 @@ lemma weight_energy_diff_term_v1_eq_u
     apply sum_congr rfl
     intro v2 hv2
     exact h_term_eq v2 hv2
-
   rw [h_sum_eq]
   rw [mul_sum]
 
-lemma weight_energy_diff_term_v1_ne_u
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State)
+lemma weight_energy_diff_term_v1_ne_u (s s' : (HopfieldNetwork R U).State)
   (u : U) (h : ∀ v : U, v ≠ u → s.act v = s'.act v) :
   ∑ v1 ∈ filter (fun v1 => v1 ≠ u) univ, ∑ v2 ∈ filter (fun v2 => v2 ≠ v1) univ,
     (wθ.w v1 v2 * s'.act v1 * s'.act v2 - wθ.w v1 v2 * s.act v1 * s.act v2) =
@@ -203,7 +200,6 @@ lemma weight_energy_diff_term_v1_ne_u
         simp only [mem_erase] at hv2
         rw [h v2 hv2.1]
         ring
-
     rw [h_v2_eq_u, h_v2_ne_u]
     exact AddZeroClass.zero_add (wθ.w v1 u * s'.act v1 * (s'.act u - s.act u))
   rw [h_transform]
@@ -268,7 +264,7 @@ lemma weight_energy_sum_split
     rw [h_goal_rewrite]
     have h_first_term : ∑ x ∈ univ.erase u, (wθ.w u x * s'.act u * s'.act x - wθ.w u x * s.act u * s.act x) =
                         (s'.act u - s.act u) * ∑ v2 ∈ univ.erase u, wθ.w u v2 * s.act v2 := by
-      have h_eq : filter (fun v2 => v2 ≠ u) univ = univ.erase u := by exact filter_erase_equiv u
+      have h_eq : filter (fun v2 => v2 ≠ u) univ = univ.erase u :=  filter_erase_equiv u
       rw [← h_eq] at *
       exact h_term_u
     have h_second_term : ∑ x ∈ univ.erase u, ∑ x_1 ∈ univ.erase x,
@@ -374,32 +370,31 @@ lemma gibbs_transition_sum_single_site -- Removed Field ℕ etc. constraints
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (h_diff : s.act u ≠ s'.act u) :
   ∑' (a : U), ((1 : ENNReal) / (Fintype.card U : ENNReal)) * -- Use ENNReal probability
-    (NN.State.gibbsUpdateSingleNeuron s wθ T a) s' =
-  ((1 : ENNReal) / (Fintype.card U : ENNReal)) * (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' := by
+    (NN.State.gibbsUpdateSingleNeuron wθ s T a) s' =
+  ((1 : ENNReal) / (Fintype.card U : ENNReal)) * (NN.State.gibbsUpdateSingleNeuron wθ s T u) s' := by
   have h_tsum := gibbs_single_site_tsum T wθ s s' u h_diff h_same_elsewhere
   have h_update : s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) :=
     single_site_difference_as_update s s' u h_diff h_same_elsewhere
   rw [← h_update] at h_tsum
   exact h_tsum
 
-lemma single_site_update_eq (s s' : (HopfieldNetwork R U).State) (u : U) [Coe R ℝ]
+lemma single_site_update_eq (s s' : (HopfieldNetwork R U).State) (u : U)
   (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (h_diff : s.act u ≠ s'.act u) :
   s' = NN.State.updateNeuron s u (s'.act u) (s'.hp u) :=
   single_site_difference_as_update s s' u h_diff h_same_elsewhere
 
-lemma gibbs_update_single_neuron_formula
-  (wθ : Params (HopfieldNetwork R U)) (s : (HopfieldNetwork R U).State) [Coe R ℝ]
+lemma gibbs_update_single_neuron_formula (s : (HopfieldNetwork R U).State)
   (u : U) (val : R) (hval : (HopfieldNetwork R U).pact val) :
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
-  (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u val hval) =
+  (NN.State.gibbsUpdateSingleNeuron wθ s T u) (NN.State.updateNeuron s u val hval) =
     if val = 1 then ENNReal.ofReal (Real.exp (local_field / T)) / Z
     else ENNReal.ofReal (Real.exp (-local_field / T)) / Z :=
-  gibbs_update_single_neuron_prob wθ T s u val hval
+  gibbs_update_single_neuron_prob wθ s T u val hval
 
 lemma gibbs_single_site_transition_explicit
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State) [Coe R ℝ]
+  (s s' : (HopfieldNetwork R U).State) [Coe R ℝ]
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
   (_ : θ' (wθ.θ u) = 0) (_ : T > 0) (h_neq : s ≠ s') :
   gibbsTransitionProb wθ T s s' =
@@ -413,13 +408,13 @@ lemma gibbs_single_site_transition_explicit
     ) :=
 by
   have h_diff : s.act u ≠ s'.act u := by
-    intro contra; exact h_neq (State.ext (fun v => if hv : v = u then by rw [hv]; exact contra else h_same_elsewhere v hv))
+    intro contra; exact h_neq (NeuralNetwork.ext (fun v => if hv : v = u then by rw [hv]; exact contra else h_same_elsewhere v hv))
   have h_prob := gibbs_single_site_transition_prob T wθ s s' u h_diff h_same_elsewhere
   rw [h_prob]
   have h_upd := single_site_difference_as_update s s' u h_diff h_same_elsewhere
   let local_field := s.net wθ u
   let Z := ENNReal.ofReal (Real.exp (local_field / T)) + ENNReal.ofReal (Real.exp (-local_field / T))
-  have h_formula : (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) =
+  have h_formula : (NN.State.gibbsUpdateSingleNeuron wθ s T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) =
       if s'.act u = 1 then
         ENNReal.ofReal (Real.exp (local_field / T)) / Z
       else
@@ -461,7 +456,7 @@ by
       ENNReal.toReal (a / b) = ENNReal.toReal a / ENNReal.toReal b := by
     intros a b ha hb hb_top
     exact ENNReal.toReal_div a b
-  have h_formula_direct : (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' =
+  have h_formula_direct : (NN.State.gibbsUpdateSingleNeuron wθ s T u) s' =
       if s'.act u = 1 then
         ENNReal.ofReal (Real.exp (local_field / T)) / Z
       else
@@ -470,7 +465,7 @@ by
     have h_update_eq : (NN.State.updateNeuron s u (s'.act u) (s'.hp u)).act u = s'.act u := by
       simp only [NN.State.updateNeuron, act]; exact rfl
     have h_formula_raw := gibbs_update_single_neuron_formula T wθ s u (s'.act u) (s'.hp u)
-    have h_formula_rewritten : (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) =
+    have h_formula_rewritten : (NN.State.gibbsUpdateSingleNeuron wθ s T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u)) =
       if (NN.State.updateNeuron s u (s'.act u) (s'.hp u)).act u = 1 then
         ENNReal.ofReal (Real.exp (local_field / T)) / Z
       else
@@ -480,7 +475,8 @@ by
     have h_cond_eq : (NN.State.updateNeuron s u (s'.act u) (s'.hp u)).act u = 1 ↔ s'.act u = 1 := by
       rw [h_update_eq]
     exact h_formula_rewritten
-  have h_final : (1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u))).toReal =
+  have h_final : (1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron wθ s T u)
+    (NN.State.updateNeuron s u (s'.act u) (s'.hp u))).toReal =
                  1 / ↑(Fintype.card U) * ENNReal.toReal (
                    if s'.act u = 1 then ENNReal.ofReal (Real.exp (local_field / T)) / Z
                    else ENNReal.ofReal (Real.exp (-local_field / T)) / Z
@@ -496,46 +492,44 @@ by
     rw [ENNReal.toReal_mul]
     congr 1
     · exact congrArg ENNReal.toReal h_formula
-  trans (1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron s wθ T u) (NN.State.updateNeuron s u (s'.act u) (s'.hp u))).toReal
+  trans (1 / ↑(Fintype.card U) * (NN.State.gibbsUpdateSingleNeuron wθ s T u)
+    (NN.State.updateNeuron s u (s'.act u) (s'.hp u))).toReal
   · exact rfl
   · exact h_final
 
 /-- Multi-site transitions have zero probability --/
-lemma gibbsUpdateSingleNeuron_support [Coe R ℝ]
-  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (u : U)
-  (s' : (HopfieldNetwork R U).State) :
-  s' ∈ (NN.State.gibbsUpdateSingleNeuron s wθ T u).support →
-  s' = NN.State.updateNeuron s u 1 (by exact Or.inl rfl) ∨
-  s' = NN.State.updateNeuron s u (-1) (by exact Or.inr rfl) := by
+lemma gibbsUpdateSingleNeuron_support
+  (s s' : (HopfieldNetwork R U).State) (u : U) :
+  s' ∈ (NN.State.gibbsUpdateSingleNeuron wθ s T u).support →
+  s' = NN.State.updateNeuron s u 1 ( Or.inl rfl) ∨
+  s' = NN.State.updateNeuron s u (-1) ( Or.inr rfl) := by
   intro h_mem_support
   rw [PMF.mem_support_iff] at h_mem_support
-  have h_pos : (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' > 0 := by
-    exact (PMF.apply_pos_iff (NN.State.gibbsUpdateSingleNeuron s wθ T u) s').mpr h_mem_support
-  exact gibbsUpdate_possible_states wθ T s u s' h_pos
+  have h_pos : (NN.State.gibbsUpdateSingleNeuron wθ s T u) s' > 0 := by
+    exact (PMF.apply_pos_iff (NN.State.gibbsUpdateSingleNeuron wθ s T u) s').mpr h_mem_support
+  exact gibbsUpdate_possible_states wθ s T u s' h_pos
 
-lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update [Coe R ℝ]
-  (s : (HopfieldNetwork R U).State) (wθ : Params (HopfieldNetwork R U)) (u : U)
-  (s' : (HopfieldNetwork R U).State) :
-  ¬(s' = NN.State.updateNeuron s u 1 (by exact Or.inl rfl) ∨
-    s' = NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)) →
-  (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' = 0 := by
+lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update
+  (s s' : (HopfieldNetwork R U).State) (u : U) :
+  ¬(s' = NN.State.updateNeuron s u 1 ( Or.inl rfl) ∨
+    s' = NN.State.updateNeuron s u (-1) ( Or.inr rfl)) →
+  (NN.State.gibbsUpdateSingleNeuron wθ s T u) s' = 0 := by
   intro h_not_update
   -- Use the contrapositive of the support lemma
   rw [PMF.apply_eq_zero_iff]
   contrapose! h_not_update -- This assumes s' is in the support
   exact gibbsUpdateSingleNeuron_support T s wθ u s' h_not_update
 
-lemma gibbsSamplingStep_prob_zero_if_multi_site [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State) :
+lemma gibbsSamplingStep_prob_zero_if_multi_site (s s' : (HopfieldNetwork R U).State) :
   (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
-  (NN.State.gibbsSamplingStep wθ T s) s' = 0 := by
+  (NN.State.gibbsSamplingStep wθ s T) s' = 0 := by
   intro h_multi_site
   unfold NN.State.gibbsSamplingStep
   simp only [PMF.bind_apply] -- Use the definition of PMF.bind
   rw [ENNReal.tsum_eq_zero]
   intro u -- Consider an arbitrary neuron u
-  have h_s'_not_update_at_u : ¬(s' = NN.State.updateNeuron s u 1 (by exact Or.inl rfl) ∨
-                                s' = NN.State.updateNeuron s u (-1) (by exact Or.inr rfl)) := by
+  have h_s'_not_update_at_u : ¬(s' = NN.State.updateNeuron s u 1 ( Or.inl rfl) ∨
+                                s' = NN.State.updateNeuron s u (-1) ( Or.inr rfl)) := by
     intro h_update_or
     apply h_multi_site
     cases h_update_or with
@@ -549,13 +543,12 @@ lemma gibbsSamplingStep_prob_zero_if_multi_site [Coe R ℝ]
       intro v hv
       rw [h_eq_update_neg_one]
       exact Eq.symm (updateNeuron_preserves s u v (-1) (Or.inr rfl) hv)
-  have h_update_prob_zero : (NN.State.gibbsUpdateSingleNeuron s wθ T u) s' = 0 :=
+  have h_update_prob_zero : (NN.State.gibbsUpdateSingleNeuron wθ s T u) s' = 0 :=
     gibbsUpdateSingleNeuron_prob_zero_if_not_update T s wθ u s' h_s'_not_update_at_u
   exact mul_eq_zero_of_right _ h_update_prob_zero
 
 -- Main lemma
-lemma gibbs_multi_site_transition [Coe R ℝ]
-  (wθ : Params (HopfieldNetwork R U)) (s s' : (HopfieldNetwork R U).State) :
+lemma gibbs_multi_site_transition (s s' : (HopfieldNetwork R U).State) :
   (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
   gibbsTransitionProb wθ T s s' = 0 := by
   intro h_multi_site
