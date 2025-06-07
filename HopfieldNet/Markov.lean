@@ -129,7 +129,7 @@ noncomputable instance : Fintype ((HopfieldNetwork R U).State) := by
 
 noncomputable def gibbsTransitionKernel (wθ : Params (HopfieldNetwork R U)) (T : ℝ) :
     Kernel ((HopfieldNetwork R U).State) ((HopfieldNetwork R U).State) where
-  toFun := fun state => (NN.State.gibbsSamplingStep wθ T state).toMeasure
+  toFun := fun state => (NN.State.gibbsSamplingStep wθ state T).toMeasure
   measurable' := Measurable.of_discrete
 
 -- Mark the kernel as a Markov kernel (preserves probability)
@@ -138,7 +138,7 @@ instance gibbsIsMarkovKernel (wθ : Params (HopfieldNetwork R U)) (T : ℝ) :
   isProbabilityMeasure := by
     intro s
     simp [gibbsTransitionKernel]
-    exact PMF.toMeasure.isProbabilityMeasure (NN.State.gibbsSamplingStep wθ T s)
+    exact PMF.toMeasure.isProbabilityMeasure (NN.State.gibbsSamplingStep wθ s T)
 
 /--
 The stochastic Hopfield Markov process, which models the evolution of Hopfield network states
@@ -162,7 +162,7 @@ The total variation distance between two probability measures on Hopfield networ
 Defined as supremum of |μ(A) - ν(A)| over all measurable sets A.
 -/
 noncomputable def totalVariation (μ ν : Measure ((HopfieldNetwork R U).State)) : ENNReal :=
-  ⨆ (A : Set ((HopfieldNetwork R U).State)) (hA : MeasurableSet A),
+  ⨆ (A : Set ((HopfieldNetwork R U).State)) (_ : MeasurableSet A),
     ENNReal.ofReal (abs ((μ A).toReal - (ν A).toReal))
 
 /--
@@ -187,27 +187,41 @@ noncomputable def boltzmannDensityFn (wθ : Params (HopfieldNetwork R U)) (T : �
 noncomputable def boltzmannPartitionFn (wθ : Params (HopfieldNetwork R U)) (T : ℝ) : ENNReal :=
   ∑ s ∈ Finset.univ, boltzmannDensityFn wθ T s
 
+/-- Helper lemma: A finite sum of ENNReal values is positive if the set is nonempty and all terms are positive -/
+lemma ENNReal.sum_pos {α : Type*} (s : Finset α) (f : α → ENNReal)
+    (h_nonempty : s.Nonempty) (h_pos : ∀ i ∈ s, 0 < f i) : 0 < ∑ i ∈ s, f i := by
+  rcases h_nonempty with ⟨i, hi⟩
+  have h_pos_i : 0 < f i := h_pos i hi
+  have h_le : f i ≤ ∑ j ∈ s, f j := Finset.single_le_sum (fun j _ => zero_le (f j)) hi
+  exact lt_of_lt_of_le h_pos_i h_le
+
 /-- The Boltzmann partition function is positive and finite -/
-lemma boltzmannPartitionFn_pos_finite [IsOrderedCancelAddMonoid ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (_hT : T ≠ 0) :
+lemma boltzmannPartitionFn_pos_finite (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (_hT : T ≠ 0) :
   0 < boltzmannPartitionFn wθ T ∧ boltzmannPartitionFn wθ T < ⊤ := by
   simp only [boltzmannPartitionFn]
-  have h_pos : ∀ s, boltzmannDensityFn wθ T s > 0 := by
+  have h_pos_term : ∀ s : (HopfieldNetwork R U).State, 0 < boltzmannDensityFn wθ T s := by
     intro s
     simp only [boltzmannDensityFn]
     exact ENNReal.ofReal_pos.mpr (Real.exp_pos _)
-  have h_finite : ∀ s, boltzmannDensityFn wθ T s < ⊤ := by
-    intro s; simp only [boltzmannDensityFn, energy_decomposition, ofReal_lt_top];
+  have h_finite_term : ∀ s : (HopfieldNetwork R U).State, boltzmannDensityFn wθ T s ≠ ⊤ := by
+    intro s
+    simp only [boltzmannDensityFn]
+    exact ENNReal.ofReal_ne_top
   constructor
-  · apply Finset.sum_pos
-    · intro s _hs; exact h_pos s
-    · obtain ⟨s_exist, hs_exist⟩ := @Finset.univ_nonempty ((HopfieldNetwork R U).State) _ _
-      use s_exist
-  · exact sum_lt_top.mpr fun a a_1 ↦ h_finite a
-
+  · -- Proves positivity: sum of positive terms is positive
+    apply ENNReal.sum_pos
+    · exact Finset.univ_nonempty
+    · intro s _hs_in_univ
+      exact h_pos_term s
+  · -- Proves finiteness: sum is finite if all terms are finite
+    rw [sum_lt_top]
+    intro s _hs_in_univ
+    rw [lt_top_iff_ne_top]
+    exact h_finite_term s
 /--
 The Boltzmann distribution over Hopfield network states at temperature T.
 -/
-noncomputable def boltzmannDistribution [IsOrderedCancelAddMonoid ENNReal]  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
+noncomputable def boltzmannDistribution (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
     Measure ((HopfieldNetwork R U).State) :=
   let densityFn := boltzmannDensityFn wθ T
   let partitionFn := boltzmannPartitionFn wθ T
@@ -225,7 +239,7 @@ noncomputable def boltzmannDistribution [IsOrderedCancelAddMonoid ENNReal]  (wθ
     Measure.withDensity countMeasure (fun s => densityFn s / partitionFn)
 
 -- Helper lemma to handle the 'if' in boltzmannDistribution definition
-lemma boltzmannDistribution_def_of_pos_finite [IsOrderedCancelAddMonoid ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
+lemma boltzmannDistribution_def_of_pos_finite (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
   boltzmannDistribution wθ T hT =
     let densityFn := boltzmannDensityFn wθ T
     let partitionFn := boltzmannPartitionFn wθ T
@@ -235,7 +249,7 @@ lemma boltzmannDistribution_def_of_pos_finite [IsOrderedCancelAddMonoid ENNReal]
   simp [boltzmannDistribution, h_part.1.ne', h_part.2.ne] -- Use the fact that partitionFn is > 0 and < ⊤
 
 /-- The Boltzmann distribution measure of the universe equals the integral of density/partition -/
-lemma boltzmannDistribution_measure_univ [IsOrderedCancelAddMonoid ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
+lemma boltzmannDistribution_measure_univ (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
   boltzmannDistribution wθ T hT Set.univ =
   ∫⁻ s in Set.univ, (boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) ∂Measure.count := by
   rw [boltzmannDistribution_def_of_pos_finite wθ T hT]
@@ -251,7 +265,7 @@ lemma boltzmannDistribution_integral_eq_sum (wθ : Params (HopfieldNetwork R U))
   · exact tsum_fintype fun b ↦ boltzmannDensityFn wθ T b / boltzmannPartitionFn wθ T
 
 /-- Division can be distributed over the sum in the Boltzmann distribution -/
-lemma boltzmannDistribution_div_sum [IsOrderedCancelAddMonoid ENNReal](wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
+lemma boltzmannDistribution_div_sum (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
   ∑ s ∈ Finset.univ, (boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) =
   (∑ s ∈ Finset.univ, boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) := by
   let Z := boltzmannPartitionFn wθ T
@@ -266,7 +280,7 @@ lemma boltzmannDistribution_div_sum [IsOrderedCancelAddMonoid ENNReal](wθ : Par
 
 
 /-- The sum of Boltzmann probabilities equals 1 -/
-lemma boltzmannDistribution_sum_one [IsOrderedCancelAddMonoid ENNReal] (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
+lemma boltzmannDistribution_sum_one  (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
   (∑ s ∈ Finset.univ, boltzmannDensityFn wθ T s) / (boltzmannPartitionFn wθ T) = 1 := by
   simp only [boltzmannPartitionFn]
   let h_part := boltzmannPartitionFn_pos_finite wθ T hT
@@ -275,7 +289,7 @@ lemma boltzmannDistribution_sum_one [IsOrderedCancelAddMonoid ENNReal] (wθ : Pa
 /--
 Proves that the Boltzmann distribution for a Hopfield network forms a valid probability measure.
 -/
-theorem boltzmannDistribution_isProbability [IsOrderedCancelAddMonoid ENNReal] {R U : Type}
+theorem boltzmannDistribution_isProbability {R U : Type}
   [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U] [Fintype U] [Nonempty U] [Coe R ℝ]
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (hT : T ≠ 0) :
   IsProbabilityMeasure (boltzmannDistribution wθ T hT) := by
