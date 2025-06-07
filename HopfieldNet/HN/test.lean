@@ -10,6 +10,14 @@ set_option maxHeartbeats 500000
 
 open Mathlib Finset
 
+variable {R U : Type} [Zero R]
+
+/-- Two neurons `u` and `v` are connected in the graph if `w u v` is not zero. -/
+def Matrix.Adj (w : Matrix U U R) : U → U → Prop := fun u v => w u v ≠ 0
+
+/-- `Matrix.w` returns the value of the matrix `w` at position `(u, v)` if `u` and `v` are connected. -/
+def Matrix.w (w : Matrix U U R) : ∀ u v : U, w.Adj u v → R := fun u v _ => w u v
+
 /-- A 3x3 matrix of rational numbers. --/
 def test.M : Matrix (Fin 3) (Fin 3) ℚ := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
 
@@ -33,7 +41,7 @@ def test : NeuralNetwork ℚ (Fin 3) where
   κ1 u := 0
   κ2 u := 1
   fnet u w pred σ := ∑ v, w v * pred v
-  fact u input θ := if input ≥ θ.get 0 then 1 else 0
+  fact u input θ := if input ≥ θ then 1 else 0
   fout u act := act
   pact u := True
   hpact w _ _ σ θ _ pact u := pact u

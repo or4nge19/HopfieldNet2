@@ -61,7 +61,8 @@ lemma UInt32.toNa_of_non_zero {n : UInt32} (h : n ≠ 0) :
   exact Nat.zero_lt_of_ne_zero A
 
 @[export dgs_get]
-def DiscreteGaussianSampleGet (num den : UInt32) (mix: UInt32) : UInt32 := Id.run do
+def DiscreteGaussianSampleGet (num den : UInt32) (mix: UInt32) :
+    UInt32 := Id.run do
   if h₁ : num = 0 then
     panic "DiscreteGaussianSampleGet was called with num = 0"
   else if h₂ : den = 0 then

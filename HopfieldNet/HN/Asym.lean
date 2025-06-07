@@ -110,7 +110,7 @@ Returns:
 - A pair (A, S) where A is antisymmetric, S is positive definite, and w = A + S
 -/
 noncomputable def getAsymmetricDecomposition (wθ : Params (AsymmetricHopfieldNetwork R U))
-    (hw' : ∃ (A S : Matrix U U R), A.IsAntisymm ∧ Matrix.PosDef S ∧ wθ.w = A + S ∧ (∀ i, wθ.w i i ≥ 0)) :
+    (_ : ∃ (A S : Matrix U U R), A.IsAntisymm ∧ Matrix.PosDef S ∧ wθ.w = A + S ∧ (∀ i, wθ.w i i ≥ 0)) :
     Matrix U U R × Matrix U U R :=
   let w := wθ.w
   let one_half : R := (1 : R) / (2 : R)
