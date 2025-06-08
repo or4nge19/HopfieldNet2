@@ -172,5 +172,3 @@ instance isProbabilityMeasure_boltzmannDistributionBM
   rw [← partitionFunctionBM]
   -- So we get Z/Z = 1
   exact ENNReal.div_self (partitionFunctionBM_pos_finite p).1.ne' (partitionFunctionBM_pos_finite p).2.ne
-
-#min_imports
