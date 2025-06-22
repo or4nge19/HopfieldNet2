@@ -7,7 +7,8 @@ open BigOperators Finset
 /-!
 # Perron-Frobenius Theory for Matrices
 
-This file develops the essential Perron-Frobenius theory for non-negative matrices.
+This file develops the essential Perron-Frobenius theory for non-negative matrices,
+as presented in Berman & Plemmons, "Nonnegative Matrices in the Mathematical Sciences".
 It provides the spectral analysis of non-negative irreducible matrices, which underlies
 applications like Markov chain convergence and spectral graph theory.
 
@@ -16,11 +17,19 @@ applications like Markov chain convergence and spectral graph theory.
 * `Matrix.toQuiver`: The directed graph associated with a matrix `A`.
 * `Matrix.Irreducible`: A matrix `A` is irreducible if its associated directed graph is
   strongly connected.
-* `Matrix.HasPerronFrobeniusProperty`: A matrix that is non-negative and irreducible.
+* `Matrix.IsPrimitive`: A matrix `A` is primitive if it is irreducible and some power of it
+  is strictly positive.
+* `Matrix.HasPerronFrobeniusProperty`: A helper class bundling the common assumptions
+  for the Perron-Frobenius theorem.
 
-## Main Results (TODO)
+## Main Results
 
-* The Perron-Frobenius theorem will be stated in several parts:
+The file builds towards the Perron-Frobenius theorem by formalizing key characterizations:
+
+* `Matrix.irreducible_iff_exists_pow_pos`: A combinatorial characterization of
+  irreducibility, matching Theorem 2.1 in the text.
+
+The main Perron-Frobenius theorem will be stated in several parts in subsequent files:
   1. For an irreducible non-negative matrix `A`, its spectral radius `ρ(A)` is a positive,
      simple eigenvalue.
   2. There exists a unique (up to scaling) strictly positive eigenvector corresponding to `ρ(A)`.
@@ -49,12 +58,22 @@ lemma weight_from_vertices_pos {V : Type*} [Quiver V] {w : V → V → ℝ}
     rw [weight_from_vertices]
     exact mul_pos ih (hw e)
 
+/-- The weight of a path is non-negative if the weight of each arrow is non-negative. -/
+lemma weight_from_vertices_nonneg {V : Type*} [Quiver V] {w : V → V → ℝ}
+    (hw : ∀ i j, 0 ≤ w i j) {i j : V} (p : Quiver.Path i j) : 0 ≤ p.weight_from_vertices w := by
+  induction p with
+  | nil => simp [Quiver.Path.weight_from_vertices];
+  | cons _ _ ih => rw [Quiver.Path.weight_from_vertices]; exact mul_nonneg ih (hw _ _)
+
 end Quiver.Path
+
 
 namespace Matrix
 
 variable {n : Type*} [Fintype n] [DecidableEq n]
 
+/-- A matrix power `A^k` remains non-negative if the base matrix `A` is non-negative.
+    This is a fundamental prerequisite for the entire theory. -/
 lemma pow_nonneg {A : Matrix n n ℝ} (hA : ∀ i j, 0 ≤ A i j) (k : ℕ) : ∀ i j, 0 ≤ (A ^ k) i j := by
   induction k with
   | zero =>
@@ -74,23 +93,45 @@ variable [Nonempty n]
 ## Irreducibility
 -/
 
-/-- The directed graph associated with a matrix `A`, where an edge `i → j` exists if `A i j > 0`. -/
+/-- The directed graph associated with a matrix `A`, where an edge `i → j` exists if `A i j > 0`.
+    For non-negative matrices, this is equivalent to `A i j ≠ 0`. -/
 def toQuiver (A : Matrix n n ℝ) : Quiver n :=
   ⟨fun i j => 0 < A i j⟩
 
-/-- A quiver is strongly connected if there is a path from any vertex to any other vertex. -/
+/-- The directed graph associated with a matrix `A`, where an edge `i → j` exists if `A i j ≠ 0`.
+    This definition is a direct match of Berman & Plemmons, Chapter 2, Definition 2.4 (p. 29). -/
+def toQuiver' (A : Matrix n n ℝ) : Quiver n :=
+  ⟨fun i j => A i j ≠ 0⟩
+
+/-- A quiver is strongly connected if there is a path from any vertex to any other vertex.
+    This corresponds to the definition of a strongly connected graph in Berman & Plemmons,
+    Chapter 2, Definition 2.6 (p. 30). -/
 abbrev IsStronglyConnected (G : Quiver n) : Prop := ∀ i j : n, Nonempty (G.Path i j)
 
-/-- A matrix `A` is irreducible if its associated directed graph is strongly connected. -/
+/-- A matrix `A` is irreducible if its associated directed graph is strongly connected.
+    This is the characterization given in Berman & Plemmons, Chapter 2, Theorem 2.7 (p. 30).
+    The book's primary definition is in terms of block matrices (p. 27, Def 1.2), but the
+    graph-theoretic one is equivalent and central to the combinatorial approach. -/
 def Irreducible (A : Matrix n n ℝ) : Prop :=
   IsStronglyConnected (toQuiver A)
 
-/-- A matrix has the Perron-Frobenius property if it is nonnegative and irreducible. -/
+/-- A matrix is primitive if it's irreducible and some power of it is strictly positive.
+    This corresponds to the characterization in Berman & Plemmons, Chapter 2, Theorem 1.7(c) (p. 49),
+    which is then used as the definition of a primitive matrix in Definition 1.8. -/
+def IsPrimitive (A : Matrix n n ℝ) : Prop :=
+  Irreducible A ∧ ∃ k, ∀ i j, 0 < (A ^ k) i j
+
+/-- This is a helper class to bundle the common hypotheses for the Perron-Frobenius theorem:
+    nonnegativity and primitivity (which implies irreducibility). The book states these as
+    assumptions on its theorems, e.g., 'If A is a nonnegative square matrix...'
+    (Theorem 1.1, p. 47). -/
 class HasPerronFrobeniusProperty (A : Matrix n n ℝ) : Prop where
   /-- All entries of the matrix are non-negative. -/
   nonneg : ∀ i j, 0 ≤ A i j
   /-- The matrix's associated graph is strongly connected. -/
   irreducible : Irreducible A
+  /-- For some power `k`, `A^k` is strictly positive. -/
+  primitive : IsPrimitive A
 
 /-- A helper lemma stating that the product of two non-negative numbers is positive
 iff both numbers are positive. -/
@@ -105,7 +146,7 @@ private lemma mul_pos_iff_of_nonneg {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) :
 
 def endpoint {V : Type*} [Quiver V] {a b : V} : Quiver.Path a b → V
 | Quiver.Path.nil => a
-| Quiver.Path.cons _ _ => b
+| Quiver.Path.cons p _ => b
 
 namespace Finset
 
@@ -138,9 +179,13 @@ lemma exists_mem_of_sum_pos' {α : Type*} {s : Finset α} {f : α → ℝ}
 
 end Finset
 
- omit [Nonempty n] in
--- (A^k)ᵢⱼ is positive iff there is at least one path of length k
--- from i to j with a positive weight.
+omit [Nonempty n] in
+/-- This theorem formalizes the fundamental combinatorial principle that the `(i, j)`-entry of `A^k`
+    is positive if and only if there is a path of length `k` from `i` to `j` whose arrows
+    correspond to positive entries in `A`.
+    See Berman & Plemmons on p. 30, where it states "Since aᵢⱼ(q) > 0 if and only if there exists
+    a sequence of q edges from Pᵢ to Pⱼ...".
+    (Note: aᵢⱼ(q) is defined on p. 29 as the (i, j) element of A^q). -/
 theorem pow_entry_pos_iff_exists_path (A : Matrix n n ℝ) (hA : ∀ i j, 0 ≤ A i j) (k : ℕ) (i j : n) :
     0 < (A ^ k) i j ↔ (letI := toQuiver A; ∃ p : Quiver.Path i j, p.length = k ∧ 0 < p.weight_from_vertices A) := by
   letI G := toQuiver A
@@ -205,7 +250,8 @@ theorem pow_entry_pos_iff_exists_path (A : Matrix n n ℝ) (hA : ∀ i j, 0 ≤ 
 
 omit [Nonempty n] in
 /-- A nonnegative matrix `A` is irreducible if and only if for every `i, j`, there exists a
-natural number `k` such that `(A^k) i j > 0`. -/
+    natural number `k` such that `(A^k) i j > 0`.
+    This is a direct formalization of Berman & Plemmons, Chapter 2, Theorem 2.1 (p. 29). -/
 theorem irreducible_iff_exists_pow_pos (A : Matrix n n ℝ) (hA_nonneg : ∀ i j, 0 ≤ A i j) :
     Irreducible A ↔ ∀ i j, ∃ k, 0 < (A ^ k) i j := by
   letI G := toQuiver A
@@ -228,7 +274,7 @@ namespace Matrix
 
 variable {n : Type*} [Fintype n]
 
-/-- If a matrix `A` is positive, then for any non-negative non-zero vector `v`,
+/-- If a matrix `A` is strictly positive, then for any non-negative non-zero vector `v`,
 the vector `A.mulVec v` is strictly positive. -/
 lemma positive_mul_vec_pos {A : Matrix n n ℝ} (hA_pos : ∀ i j, 0 < A i j) {v : n → ℝ}
     (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
