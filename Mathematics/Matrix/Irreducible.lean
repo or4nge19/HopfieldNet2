@@ -128,8 +128,6 @@ def IsPrimitive (A : Matrix n n ℝ) : Prop :=
 class HasPerronFrobeniusProperty (A : Matrix n n ℝ) : Prop where
   /-- All entries of the matrix are non-negative. -/
   nonneg : ∀ i j, 0 ≤ A i j
-  /-- The matrix's associated graph is strongly connected. -/
-  irreducible : Irreducible A
   /-- For some power `k`, `A^k` is strictly positive. -/
   primitive : IsPrimitive A
 
