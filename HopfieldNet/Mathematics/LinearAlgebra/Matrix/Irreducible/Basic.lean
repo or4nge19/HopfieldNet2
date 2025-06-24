@@ -1,7 +1,7 @@
 import Mathlib
 import Mathlib.Analysis.Convex.Basic
 import Mathlib.Topology.MetricSpace.Basic
-import HopfieldNet.Mathematics.LinearAlgebra.PF.Defs
+import HopfieldNet.Mathematics.LinearAlgebra.Matrix.Irreducible
 
 variable {n : Type*} [Fintype n] [DecidableEq n] [Nonempty n]
 
