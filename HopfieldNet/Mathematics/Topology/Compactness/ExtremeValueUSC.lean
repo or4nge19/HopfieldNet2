@@ -13,7 +13,7 @@ variable {f : α → ℝ} {K : Set α}
 section GeneralProof
 -- This section provides proofs that do not rely on first-countability.
 
-lemma upperSemicontinuousOn_iff_upperSemicontinuous_of_embedding {s : Set α} (he : IsEmbedding (Subtype.val : s → α)) :
+lemma upperSemicontinuousOn_iff_upperSemicontinuous_of_embedding {s : Set α}  :
     UpperSemicontinuousOn f s ↔ UpperSemicontinuous (s.restrict f) := by
   constructor
   · intro h x c hc
@@ -28,7 +28,7 @@ lemma upperSemicontinuousOn_iff_upperSemicontinuous_of_embedding {s : Set α} (h
 
 lemma upperSemicontinuousOn_iff_upperSemicontinuous {f : α → ℝ} {s : Set α} :
     UpperSemicontinuousOn f s ↔ UpperSemicontinuous (s.restrict f) :=
-  upperSemicontinuousOn_iff_upperSemicontinuous_of_embedding IsEmbedding.subtypeVal
+  upperSemicontinuousOn_iff_upperSemicontinuous_of_embedding 
 
 /--
 **Boundedness Theorem (General Version)**: An upper semicontinuous function on a compact set
