@@ -41,7 +41,7 @@ theorem bddAbove_image_of_upperSemicontinuousOn (hK : IsCompact K)
     (hf : UpperSemicontinuousOn f K) : BddAbove (f '' K) := by
   -- We proceed by contradiction. Assume the image `f '' K` is not bounded above.
   by_contra h_unbdd
-  -- Let's work on the space `K` with the subspace topology.
+  -- We work on the space `K` with the subspace topology.
   -- The hypothesis `IsCompact K` is equivalent to `K` being a compact space.
   haveI : CompactSpace K := isCompact_iff_compactSpace.mp hK
   -- Define a family of sets `U n = {x : K | f(x) < n}`.
