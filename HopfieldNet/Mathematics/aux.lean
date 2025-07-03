@@ -459,18 +459,4 @@ lemma mem_supp_of_sum_eq_one [Fintype n] [DecidableEq n] {v : n → ℝ} (hv : v
   specialize h_v_compl_zero i (mem_compl.mpr hi_not_in_S)
   exact hi_ne_zero h_v_compl_zero
 
-/-!
-## End of Compressed API
-
-This compressed API contains all essential definitions and theorems needed to complete
-the Perron-Frobenius theorem formalization. It includes:
-
-1. Core topology definitions (compactness, semicontinuity, ultrafilters)
-2. Standard simplex properties
-3. Supremum/infimum theorems for compact sets
-4. Matrix and vector operations
-5. Order and field properties
-6. Finset operations and utility lemmas
-
-All theorems are proven and ready for use in the main formalization.
 -/
