@@ -17,12 +17,12 @@ def weightFromVertices (w : V → V → R) : ∀ {i j : V}, Path i j → R :=
   weight (fun {i j} (_ : i ⟶ j) => w i j)
 
 @[simp]
-theorem weight_comp (w : ∀ {i j : V}, (i ⟶ j) → R) {a b c : V} (p : Path a b) (q : Path b c) :
+lemma weight_comp (w : ∀ {i j : V}, (i ⟶ j) → R) {a b c : V} (p : Path a b) (q : Path b c) :
     weight w (p.comp q) = weight w p * weight w q := by
   induction q with | nil => simp | cons q' e ih => simp [Path.comp_cons, ih, mul_assoc]
 
 @[simp]
-theorem weightFromVertices_comp (w : V → V → R) {a b c : V} (p : Path a b) (q : Path b c) :
+lemma weightFromVertices_comp (w : V → V → R) {a b c : V} (p : Path a b) (q : Path b c) :
     weightFromVertices w (p.comp q) = weightFromVertices w p * weightFromVertices w q := by
   simp [weightFromVertices, weight_comp]
 
@@ -32,7 +32,7 @@ section PositiveWeight
 
 variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [PosMulStrictMono R] [Nontrivial R]
 
-theorem weight_pos {w : ∀ {i j : V}, (i ⟶ j) → R}
+lemma weight_pos {w : ∀ {i j : V}, (i ⟶ j) → R}
     (hw : ∀ {i j : V} (e : i ⟶ j), 0 < w e) {i j : V} (p : Path i j) :
     0 < weight w p := by
   induction p with
@@ -43,12 +43,12 @@ end PositiveWeight
 
 section RealWeight
 
-theorem weightFromVertices_pos {w : V → V → ℝ}
+lemma weightFromVertices_pos {w : V → V → ℝ}
     (hw : ∀ i j : V, 0 < w i j) {i j : V} (p : Path i j) :
     0 < weightFromVertices w p := by
   apply weight_pos; intro i j _; exact hw i j
 
-theorem weightFromVertices_nonneg {w : V → V → ℝ}
+lemma weightFromVertices_nonneg {w : V → V → ℝ}
     (hw : ∀ i j : V, 0 ≤ w i j) {i j : V} (p : Path i j) :
     0 ≤ weightFromVertices w p := by
   induction p using Path.rec with
@@ -62,12 +62,12 @@ section PathDecomposition
 variable {V : Type*} [Quiver V]
 
 /-- Every non-empty path can be decomposed as an initial path plus a final edge. -/
-theorem path_decomposition_last_edge {a b : V} (p : Path a b) (h : p.length > 0) :
+lemma path_decomposition_last_edge {a b : V} (p : Path a b) (h : p.length > 0) :
     ∃ (c : V) (p' : Path a c) (e : c ⟶ b), p = p'.cons e := by
   cases p with | nil => simp at h | cons p' e => exact ⟨_, p', e, rfl⟩
 
 /-- Every non-empty path can be decomposed as a first edge plus a remaining path. -/
-theorem path_decomposition_first_edge {a b : V} (p : Path a b) (h : p.length > 0) :
+lemma path_decomposition_first_edge {a b : V} (p : Path a b) (h : p.length > 0) :
     ∃ (c : V) (e : a ⟶ c) (p' : Path c b), p = e.toPath.comp p' ∧ p.length = p'.length + 1 := by
   have h_len : p.length = (p.length - 1) + 1 := by omega
   obtain ⟨c, e, p', hp', rfl⟩ := Path.eq_toPath_comp_of_length_eq_succ p h_len
@@ -80,7 +80,7 @@ section BoundaryEdges
 variable {V : Type*} [Quiver V]
 
 @[simp]
-theorem cons_eq_comp_toPath {a b c : V} (p : Path a b) (e : b ⟶ c) :
+lemma cons_eq_comp_toPath {a b c : V} (p : Path a b) (e : b ⟶ c) :
     p.cons e = p.comp e.toPath := by
   rfl
 
