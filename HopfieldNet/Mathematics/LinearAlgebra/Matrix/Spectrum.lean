@@ -13,7 +13,6 @@ import Mathlib.Topology.Separation.CompletelyRegular
 /-! # Perron-Frobenius Theory for Matrices
 
 This file develops the essential Perron-Frobenius theory needed for MCMC convergence proofs.
-It provides the spectral analysis of non-negative irreducible matrices.
 
 I. Core Algebraic Structures & Utilities
 
