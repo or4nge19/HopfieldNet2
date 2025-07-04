@@ -7,6 +7,8 @@ import Mathlib.Analysis.RCLike.Lemmas
 import Mathlib.Combinatorics.Quiver.Path
 import Mathlib.Topology.Algebra.Module.ModuleTopology
 import Mathlib.Topology.Metrizable.CompletelyMetrizable
+import HopfieldNet.Combinatorics.Quiver.Path
+import HopfieldNet.Topology.Compactness.ExtremeValueUSC
 
 /-!
 # Perron-Frobenius Theory for Matrices
