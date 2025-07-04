@@ -200,11 +200,7 @@ lemma det_toLin' (A : Matrix n n ℝ) : det A = LinearMap.det (toLin' A) := by
 # Perron-Frobenius Theory for Matrices
 
 This file provides core lemmas and theorems related to the Perron-Frobenius theory for non-negative,
-irreducible matrices, building on Mathlib's linear algebra and spectral theory.
-
-## Key Results
-
-* `det_eq_zero_of_not_injective`: If a linear endomorphism is not injective, then its determinant is `0`.
+irreducible matrices.
 -/
 
 open LinearMap
