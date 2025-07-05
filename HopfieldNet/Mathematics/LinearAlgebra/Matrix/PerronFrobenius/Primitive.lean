@@ -499,13 +499,12 @@ lemma perron_root_pos_of_primitive
 open Matrix.CollatzWielandt
 --variable [Fintype n] [Nonempty n] [DecidableEq n] {A : Matrix n n ℝ}
 
-/-- **Perron-Frobenius theorem for primitive matrices**-/
+/-- **Perron-Frobenius theorem for primitive matrices - Existence part**-/
 theorem exists_positive_eigenvector_of_primitive
   (hA_prim : IsPrimitive A) (hA_nonneg : ∀ i j, 0 ≤ A i j) :
   ∃ (r : ℝ) (v : n → ℝ), r > 0 ∧ (∀ i, v i > 0) ∧ A *ᵥ v = r • v := by
   -- 1) We get maximizer v on the simplex
   haveI : Nonempty (stdSimplex ℝ n) := by
-    -- We construct the uniform distribution on n elements
     let uniform : n → ℝ := fun _ => (Fintype.card n : ℝ)⁻¹
     use uniform
     constructor
