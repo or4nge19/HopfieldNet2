@@ -35,7 +35,7 @@ lemma eigenvector_no_zero_entries_of_primitive (hA_prim : IsPrimitive A) (_ : 0 
     {z : n → ℝ} (h_eig : A *ᵥ z = r • z) (hz_nonneg : ∀ i, 0 ≤ z i) (hz_ne_zero : z ≠ 0)
     (i₀ : n) (hi₀_zero : z i₀ = 0) :
     False := by
-  obtain ⟨k, _, hA_k_pos⟩ := hA_prim
+  rcases hA_prim with ⟨_, ⟨k, _, hA_k_pos⟩⟩
   have h_Ak_z_eig : (A ^ k) *ᵥ z = (r ^ k) • z := by
     have h_gen : ∀ m, (A ^ m) *ᵥ z = (r ^ m) • z := by
       intro m

@@ -10,7 +10,6 @@ import Mathlib.Combinatorics.Quiver.Path
 import Mathlib.Topology.Algebra.Module.ModuleTopology
 import Mathlib.Topology.Metrizable.CompletelyMetrizable
 
-
 /-!
 # Perron-Frobenius Theory for Matrices
 
@@ -51,19 +50,22 @@ def toQuiver (A : Matrix n n ℝ) : Quiver n :=
 
 abbrev IsStronglyConnected (G : Quiver n) : Prop :=   ∀ i j : n, Nonempty { p : Path i j // p.length > 0 }
 
--- In Defs.lean
-
--- The old definition:
-def Irreducible (A : Matrix n n ℝ) : Prop :=
+/-def Irreducible' (A : Matrix n n ℝ) : Prop :=
   IsStronglyConnected (toQuiver A)
 
 -- The new, refined definition:
-def Irreducible' (A : Matrix n n ℝ) : Prop :=
+def Irreducible'' (A : Matrix n n ℝ) : Prop :=
   letI := toQuiver A;
   ∀ i j : n, Nonempty { p : Path i j // p.length > 0 }
 
+def IsPrimitive' [DecidableEq n] (A : Matrix n n ℝ) : Prop :=
+  ∃ k, k > 0 ∧ ∀ i j, 0 < (A ^ k) i j-/
+
+def Irreducible (A : Matrix n n ℝ) : Prop :=
+  (∀ i j, 0 ≤ A i j) ∧ IsStronglyConnected (toQuiver A)
+
 def IsPrimitive [DecidableEq n] (A : Matrix n n ℝ) : Prop :=
-  ∃ k, k > 0 ∧ ∀ i j, 0 < (A ^ k) i j
+  (∀ i j, 0 ≤ A i j) ∧ ∃ k, 0 < k ∧ ∀ i j, 0 < (A ^ k) i j
 
 /-- If `A` is irreducible and `n>1` then every row has a positive entry. -/
 lemma irreducible_no_zero_row
@@ -75,7 +77,7 @@ lemma irreducible_no_zero_row
   have no_out : ∀ j : n, IsEmpty (i ⟶ j) :=
     fun j ↦ ⟨fun h ↦ (h_row j).not_lt h⟩
   obtain ⟨j, hij⟩ := Fintype.exists_ne_of_one_lt_card h_dim i
-  obtain ⟨⟨p, _⟩⟩ := h_irr i j
+  obtain ⟨⟨p, _⟩⟩ := h_irr.2 i j
   have : False := by
     have aux : (∀ {v} (q : G.Path i v), v ≠ i → False) := by
       intro v q
@@ -151,28 +153,32 @@ theorem irreducible_iff_exists_pow_pos [DecidableEq n]  (hA : ∀ i j, 0 ≤ A i
     Irreducible A ↔ ∀ i j, ∃ k, 0 < k ∧ 0 < (A ^ k) i j := by
   constructor
   · intro h_irr i j
-    rcases h_irr i j with ⟨⟨p, hp_len⟩⟩
-    -- use the path length (which is positive) as the exponent
+    rcases h_irr.2 i j with ⟨⟨p, hp_len⟩⟩
     letI := toQuiver A;
     use p.length, hp_len, by
-      -- show the corresponding entry of A^p.length is positive
       rw [pow_entry_pos_iff_exists_path hA]
       exact ⟨p, rfl⟩
-  · intro h_exists i j
-    obtain ⟨k, hk_pos, hk_entry⟩ := h_exists i j
-    -- get a path of length k from the positivity of (A^k) i j
-    letI := toQuiver A;
-    obtain ⟨⟨p, hp_len⟩⟩ := (pow_entry_pos_iff_exists_path hA k i j).mp hk_entry
-    -- substitute p.length = k, then use k > 0
-    subst hp_len
-    exact ⟨p, hk_pos⟩
+  · intro h_exists
+    constructor
+    · exact hA
+    · intro i j
+      obtain ⟨k, hk_pos, hk_entry⟩ := h_exists i j
+      letI := toQuiver A
+      obtain ⟨⟨p, hp_len⟩⟩ := (pow_entry_pos_iff_exists_path hA k i j).mp hk_entry
+      subst hp_len
+      exact ⟨p, hk_pos⟩
 
 theorem IsPrimitive.to_Irreducible [DecidableEq n] (h_prim : IsPrimitive A) (hA : ∀ i j, 0 ≤ A i j) :
     Irreducible A := by
   rw [irreducible_iff_exists_pow_pos hA]
   intro i j
   obtain ⟨k, _hk_gt_zero, hk_pos⟩ := h_prim
-  exact Filter.frequently_principal.mp fun a ↦ a _hk_gt_zero (hk_pos i j)
+  simp_all only [implies_true]
+  obtain ⟨left, right⟩ := hk_pos
+  apply Exists.intro
+  · apply And.intro
+    · exact left
+    · simp_all only
 
 end PerronFrobeniusTheorems
 end Matrix

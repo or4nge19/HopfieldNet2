@@ -1,6 +1,11 @@
-import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Defs
-
-
+import HopfieldNet.Mathematics.Topology.Compactness.ExtremeValueUSC
+import HopfieldNet.Mathematics.Combinatorics.Quiver.Path
+import HopfieldNet.Mathematics.aux
+import Mathlib.Algebra.Lie.OfAssociative
+import Mathlib.Analysis.Normed.Field.Instances
+import Mathlib.Analysis.RCLike.Lemmas
+import Mathlib.Topology.Algebra.Module.ModuleTopology
+import Mathlib.Topology.Metrizable.CompletelyMetrizable
 namespace Matrix
 open Finset Quiver
 variable {n : Type*} [Fintype n]
@@ -142,10 +147,10 @@ def P_set := {x : n → ℝ | (∀ i, 0 ≤ x i) ∧ x ≠ 0}
 noncomputable def r (A : Matrix n n ℝ) [Fintype n] := ⨆ x ∈ P_set, collatzWielandtFn A x
 
 /-- The Collatz-Wielandt function attains its maximum on the standard simplex.
-    [Giaquinta-Modica, Theorem 6.24 (dual), cite: 235] -/
+    [Giaquinta-Modica, Theorem 6.24 (dual), p: 235] -/
 theorem exists_maximizer :
     ∃ v ∈ stdSimplex ℝ n, IsMaxOn (collatzWielandtFn A) (stdSimplex ℝ n) v := by
-  have h_compact : IsCompact (stdSimplex ℝ n) := isCompact_stdSimplex
+  have h_compact : IsCompact (stdSimplex ℝ n) := isCompact_stdSimplex n
   have h_nonempty : (stdSimplex ℝ n).Nonempty := stdSimplex_nonempty
   have h_usc : UpperSemicontinuousOn (collatzWielandtFn A) (stdSimplex ℝ n) :=
     upperSemicontinuousOn A
@@ -321,3 +326,4 @@ end CollatzWielandt
 end PerronFrobenius
 
 end Matrix
+#min_imports
