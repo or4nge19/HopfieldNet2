@@ -527,5 +527,6 @@ theorem exists_positive_eigenvector_of_primitive
   have hvp := eigenvector_of_primitive_is_positive hA_prim hr h_eig hvS.1 hv0
   use r, v
 
+
 end PerronFrobenius
 end Matrix
