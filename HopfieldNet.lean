@@ -10,6 +10,12 @@ import HopfieldNet.HN.test
 import HopfieldNet.Stochastic
 import HopfieldNet.DetailedBalance
 
+import HopfieldNet.Mathematics.aux
+import HopfieldNet.Mathematics.Combinatorics.Quiver.Path
+import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Defs
+import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Primitive
+import HopfieldNet.mathematics.LinearAlgebra.Matrix.Spectrum
+import HopfieldNet.Mathematics.Topology.Compactness.ExtremeValueUSC
 
 import HopfieldNet.Papers.Hopfield82.PhaseSpaceFlow
 import HopfieldNet.Papers.Hopfield82.MemoryConfusion

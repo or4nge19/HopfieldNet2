@@ -178,7 +178,16 @@ theorem eventually_to_open {α : Type*} [TopologicalSpace α] {p : α → Prop} 
     (h : ∀ᶠ x in 𝓝 a, p x) :
     ∃ (U : Set α), IsOpen U ∧ a ∈ U ∧ ∀ x ∈ U, p x := by
   rcases mem_nhds_iff.mp h with ⟨U, hU_open, haU, hU⟩
-  aesop
+  simp_all only
+  apply Exists.intro
+  · apply And.intro
+    on_goal 2 => apply And.intro
+    on_goal 2 => {exact hU
+    }
+    · simp_all only
+    · intro x a_1
+      apply hU_open
+      simp_all only
 
 -- Continuous infimum over finset
 theorem continuousOn_finset_inf' {α β : Type*} [TopologicalSpace α] [LinearOrder β]
@@ -459,4 +468,209 @@ lemma mem_supp_of_sum_eq_one [Fintype n] [DecidableEq n] {v : n → ℝ} (hv : v
   specialize h_v_compl_zero i (mem_compl.mpr hi_not_in_S)
   exact hi_ne_zero h_v_compl_zero
 
+/-- A non-negative, non-zero vector must have a positive component. -/
+lemma exists_pos_of_ne_zero [Fintype n] [DecidableEq n] {v : n → ℝ} (h_nonneg : ∀ i, 0 ≤ v i) (h_ne_zero : v ≠ 0) :
+    ∃ i, 0 < v i := by
+  by_contra h_all_nonpos
+  apply h_ne_zero
+  ext i
+  exact le_antisymm (by simp_all only [ne_eq, not_exists, not_lt, Pi.zero_apply]) (h_nonneg i)
+
+/-- A set is nonempty if and only if its finite conversion is nonempty. -/
+lemma Set.toFinset_nonempty_iff {α : Type*} [Fintype α] [DecidableEq α] (s : Set α) [Finite s] [Fintype s] :
+    s.toFinset.Nonempty ↔ s.Nonempty := by
+  constructor
+  · intro h
+    obtain ⟨x, hx⟩ := h
+    exact ⟨x, Set.mem_toFinset.mp hx⟩
+  · intro h
+    obtain ⟨x, hx⟩ := h
+    exact ⟨x, Set.mem_toFinset.mpr hx⟩
+
+/-- Division inequality: a / b ≤ c ↔ a ≤ c * b when b > 0. -/
+lemma div_le_iff {a b c : ℝ} (hb : 0 < b) : a / b ≤ c ↔ a ≤ c * b := by
+  rw [@le_iff_le_iff_lt_iff_lt]
+  exact lt_div_iff₀ hb
+
+/-- For real numbers, if `0 < b`, then `a ≤ c * b ↔ a / b ≤ c`. -/
+lemma le_div_iff {a b c : ℝ} (hb : 0 < b) : a ≤ c * b ↔ a / b ≤ c := by
+  rw [←div_le_iff hb]
+
+/-- The ratio (A *ᵥ v) i / v i is nonnegative when A has nonnegative entries and v is nonnegative -/
+lemma ratio_nonneg [Fintype n] (hA_nonneg : ∀ i j, 0 ≤ A i j) {v : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i)
+    (i : n) (hv_pos : 0 < v i) : 0 ≤ (A *ᵥ v) i / v i :=
+  div_nonneg (Finset.sum_nonneg fun j _ => mul_nonneg (hA_nonneg i j) (hv_nonneg j)) hv_pos.le
+
+lemma Finset.inf'_pos {α : Type*} {s : Finset α} (hs : s.Nonempty)
+    {f : α → ℝ} (h_pos : ∀ a ∈ s, 0 < f a) :
+    0 < s.inf' hs f := by
+  obtain ⟨b, hb_mem, h_fb_is_inf⟩ := s.exists_mem_eq_inf' hs f
+  have h_fb_pos : 0 < f b := h_pos b hb_mem
+  rw [h_fb_is_inf]
+  exact h_fb_pos
+
+lemma lt_not_le {α : Type*} [PartialOrder α] (x y : α) : x < y → ¬ (x ≥ y) := by
+  intro h_lt h_ge
+  exact not_le_of_lt h_lt h_ge
+
+section ConditionallyCompleteLinearOrder
+
+variable {α : Type*}  [ConditionallyCompleteLinearOrder α]
+/-- If y is an upper bound of a set s, and x is in s, then x ≤ y -/
+lemma le_of_mem_upperBounds {s : Set α} {x : α} {y : α} (hy : y ∈ upperBounds s) (hx : x ∈ s) : x ≤ y := by
+  exact hy hx
+
+lemma bddAbove_iff_exists_upperBound {s : Set α} : BddAbove s ↔ ∃ b, ∀ x ∈ s, x ≤ b := by exact
+  bddAbove_def
+
+--lemma le_sSup_of_mem {s : Set α} {x : α} (hx : x ∈ s) : x ≤ sSup s := by
+--  exact le_sSup_iff.mpr fun b a ↦ a hx
+
+end ConditionallyCompleteLinearOrder
+
+/--
+The definition of the `i`-th component of a matrix-vector product.
+This is standard in Mathlib and often available via `simp`.
 -/
+lemma mulVec_apply {n : Type*} [Fintype n] {A : Matrix n n ℝ} {v : n → ℝ} (i : n) :
+  (A *ᵥ v) i = ∑ j, A i j * v j :=
+rfl
+
+/--
+An element of a set is less than or equal to the supremum of that set,
+provided the set is non-empty and bounded above.
+-/
+lemma le_sSup_of_mem {s : Set ℝ} (_ : s.Nonempty) (hs_bdd : BddAbove s) {y : ℝ} (hy : y ∈ s) :
+  y ≤ sSup s :=
+le_csSup hs_bdd hy
+
+/-- A sum of non-negative terms is strictly positive if and only if the sum is not zero.
+    This is a direct consequence of the sum being non-negative. -/
+lemma sum_pos_of_nonneg_of_ne_zero {α : Type*} {s : Finset α} {f : α → ℝ}
+    (h_nonneg : ∀ a ∈ s, 0 ≤ f a) (h_ne_zero : ∑ x ∈ s, f x ≠ 0) :
+    0 < ∑ x ∈ s, f x := by
+  have h_sum_nonneg : 0 ≤ ∑ x ∈ s, f x := Finset.sum_nonneg h_nonneg
+  exact lt_of_le_of_ne h_sum_nonneg h_ne_zero.symm
+
+-- Missing lemma: bound each component by the supremum
+lemma le_sup'_of_mem {α β : Type*} [SemilatticeSup α] {s : Finset β} (hs : s.Nonempty)
+    (f : β → α) {b : β} (hb : b ∈ s) : f b ≤ s.sup' hs f := by
+  exact le_sup' f hb
+
+-- Missing lemma: supremum is at least any component
+lemma sup'_le_sup'_of_le {α β : Type*} [SemilatticeSup α] {s t : Finset β}
+    (hs : s.Nonempty) (ht : t.Nonempty) (f : β → α) (h : s ⊆ t) :
+    s.sup' hs f ≤ t.sup' ht f := by
+  exact sup'_mono f h hs
+
+
+-- A non-zero function must be non-zero at some point.
+lemma Function.exists_ne_zero_of_ne_zero {α β} [Zero β] {f : α → β} (h : f ≠ (fun _ => 0)) : ∃ i, f i ≠ 0 := by
+  by_contra hf
+  push_neg at hf
+  apply h
+  ext x
+  exact hf x
+
+/-- If the ratio (A *ᵥ v) i / v i = 0 and v i > 0, then (A *ᵥ v) i = 0. -/
+lemma mulVec_eq_zero_of_ratio_zero [Fintype n] {v : n → ℝ} (i : n) (hv_pos : 0 < v i)
+    (h_ratio_zero : (A *ᵥ v) i / v i = 0) :
+    (A *ᵥ v) i = 0 := by
+  rw [div_eq_zero_iff] at h_ratio_zero
+  exact h_ratio_zero.resolve_right (ne_of_gt hv_pos)
+
+
+lemma mul_vec_mul_vec
+  {n : Type*} [Fintype n] [Nonempty n] (A B : Matrix n n ℝ) (v : n → ℝ) :
+  (A * B) *ᵥ v = A *ᵥ (B *ᵥ v) := by
+  ext i
+  simp only [mulVec, dotProduct, mul_apply]
+  simp_rw [Finset.mul_sum]
+  rw [Finset.sum_comm]
+  simp_rw [Finset.sum_mul]
+  rw [Finset.sum_comm]
+  rw [Finset.sum_comm]
+  simp [mul_assoc]
+
+/-- If `A *ᵥ v` is zero on the support `S` of `v`, then for any `i ∈ S`, `A i k` must be zero
+for all `k` where `v` is positive (i.e., `k ∈ S`). -/
+lemma zero_block_of_mulVec_eq_zero [Fintype n] (hA_nonneg : ∀ i j, 0 ≤ A i j) {v : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i)
+    (S : Set n) (hS_def : S = {i | 0 < v i})
+    (h_Av_zero : ∀ i ∈ S, (A *ᵥ v) i = 0) :
+    ∀ i ∈ S, ∀ k ∈ S, A i k = 0 := by
+  intro i hi_S k hk_S
+  have h_sum_Aiv_eq_zero : (A *ᵥ v) i = 0 := h_Av_zero i hi_S
+  rw [mulVec, dotProduct] at h_sum_Aiv_eq_zero
+  have h_sum_terms_nonneg : ∀ l, 0 ≤ A i l * v l :=
+    fun l ↦ mul_nonneg (hA_nonneg i l) (hv_nonneg l)
+  have h_Aik_vk_zero : A i k * v k = 0 :=
+    (sum_eq_zero_iff_of_nonneg (fun l _ ↦ h_sum_terms_nonneg l)).mp h_sum_Aiv_eq_zero k (mem_univ k)
+  rw [hS_def] at hk_S
+  exact (mul_eq_zero.mp h_Aik_vk_zero).resolve_right (ne_of_gt hk_S)
+
+/-- For any natural number `n > 0`, it is either equal to 1 or greater than 1.
+    This is a helper for reasoning about the cardinality of a Fintype. -/
+lemma Nat.eq_one_or_one_lt (n : ℕ) (hn : n ≠ 0) : n = 1 ∨ 1 < n := by
+  rcases n with _ | n
+  · contradiction
+  rcases n with _ | n
+  · exact Or.inl rfl
+  · exact Or.inr (Nat.succ_lt_succ (Nat.succ_pos _))
+
+
+/-- For a finite type, the infimum over the type is attained at some element. -/
+lemma exists_eq_iInf {α : Type*} [Fintype α] [Nonempty α] (f : α → ℝ) : ∃ i, f i = ⨅ j, f j :=
+  exists_eq_ciInf_of_finite
+
+/-- Functions computing pointwise infima are equal when using `iInf` vs `Finset.inf'`. -/
+lemma Finset.iInf_apply_eq_finset_inf'_apply_fun {α β γ : Type*}
+    [Fintype α] [Nonempty α] [ConditionallyCompleteLinearOrder γ]
+    (f : α → β → γ) :
+    (fun x ↦ ⨅ i, f i x) = (fun x ↦ (Finset.univ : Finset α).inf' Finset.univ_nonempty (fun i ↦ f i x)) := by
+  ext x
+  have h1 : ⨅ i, f i x = ⨅ i ∈ Set.univ, f i x := by
+    simp only [Set.mem_univ, ciInf_unique]
+  have h2 : ⨅ i ∈ Set.univ, f i x = ⨅ i ∈ (Finset.univ : Finset α), f i x := by
+    congr
+    ext i
+    simp only [Set.mem_univ, ciInf_unique, mem_univ]
+  have h3 : ⨅ i ∈ (Finset.univ : Finset α), f i x =
+           (Finset.univ : Finset α).inf' Finset.univ_nonempty (fun i ↦ f i x) := by
+    rw [Finset.inf'_eq_csInf_image]
+    simp only [mem_univ, ciInf_unique, Finset.mem_univ, Finset.coe_univ, image_univ]
+    rfl
+  rw [h1, h2, h3]
+
+/-- For a finite index type, the point-wise (finite) infimum of a family of
+    continuous functions is continuous. -/
+lemma continuousOn_iInf' {α β : Type*}
+    [Fintype α] [Nonempty α]
+    [TopologicalSpace β]
+    {s : Set β} {f : α → β → ℝ}
+    (hf : ∀ i, ContinuousOn (f i) s) :
+    ContinuousOn (fun x ↦ ⨅ i, f i x) s := by
+  classical
+  let g : β → ℝ :=
+    fun x ↦ (Finset.univ : Finset α).inf' Finset.univ_nonempty (fun i ↦ f i x)
+  have hg : ContinuousOn g s := by
+    exact ContinuousOn.finset_inf'_apply Finset.univ_nonempty fun i a ↦ hf i
+  have h_eq : (fun x ↦ ⨅ i, f i x) = g := by
+    dsimp [g]
+    exact Finset.iInf_apply_eq_finset_inf'_apply_fun f
+  rwa [h_eq]
+
+lemma div_lt_iff (hc : 0 < c) : b / c < a ↔ b < a * c :=
+  lt_iff_lt_of_le_iff_le (by exact Nat.le_div_iff_mul_le hc)
+
+--lemma lt_div_iff (hc : 0 < c) : a < b / c ↔ a * c < b :=
+--  lt_iff_lt_of_le_iff_le (div_le_iff hc)
+
+lemma smul_sum (α : Type*) [Fintype α] (r : ℝ) (f : α → ℝ) :
+    r • (∑ i, f i) = ∑ i, r • f i := by
+  simp only [smul_eq_mul, Finset.mul_sum]
+
+lemma ones_norm_mem_simplex [Fintype n] [Nonempty n] :
+  (fun _ => (Fintype.card n : ℝ)⁻¹) ∈ stdSimplex ℝ n := by
+  dsimp [stdSimplex]; constructor
+  · intro i; apply inv_nonneg.2; norm_cast; exact Nat.cast_nonneg _
+  · simp [Finset.sum_const, Finset.card_univ];

@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Order.Star.Basic
 import Mathlib.Analysis.Normed.Ring.Basic
 import Mathlib.Combinatorics.Quiver.Path
+
 namespace Quiver.Path
 
 variable {V : Type*} [Quiver V] {R : Type*}
@@ -122,4 +123,3 @@ theorem exists_crossing_edge {a b : V} (p : Path a b) (S : Set V)
 end BoundaryEdges
 
 end Quiver.Path
-

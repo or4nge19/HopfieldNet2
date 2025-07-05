@@ -3,7 +3,7 @@ import Mathlib.Analysis.Normed.Order.Lattice
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Analysis.SpecificLimits.Basic
 
-open Set Filter Topology 
+open Set Filter Topology
 
 namespace IsCompact
 
@@ -65,7 +65,7 @@ theorem bddAbove_image_of_upperSemicontinuousOn (hK : IsCompact K)
     · exfalso; simp at h_unbdd
     · by_contra hs_empty
       rw [Finset.not_nonempty_iff_eq_empty.mp hs_empty] at hs_cover
-      simp_all only [univ_subset_iff, Finset.notMem_empty, iUnion_of_empty, iUnion_empty, subset_empty_iff,
+      simp_all only [univ_subset_iff, Finset.not_mem_empty, iUnion_of_empty, iUnion_empty, subset_empty_iff,
         univ_eq_empty_iff, isEmpty_coe_sort, Set.not_nonempty_empty, U]
   let N := s.sup id
   -- The union of the finite subcover is a subset of U (N + 1).
