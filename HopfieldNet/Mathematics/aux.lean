@@ -674,3 +674,46 @@ lemma ones_norm_mem_simplex [Fintype n] [Nonempty n] :
   dsimp [stdSimplex]; constructor
   · intro i; apply inv_nonneg.2; norm_cast; exact Nat.cast_nonneg _
   · simp [Finset.sum_const, Finset.card_univ];
+
+/--
+If a value `y` is a lower bound for a function `f` over a non-empty finset `s` and is
+also attained by `f` for some element in `s`, then `y` is the infimum of `f` over `s`.
+-/
+lemma Finset.inf'_eq_of_forall_le_of_exists_le {α β} [LinearOrder β]
+    {s : Finset α} (hs : s.Nonempty) (f : α → β) (y : β)
+    (h_le : ∀ i ∈ s, y ≤ f i) (h_exists : ∃ i ∈ s, f i = y) :
+    s.inf' hs f = y := by
+  apply le_antisymm
+  · obtain ⟨i, hi_mem, hi_eq⟩ := h_exists
+    rw [← hi_eq]
+    exact inf'_le f hi_mem
+  · exact (le_inf'_iff hs f).mpr h_le
+
+/-- The dot product of two strictly positive vectors is positive. -/
+lemma dotProduct_pos_of_pos_of_pos {n : Type*} [Fintype n] [Nonempty n]
+    {u v : n → ℝ} (hu_pos : ∀ i, 0 < u i) (hv_pos : ∀ i, 0 < v i) :
+    0 < u ⬝ᵥ v := by
+  simp [dotProduct]
+  apply Finset.sum_pos
+  · intro i _
+    exact mul_pos (hu_pos i) (hv_pos i)
+  · apply Finset.univ_nonempty
+
+/-- The dot product of a positive vector with a non-negative, non-zero vector is positive. -/
+lemma dotProduct_pos_of_pos_of_nonneg_ne_zero {n : Type*} [Fintype n] [DecidableEq n]
+    {u v : n → ℝ} (hu_pos : ∀ i, 0 < u i) (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
+    0 < u ⬝ᵥ v := by
+  simp [dotProduct]
+  have h_exists_pos : ∃ i, 0 < v i := by
+    by_contra h
+    push_neg at h
+    have h_all_zero : ∀ i, v i = 0 := fun i =>
+      le_antisymm (h i) (hv_nonneg i)
+    have h_zero : v = 0 := funext h_all_zero
+    contradiction
+  have h_nonneg : ∀ i ∈ Finset.univ, 0 ≤ u i * v i :=
+    fun i _ => mul_nonneg (le_of_lt (hu_pos i)) (hv_nonneg i)
+  rcases h_exists_pos with ⟨i, hi⟩
+  have hi_mem : i ∈ Finset.univ := Finset.mem_univ i
+  have h_pos : 0 < u i * v i := mul_pos (hu_pos i) hi
+  exact sum_pos_of_mem h_nonneg i hi_mem h_pos

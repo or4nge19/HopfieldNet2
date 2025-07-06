@@ -123,3 +123,80 @@ theorem exists_crossing_edge {a b : V} (p : Path a b) (S : Set V)
 end BoundaryEdges
 
 end Quiver.Path
+
+namespace Quiver.Path
+
+variable {V : Type*} [Quiver V]
+
+/-- The end vertex of a path. A path `p : Path a b` has `p.end = b`. -/
+def «end» {a : V} : ∀ {b : V}, Path a b → V
+  | b, _ => b
+
+/-- The set of vertices in a path. -/
+def activeVertices {a : V} : ∀ {b : V}, Path a b → Set V
+  | _, nil => {a}
+  | _, cons p e => activeVertices p ∪ {«end» (cons p e)}
+
+@[simp] lemma end_cons {a b c : V} (p : Path a b) (e : b ⟶ c) : «end» (p.cons e) = c := rfl
+@[simp] lemma activeVertices_nil {a : V} : activeVertices (nil : Path a a) = {a} := rfl
+@[simp] lemma activeVertices_cons {a b c : V} (p : Path a b) (e : b ⟶ c) :
+  activeVertices (p.cons e) = activeVertices p ∪ {c} := by simp [activeVertices]; rfl
+
+end Quiver.Path
+
+namespace Prefunctor
+
+open Quiver
+
+variable {V W : Type*} [Quiver V] [Quiver W] (F : V ⥤q W)
+
+@[simp]
+lemma end_map {a b : V} (p : Path a b) : F.obj (p.end) = (F.mapPath p).end := by
+  induction p with
+  | nil => rfl
+  | cons p' e ih => simp [ih]; rfl
+
+end Prefunctor
+
+open Quiver
+
+namespace Quiver
+
+/-- The quiver structure on a subtype is induced by the quiver structure on the original type.
+    An arrow from `a : S` to `b : S` exists if an arrow from `a.val` to `b.val` exists. -/
+def inducedQuiver {V : Type u} [Quiver.{v} V] (S : Set V) : Quiver.{v} S :=
+  ⟨fun a b => a.val ⟶ b.val⟩
+
+end Quiver
+
+namespace Quiver.Subquiver
+
+variable {V : Type u} [Quiver.{v} V] (S : Set V)
+
+attribute [local instance] inducedQuiver
+
+/-- The embedding of an induced subquiver on a set `S` into the original quiver. -/
+@[simps]
+def embedding : Prefunctor S V where
+  obj := Subtype.val
+  map := id
+
+/-- The vertices in a path mapped by the embedding are all in the original set S. -/
+@[simp]
+lemma mapPath_embedding_vertices_in_set {i j : S} (p : Path i j) :
+  ∀ v, v ∈ ((embedding S).mapPath p).activeVertices → v ∈ S := by
+  induction p with
+  | nil =>
+    intro v hv
+    simp only [Prefunctor.mapPath_nil, Path.activeVertices_nil, Set.mem_singleton_iff] at hv
+    subst hv
+    exact i.property
+  | cons p' e ih =>
+    intro v hv
+    simp only [Prefunctor.mapPath_cons, Path.activeVertices_cons, Set.mem_union,
+               Set.mem_singleton_iff] at hv
+    cases hv with
+    | inl h => exact ih v h
+    | inr h => subst h; aesop
+
+end Quiver.Subquiver

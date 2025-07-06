@@ -321,9 +321,44 @@ lemma smul [Fintype n] [Nonempty n] [DecidableEq n] {c : ℝ} (hc : 0 < c) (_ : 
   simp only [mulVec_smul, smul_eq_mul, Pi.smul_apply]
   rw [mul_div_mul_left _ _ (ne_of_gt hc)]
 
-end CollatzWielandt
+/- The Perron root of a matrix `A`, defined as the supremum of the Collatz-Wielandt function
+    over the set of non-negative, non-zero vectors. -/
+noncomputable abbrev perronRoot (A : Matrix n n ℝ) : ℝ :=
+  ⨆ x ∈ {x : n → ℝ | (∀ i, 0 ≤ x i) ∧ x ≠ 0}, collatzWielandtFn A x
 
+ omit [Nonempty n] in
+lemma perronRoot_eq_sup_collatzWielandt (A : Matrix n n ℝ) :
+  perronRoot A = ⨆ x ∈ {x : n → ℝ | (∀ i, 0 ≤ x i) ∧ x ≠ 0}, collatzWielandtFn A x := rfl
+
+/-- A helper lemma to connect the Collatz-Wielandt function of a vector `v` to its value `r`
+    when `v` is an eigenvector. -/
+lemma eq_eigenvalue_of_positive_eigenvector
+  {n : Type*} [Fintype n] [DecidableEq n] [Nonempty n]
+  {A : Matrix n n ℝ} {r : ℝ} {v : n → ℝ}
+  (hv_pos : ∀ i, 0 < v i) (h_eig : A *ᵥ v = r • v) :
+    collatzWielandtFn A v = r := by
+  dsimp [collatzWielandtFn]
+  have h_supp_nonempty : ({i | 0 < v i}.toFinset).Nonempty := by
+    let i0 := Classical.arbitrary n
+    simp [Set.mem_toFinset, hv_pos i0]
+    simp_all only [filter_True, Finset.univ_nonempty]
+  rw [dif_pos h_supp_nonempty]
+  apply Finset.inf'_eq_of_forall_le_of_exists_le h_supp_nonempty
+  · intro i hi
+    let hi_pos := Set.mem_toFinset.mp hi
+    have : (A *ᵥ v) i = (r • v) i := by rw [h_eig]
+    rw [Pi.smul_apply, smul_eq_mul] at this
+    have : (A *ᵥ v) i / v i = r := by
+      rw [this]; rw [mul_div_cancel_pos_right rfl (hv_pos i)]
+    rw [this]
+  · use h_supp_nonempty.choose
+    use h_supp_nonempty.choose_spec
+    let hi_pos := Set.mem_toFinset.mp h_supp_nonempty.choose_spec
+    have : (A *ᵥ v) h_supp_nonempty.choose = (r • v) h_supp_nonempty.choose := by rw [h_eig]
+    rw [Pi.smul_apply, smul_eq_mul] at this
+    rw [this]; rw [mul_div_cancel_pos_right rfl (hv_pos (Exists.choose h_supp_nonempty))]
+
+end CollatzWielandt
 end PerronFrobenius
 
 end Matrix
-#min_imports
