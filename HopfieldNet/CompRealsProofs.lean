@@ -162,16 +162,17 @@ def radius : Base := (2 : ℚ) ^ (-51 : ℤ)
 A constructive real number, represented by an approximation function
 and an integer approximation.
 -/
-structure CReal where
+structure CReal_repr where
   approx : Complete Base
   intApprox : ℤ
 deriving Nonempty
 
---def CReal_eq : CReal_repr → CReal_repr → Prop := sorry
+def CReal_eq : CReal_repr → CReal_repr → Prop := sorry
 
---def CReal : Type := sorry -- CReal_repr modulo CReal_eq
+def CReal : Type := sorry -- CReal_repr modulo CReal_eq
 
 --Start working with quotients
+#exit
 
 /--
 Compute a bound for a constructive real number.
@@ -435,9 +436,9 @@ instance : AddCommMonoid CReal where
   zero := realZero
   zero_add := real_zero_add
   add_zero := real_add_zero
-  nsmul := sorry
-  nsmul_zero := sorry
-  nsmul_succ := sorry
+  nsmul := _
+  nsmul_zero := _
+  nsmul_succ := _
   add_comm := real_add_comm
 
 /--
@@ -493,6 +494,7 @@ Warning: does not terminate if the input is zero.
 -/
 def realRecip (x : CReal) : CReal :=
   realRecipWitness x (proveNonZero x)
+
 
 -- instance Fractional CReal where
 -- recip = realRecip
@@ -555,7 +557,7 @@ def diffPolynomial {a : Type} [Add a] [Mul a] [OfNat a 1] [NatCast a] (p : polyn
 
 -- Example: The derivative of 2 + 3x + 4x^2 is 3 + 8x
 #eval diffPolynomial ([2, 3, 4] : polynomial ℚ)  -- Output: [3, 8]
-#time #eval diffPolynomial ([2, 3, 4] : polynomial ℚ)  -- Output: [3, 8]
+
 /--
 Given a bound `maxx` and a polynomial `p`, returns a uniformly continuous function
 that evaluates the polynomial at a given input.
@@ -662,7 +664,7 @@ def rationalExp (tol x : Base) : CReal :=
   rationalExpAux tol x 100 -- 100 is an arbitrary recursion limit; increase as needed
 
 -- Example: Compute exp(1) with tolerance 1/2
-#time #eval (rationalExp (1/2) 1).approx { val := 1/100, --property := by norm_num
+#eval (rationalExp (1/2) 1).approx { val := 1/100, --property := by norm_num
  }
 
 /--
@@ -696,10 +698,6 @@ Exponential function on constructive real numbers.
 def realExp (x : CReal) : CReal :=
   makeCRealFun2 (expUniformCts (1 + x.intApprox)) x
 
--- Example: Compute exp(1) and print the result
---#time #eval (realExp (realBase 1)).approx { val := 1/2 }
-
-
 /--
 Given a (possibly infinite) list of terms `a` (assumed to be an
 alternating series with decreasing absolute values),
@@ -712,8 +710,7 @@ def alternatingSeries (a : List Base) : Complete Base :=
     partSeries.sum
 
 /--
-Compute sin(x) as a constructive real, with error control parameter `tol`
-and recursion limit `fuel`.
+Compute sin(x) as a constructive real, with error control parameter `tol` and recursion limit `fuel`.
 If `|x| ≥ tol`, reduces the argument using the triple-angle identity:
   sin(x) = 3 sin(x/3) - 4 sin^3(x/3)
 Otherwise, computes the alternating series expansion for sin(x) up to `fuel` terms.
