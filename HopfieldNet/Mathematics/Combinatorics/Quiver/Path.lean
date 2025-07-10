@@ -302,7 +302,6 @@ def inducedQuiver {V : Type u} [Quiver.{v} V] (S : Set V) : Quiver.{v} S :=
   ⟨fun a b => a.val ⟶ b.val⟩
 
 end Quiver
-
 namespace Quiver.Subquiver
 
 variable {V : Type u} [Quiver.{v} V] (S : Set V)

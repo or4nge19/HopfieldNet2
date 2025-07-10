@@ -513,6 +513,42 @@ lemma toLin'_toContinuousLinearMap (A : Matrix n n ℝ) :
   ext v
   rfl
 
+lemma vecMul_eq_mulVec_transpose {n : Type*} [Fintype n] (A : Matrix n n ℝ) (v : n → ℝ) :
+    v ᵥ* A = Aᵀ *ᵥ v := by
+  ext j
+  simp [vecMul, mulVec, transpose]
+  rw [@dotProduct_comm]
+
+lemma dotProduct_le_dotProduct_of_nonneg_left' {n : Type*} [Fintype n] {u x y : n → ℝ}
+    (hu_nonneg : ∀ i, 0 ≤ u i) (h_le : x ≤ y) :
+    u ⬝ᵥ x ≤ u ⬝ᵥ y := by
+  rw [dotProduct, dotProduct, ← sub_nonneg, ← Finset.sum_sub_distrib]
+  apply Finset.sum_nonneg
+  intro i _
+  rw [← mul_sub]
+  exact mul_nonneg (hu_nonneg i) (sub_nonneg.mpr (h_le i))
+
+lemma eq_zero_of_nonneg_of_dotProduct_eq_zero {n : Type*} [Fintype n] {u z : n → ℝ}
+    (hu_pos : ∀ i, 0 < u i) (hz_nonneg : ∀ i, 0 ≤ z i) (h_dot : u ⬝ᵥ z = 0) :
+    z = 0 := by
+  have h_terms_nonneg : ∀ i, 0 ≤ u i * z i := fun i => mul_nonneg (hu_pos i).le (hz_nonneg i)
+  have h_terms_zero : ∀ i, u i * z i = 0 := by
+    rw [dotProduct, Finset.sum_eq_zero_iff_of_nonneg] at h_dot
+    · exact fun i => h_dot i (Finset.mem_univ _)
+    · exact fun i _ => h_terms_nonneg i
+  funext i
+  exact (mul_eq_zero.mp (h_terms_zero i)).resolve_left (hu_pos i).ne'
+
+lemma Module.End.exists_eigenvector_of_mem_spectrum {K V : Type*}
+  [Field K] [AddCommGroup V] [Module K V] [FiniteDimensional K V]
+  {f : V →ₗ[K] V} {μ : K} (h_is_eigenvalue : μ ∈ spectrum K f) :
+  ∃ v, v ≠ 0 ∧ f v = μ • v := by
+  rw [spectrum.mem_iff, LinearMap.isUnit_iff_ker_eq_bot] at h_is_eigenvalue
+  obtain ⟨v, hv_mem, hv_ne_zero⟩ := Submodule.exists_mem_ne_zero_of_ne_bot h_is_eigenvalue
+  use v, hv_ne_zero
+  rw [LinearMap.mem_ker, LinearMap.sub_apply, Module.algebraMap_end_apply] at hv_mem
+  exact (sub_eq_zero.mp hv_mem).symm
+
 -- Core lemma: spectral radius is bounded by the operator norm
 lemma spectralRadius_le_nnnorm {𝕜 A : Type*} [NontriviallyNormedField 𝕜]
      [NormedField 𝕜] [NormedRing A] [NormedAlgebra 𝕜 A] [CompleteSpace A] [NormOneClass A]
@@ -531,6 +567,13 @@ lemma spectralRadius_le_nnnorm_continuousLinearMap {E : Type*} [NormedAddCommGro
     [SeminormedRing A] [NormedAlgebra 𝕜 A] [CompleteSpace A] [NormOneClass A] (T : E →L[ℝ] E) :
     spectralRadius ℝ T ≤ ↑‖T‖₊ := by
   exact spectralRadius_le_nnnorm T
+
+omit [DecidableEq n] in
+/-- The spectral radii of a matrix and its transpose are equal. -/
+lemma spectralRadius_eq_spectralRadius_transpose [DecidableEq n] (A : Matrix n n ℝ) :
+    spectralRadius ℝ A = spectralRadius ℝ Aᵀ := by
+  unfold spectralRadius
+  rw [spectrum_eq_spectrum_transpose]
 
 lemma spectralRadius_le_opNorm (A : Matrix n n ℝ) :
     spectralRadius ℝ (Matrix.toLin' A) ≤ ↑‖(Matrix.toLin' A).toContinuousLinearMap‖₊ := by
