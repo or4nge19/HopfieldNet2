@@ -221,7 +221,7 @@ lemma gibbsUpdateSingleNeuron_support
     exact (PMF.apply_pos_iff (NN.State.gibbsUpdateSingleNeuron wθ s T u) s').mpr h_mem_support
   exact gibbsUpdate_possible_states wθ s T u s' h_pos
 
-lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update
+lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update [Coe R ℝ] (T : ℝ)
   (s s' : (HopfieldNetwork R U).State) (u : U) :
   ¬(s' = NN.State.updateNeuron s u 1 (Or.inl rfl) ∨
     s' = NN.State.updateNeuron s u (-1) (Or.inr rfl)) →
@@ -230,7 +230,7 @@ lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update
   -- Use the contrapositive of the support lemma
   rw [PMF.apply_eq_zero_iff]
   contrapose! h_not_update -- This assumes s' is in the support
-  exact gibbsUpdateSingleNeuron_support T s wθ u s' h_not_update
+  exact gibbsUpdateSingleNeuron_support wθ T s u s' h_not_update
 
 lemma gibbsSamplingStep_prob_zero_if_multi_site (s s' : (HopfieldNetwork R U).State) :
   (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
