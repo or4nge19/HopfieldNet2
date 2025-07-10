@@ -1,9 +1,6 @@
-import Mathlib.Algebra.Order.Star.Basic
-import Mathlib.Analysis.Normed.Ring.Basic
 import Mathlib.Combinatorics.Quiver.Path
 import HopfieldNet.Mathematics.Data.List
 import Mathlib.Data.List.Lemmas
-import Mathlib
 import Mathlib.Data.List.Nodup
 import Mathlib.Tactic
 
@@ -692,10 +689,7 @@ lemma isPrefix_dropLast_of_comp_eq {V : Type*} [Quiver V] {a b c : V} {p : Path 
   rw [h]
   exact List.prefix_append p₁.vertices.dropLast p₂.vertices
 
-/- Lemma `mem_suffix_of_repeated_vertex` has been removed because it is unused and depends on a missing constant. -/
-/-!  ### Path splitting utilities (continued) -/
 open List
-
 
 /-- If a vertex c appears in path p, c must either be the end vertex or appear in the tail of vertices. -/
 lemma vertex_in_path_cases {a b c : V} (p : Path a b) (h : c ∈ p.vertices) :
@@ -727,6 +721,7 @@ lemma vertex_in_path_cases {a b c : V} (p : Path a b) (h : c ∈ p.vertices) :
       subst h_eq_b
       left
       rfl
+
 /-- If we have a path p from a to b with c ∈ p.vertices,
     and c is not the end vertex b, then it appears in a proper prefix of the path. -/
 lemma exists_prefix_with_vertex [DecidableEq V] {a b c : V} (p : Path a b) (h : c ∈ p.vertices) (h_ne : c ≠ b) :
