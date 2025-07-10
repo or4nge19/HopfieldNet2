@@ -1,5 +1,5 @@
 import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.CollatzWielandt
-import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Defs
+import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Lemmas
 import Mathlib.Tactic
 
 namespace Matrix
@@ -36,218 +36,6 @@ open Topology Metric Set Finset
 section PerronFrobenius
 open Finset Set IsCompact Topology Matrix
 
-lemma positive_mul_vec_pos [Fintype n]
-    {A : Matrix n n ℝ} (hA_pos : ∀ i j, 0 < A i j)
-    {x : n → ℝ} (hx_nonneg : ∀ i, 0 ≤ x i) (hx_ne_zero : x ≠ 0) :
-    ∀ i, 0 < (A.mulVec x) i := by
-  intro i
-  --  `A.mulVec x i = ∑ j, A i j * x j`
-  simp only [Matrix.mulVec, dotProduct]
-  apply Finset.sum_pos'
-  · intro j _
-    exact mul_nonneg (le_of_lt (hA_pos i j)) (hx_nonneg j)
-  · have : ∃ k, 0 < x k := by
-      by_contra h_all_nonpos
-      push_neg at h_all_nonpos
-      have h_zero : x = 0 := funext (fun j => le_antisymm (h_all_nonpos j) (hx_nonneg j))
-      exact hx_ne_zero h_zero
-    rcases this with ⟨k, hk_pos⟩
-    refine ⟨k, ?_, ?_⟩
-    · simp only [Finset.mem_univ]  --  `k ∈ Finset.univ`
-    · exact mul_pos (hA_pos i k) hk_pos
-
-variable {A : Matrix n n ℝ} --[DecidableEq n] [Nonempty n]
-
-theorem positive_mul_vec_of_nonneg_vec [Fintype n] (hA_pos : ∀ i j, 0 < A i j)
-    {v : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
-    ∀ i, 0 < (A *ᵥ v) i := by
-  intro i
-  simp only [mulVec, dotProduct]
-  apply Finset.sum_pos'
-  · intro j _
-    exact mul_nonneg (le_of_lt (hA_pos i j)) (hv_nonneg j)
-  · have : ∃ k, 0 < v k := by
-      by_contra h_all_nonpos
-      push_neg at h_all_nonpos
-      have h_zero : v = 0 := funext (fun j => le_antisymm (h_all_nonpos j) (hv_nonneg j))
-      exact hv_ne_zero h_zero
-    rcases this with ⟨k, hk_pos⟩
-    refine ⟨k, Finset.mem_univ k, ?_⟩
-    exact mul_pos (hA_pos i k) hk_pos
-
-lemma path_exists_of_pos_entry {A : Matrix n n ℝ} {i j : n} (h_pos : 0 < A i j) :
-    Nonempty { p : (toQuiver A).Path i j // letI G := toQuiver A; p.length > 0 } := by
-  letI G := toQuiver A
-  let e : G.Hom i j := h_pos
-  use Subtype.mk (e.toPath : (toQuiver A).Path i j) (by
-    simp_all only [G]
-    rfl)
-  exact Nat.zero_lt_succ nil.length
-
-lemma irreducible_of_all_entries_positive {A : Matrix n n ℝ} (hA : ∀ i j, 0 < A i j) :
-    Irreducible A := by
-  letI G := toQuiver A
-  dsimp [Irreducible]
-  constructor
-  · intros i j
-    exact (hA i j).le
-  · intros i j
-    exact path_exists_of_pos_entry (hA i j)
-
-theorem exists_connecting_edge_of_irreducible {A : Matrix n n ℝ} (hA_irred : A.Irreducible)
-    {v : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i)
-    (S T : Set n) (hS_nonempty : S.Nonempty) (hT_nonempty : T.Nonempty)
-    (h_partition : ∀ i, i ∈ S ↔ v i > 0)
-    (h_complement : ∀ i, i ∈ T ↔ v i = 0) :
-    ∃ (i j : n), i ∈ T ∧ j ∈ S ∧ 0 < A i j := by
-  obtain ⟨i₀, hi₀_in_T⟩ := hT_nonempty
-  obtain ⟨j₀, hj₀_in_S⟩ := hS_nonempty
-  unfold Irreducible IsStronglyConnected toQuiver at hA_irred
-  obtain ⟨⟨p, _⟩⟩ := hA_irred.2 j₀ i₀
-  obtain ⟨y, z, e, _, _, hy_not_T, hz_in_T, _⟩ :=
-    @Quiver.Path.exists_boundary_edge n (toQuiver A) _ _ p T
-    (fun h_j0_in_T => by
-      have hj₀_pos : v j₀ > 0 := (h_partition j₀).mp hj₀_in_S
-      have hj₀_zero : v j₀ = 0 := (h_complement j₀).mp h_j0_in_T
-      exact ne_of_gt hj₀_pos hj₀_zero)
-    hi₀_in_T
-  have hy_in_S : y ∈ S := by
-    by_contra hy_not_S
-    have hy_in_T : y ∈ T := by
-      cases' (lt_or_eq_of_le (hv_nonneg y)) with h_pos h_zero
-      · simp_all only [gt_iff_lt, nonempty_subtype, not_true_eq_false]
-      · simp_all only [gt_iff_lt, nonempty_subtype, not_true_eq_false]
-    exact hy_not_T hy_in_T
-  obtain ⟨p', _⟩ := hA_irred.2 i₀ j₀
-  obtain ⟨y, z, e, _, _, hy_not_S, hz_in_S, _⟩ :=
-    @Quiver.Path.exists_boundary_edge n (toQuiver A) _ _ p' S
-    (fun h_i0_in_S => by
-      have hi₀_zero : v i₀ = 0 := (h_complement i₀).mp hi₀_in_T
-      have hi₀_pos : v i₀ > 0 := (h_partition i₀).mp h_i0_in_S
-      exact ne_of_gt hi₀_pos hi₀_zero)
-    hj₀_in_S
-  have hy_in_T : y ∈ T := by
-    by_contra hy_not_T
-    have hy_in_S : y ∈ S := by
-      cases' (lt_or_eq_of_le (hv_nonneg y)) with h_pos h_zero
-      · exact (h_partition y).mpr h_pos
-      · have hy_in_T' : y ∈ T := by simp_all only [gt_iff_lt, nonempty_subtype, lt_self_iff_false, not_false_eq_true,
-        not_true_eq_false]
-        exact (hy_not_T hy_in_T').elim
-    exact hy_not_S hy_in_S
-  exact ⟨y, z, hy_in_T, hz_in_S, e⟩
-
-lemma exists_boundary_crossing_in_support [DecidableEq n] [Fintype n]
-    (hA_irred : Irreducible A) (_ : ∀ i j, 0 ≤ A i j)
-    {v : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i) (_ : v ≠ 0)
-    (S T : Set n) (hS_nonempty : S.Nonempty) (hT_nonempty : T.Nonempty)
-    (h_partition : ∀ i, i ∈ S ↔ v i > 0)
-    (h_complement : ∀ i, i ∈ T ↔ v i = 0) :
-    ∃ (i j : n), i ∈ T ∧ j ∈ S ∧ 0 < A i j := by
-  obtain ⟨i₀, hi₀_in_T⟩ := hT_nonempty
-  obtain ⟨j₀, hj₀_in_S⟩ := hS_nonempty
-  unfold Irreducible IsStronglyConnected toQuiver at hA_irred
-  obtain ⟨⟨p, _⟩⟩ := hA_irred.2 i₀ j₀
-  obtain ⟨y, z, e, _, _, hy_not_S, hz_in_S, _⟩ :=
-    @Quiver.Path.exists_boundary_edge n (toQuiver A) _ _ p S
-    (fun h_i0_in_S => by
-      have hi₀_zero : v i₀ = 0 := (h_complement i₀).mp hi₀_in_T
-      have hi₀_pos : v i₀ > 0 := (h_partition i₀).mp h_i0_in_S
-      exact ne_of_gt hi₀_pos hi₀_zero)
-    hj₀_in_S
-  have hy_in_T : y ∈ T := by
-    by_contra hy_not_T
-    have hy_in_S : y ∈ S := by
-      cases' (lt_or_eq_of_le (hv_nonneg y)) with h_pos h_zero
-      · exact (h_partition y).mpr h_pos
-      · have hy_in_T' : y ∈ T := by simp_all only [gt_iff_lt, nonempty_subtype, ne_eq, lt_self_iff_false,
-        not_false_eq_true, not_true_eq_false]
-        exact (hy_not_T hy_in_T').elim
-    exact hy_not_S hy_in_S
-  exact ⟨y, z, hy_in_T, hz_in_S, e⟩
-
-theorem irreducible_mulVec_ne_zero [DecidableEq n] [Fintype n]
-    (hA_irred : Irreducible A) (hA_nonneg : ∀ i j, 0 ≤ A i j) (hA_ne_zero : A ≠ 0)
-    {v : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
-    A *ᵥ v ≠ 0 := by
-  by_contra h_Av_zero
-  let S : Set n := {i | v i > 0}
-  let T : Set n := {i | v i = 0}
-  have hS_nonempty : S.Nonempty := by
-    by_contra hS_empty
-    rw [Set.not_nonempty_iff_eq_empty] at hS_empty
-    apply hv_ne_zero
-    ext k
-    have : v k ≤ 0 := by
-      by_contra hv_pos
-      have : k ∈ S := not_le.mp hv_pos
-      rw [hS_empty] at this
-      exact Set.not_mem_empty k this
-    exact le_antisymm this (hv_nonneg k)
-  by_cases hT_is_empty : T = ∅
-  · have v_all_pos : ∀ i, v i > 0 := by
-      intro i
-      have hi_not_in_T : i ∉ T := by simp [hT_is_empty]
-      have hi_ne_zero : v i ≠ 0 := by simpa [T] using hi_not_in_T
-      exact lt_of_le_of_ne (hv_nonneg i) (id (Ne.symm hi_ne_zero))
-    have A_is_zero : A = 0 := by
-      ext k j
-      have : (A *ᵥ v) k = 0 := congrFun h_Av_zero k
-      rw [mulVec, dotProduct] at this
-      have terms_nonneg : ∀ idx, 0 ≤ A k idx * v idx :=
-        fun idx => mul_nonneg (hA_nonneg k idx) (le_of_lt (v_all_pos idx))
-      have term_kj_is_zero := (Finset.sum_eq_zero_iff_of_nonneg (fun i _ => terms_nonneg i)).mp this j (Finset.mem_univ _)
-      exact (mul_eq_zero.mp term_kj_is_zero).resolve_right (v_all_pos j).ne'
-    exact hA_ne_zero A_is_zero
-  · have hT_nonempty : T.Nonempty := Set.nonempty_iff_ne_empty.mpr hT_is_empty
-    obtain ⟨i, j, hi_T, hj_S, hA_ij_pos⟩ := exists_boundary_crossing_in_support
-      hA_irred hA_nonneg hv_nonneg hv_ne_zero S T hS_nonempty hT_nonempty
-      (fun i => by simp [S]) (fun i => by simp [T])
-    have hA_ij_zero : A i j = 0 := by
-      have : (A *ᵥ v) i = 0 := congrFun h_Av_zero i
-      rw [mulVec, dotProduct] at this
-      have terms_nonneg : ∀ k ∈ Finset.univ, 0 ≤ A i k * v k :=
-        fun k _ => mul_nonneg (hA_nonneg i k) (hv_nonneg k)
-      have term_j_is_zero := (Finset.sum_eq_zero_iff_of_nonneg terms_nonneg).mp this j (Finset.mem_univ _)
-      have hv_j_pos : v j > 0 := by simp [S] at hj_S; exact hj_S
-      exact (mul_eq_zero.mp term_j_is_zero).resolve_right (ne_of_gt hv_j_pos)
-    exact (ne_of_gt hA_ij_pos) hA_ij_zero
-
-variable --{n : Type*} [Fintype n] [DecidableEq n]
-          {A : Matrix n n ℝ} {r : ℝ}
-
-/-- A zero matrix is not irreducible if the dimension is greater than 1. -/
-lemma not_irreducible_of_zero_matrix {n : Type*} [Fintype n] [Nonempty n]
-    (h_card_gt_one : 1 < Fintype.card n) : ¬ Irreducible (0 : Matrix n n ℝ) := by
-  intro h_irred_contra
-  obtain ⟨i, j, hij⟩ := Fintype.exists_pair_of_one_lt_card h_card_gt_one
-  rcases h_irred_contra with ⟨_, h_conn⟩
-  let h_conn_ij := h_conn i j
-  letI := toQuiver (0 : Matrix n n ℝ)
-  have h_no_path : ¬ Nonempty (Quiver.Path i j) := by
-      intro h
-      obtain ⟨p⟩ := h
-      induction p with
-      | nil => exact hij rfl
-      | cons p' e ih =>
-        exact False.elim (lt_irrefl 0 e)
-  rcases h_conn_ij with ⟨⟨p, _⟩⟩
-  exact h_no_path ⟨p⟩
-
-/-- If an irreducible matrix `A` has a row `i` where `A*v` is zero, then all entries `A i k` must be zero
-    for `k` in the support of `v`. -/
-lemma zero_block_of_mulVec_eq_zero_row [Fintype n] (hA_nonneg : ∀ i j, 0 ≤ A i j) {v : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i)
-    (S : Set n) (hS_def: S = {i | 0 < v i}) (i : n) (h_Av_i_zero : (A *ᵥ v) i = 0) :
-    ∀ k ∈ S, A i k = 0 := by
-  intro k hk_S_mem
-  rw [mulVec, dotProduct] at h_Av_i_zero
-  have h_sum_terms_nonneg : ∀ l, 0 ≤ A i l * v l :=
-    fun l ↦ mul_nonneg (hA_nonneg i l) (hv_nonneg l)
-  have h_Aik_vk_zero : A i k * v k = 0 :=
-    (sum_eq_zero_iff_of_nonneg (fun l _ ↦ h_sum_terms_nonneg l)).mp h_Av_i_zero k (mem_univ k)
-  have vk_pos : 0 < v k := by rwa [hS_def] at hk_S_mem
-  exact (mul_eq_zero.mp h_Aik_vk_zero).resolve_right (ne_of_gt vk_pos)
-
 variable [Fintype n]  {A : Matrix n n ℝ}
 
 lemma ratio_le_max_row_sum_simple [Nonempty n]  (A : Matrix n n ℝ) (hA_nonneg : ∀ i j, 0 ≤ A i j)
@@ -260,22 +48,6 @@ lemma ratio_le_max_row_sum_simple [Nonempty n]  (A : Matrix n n ℝ) (hA_nonneg 
       intro j _
       exact mul_le_mul_of_nonneg_left (le_sup' x (Finset.mem_univ j)) (hA_nonneg i j)
     _ = (∑ j, A i j) * Finset.univ.sup' Finset.univ_nonempty x := by rw [Finset.sum_mul]
-
-/-- For an irreducible matrix on a one-element type, the (unique) diagonal entry is positive. -/
-lemma irreducible_one_element_implies_diagonal_pos
-    {A : Matrix n n ℝ} (hA_irred : Irreducible A)
-    (h_card_one : Fintype.card n = 1) (i : n) :
-    0 < A i i := by
-  letI G := toQuiver A
-  obtain ⟨⟨p, hp_pos⟩⟩ := hA_irred.2 i i
-  obtain ⟨j, p', e, rfl⟩ := Quiver.Path.path_decomposition_last_edge p hp_pos
-  have h_sub : Subsingleton n := by
-    rcases (Fintype.card_eq_one_iff).1 h_card_one with ⟨a, ha⟩
-    exact ⟨fun x y => by simp [ha x, ha y]⟩
-  haveI : Subsingleton n := h_sub
-  have hji : j = i := Subsingleton.elim _ _
-  have e_pos : 0 < A j i := e
-  simpa [hji] using e_pos
 
 variable [Nonempty n] [DecidableEq n] {A : Matrix n n ℝ}
 
@@ -445,7 +217,7 @@ theorem maximizer_is_eigenvector  (hA_prim : IsPrimitive A)
   linarith [r_ge_r_y_norm, r_y_norm_eq_r_y, r_lt_r_y]
 
 /-- An eigenvector `v` of a primitive matrix `A` corresponding to a positive eigenvalue `r` must be strictly positive. -/
-lemma eigenvector_of_primitive_is_positive (hA_prim : IsPrimitive A) (hr_pos : 0 < r)
+lemma eigenvector_of_primitive_is_positive {r : ℝ} (hA_prim : IsPrimitive A) (hr_pos : 0 < r)
     {v : n → ℝ} (h_eigen : A *ᵥ v = r • v) (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
     ∀ i, 0 < v i := by
   obtain ⟨_, k, hk_gt_zero, hk_pos⟩ := hA_prim
@@ -468,7 +240,7 @@ lemma eigenvector_of_primitive_is_positive (hA_prim : IsPrimitive A) (hr_pos : 0
   rw [h_Ak_v] at h_Ak_v_pos
   exact (mul_pos_iff_of_pos_left (pow_pos hr_pos k)).mp (h_Ak_v_pos i)
 
-/-- Step 2: the Perron root `r = collatzWielandtFn A v` is positive. -/
+/-- The Perron root `r = collatzWielandtFn A v` is positive. -/
 lemma perron_root_pos_of_primitive
   (hA_prim : IsPrimitive A) (hA_nonneg : ∀ i j, 0 ≤ A i j)
   {v : n → ℝ} (_ : v ∈ stdSimplex ℝ n) (hvM : IsMaxOn (collatzWielandtFn A) (stdSimplex ℝ n) v) :
