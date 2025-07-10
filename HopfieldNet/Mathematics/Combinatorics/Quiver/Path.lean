@@ -692,8 +692,6 @@ lemma isPrefix_dropLast_of_comp_eq {V : Type*} [Quiver V] {a b c : V} {p : Path 
   rw [h]
   exact List.prefix_append p₁.vertices.dropLast p₂.vertices
 
-/- Lemma `mem_suffix_of_repeated_vertex` has been removed because it is unused and depends on a missing constant. -/
-/-!  ### Path splitting utilities (continued) -/
 open List
 
 
