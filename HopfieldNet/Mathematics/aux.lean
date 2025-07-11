@@ -659,6 +659,11 @@ lemma continuousOn_iInf' {α β : Type*}
     exact Finset.iInf_apply_eq_finset_inf'_apply_fun f
   rwa [h_eq]
 
+/-- An element of the image of a set is less than or equal to the supremum of that set. -/
+lemma le_csSup_of_mem {α : Type*} {f : α → ℝ} {s : Set α} (hs_bdd : BddAbove (f '' s)) {y : α} (hy : y ∈ s) :
+  f y ≤ sSup (f '' s) :=
+le_csSup hs_bdd (Set.mem_image_of_mem f hy)
+
 lemma div_lt_iff (hc : 0 < c) : b / c < a ↔ b < a * c :=
   lt_iff_lt_of_le_iff_le (by exact Nat.le_div_iff_mul_le hc)
 
