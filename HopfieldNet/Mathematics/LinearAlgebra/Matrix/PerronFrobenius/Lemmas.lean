@@ -2,10 +2,10 @@
 import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Defs
 namespace Matrix
 section PerronFrobenius
-open Finset Quiver
+open Finset Quiver Quiver.Path
 variable {n : Type*}
 
-open Quiver.Path
+--open Quiver.Path
 
 /-- A path in the submatrix `A.submatrix Subtype.val Subtype.val` lifts to a path in the
 original quiver `toQuiver A`, and all vertices along that lifted path lie in `S`. -/
@@ -315,3 +315,112 @@ theorem IsPrimitive.of_irreducible_pos_diagonal [Fintype n][Nonempty n] [Decidab
     let p_final := (Path.replicate num_loops p_loop).comp p_ij
     use p_final
     rw [Path.length_comp, Path.length_replicate, p_loop_len, mul_one, Nat.sub_add_cancel h_num_loops_nonneg]
+
+/-- If a path between two points in a set `S` must leave `S`, irreducibility guarantees
+a path from the exit point back to an entry point. -/
+private lemma exists_path_back_to_set
+    (hA_irred : A.Irreducible) (S : Set n)
+    {u v : n} (hu : u ∈ S) (hv : v ∉ S) :
+    letI : Quiver n := A.toQuiver
+    ∃ (i j : n) (p : Path i j),
+      i ∈ S ∧ j ∉ S ∧ (∀ k, k ∈ p.vertices.tail → k ∉ S) := by
+  letI : Quiver n := A.toQuiver
+  letI : DecidablePred (· ∈ S) := Classical.decPred _
+  obtain ⟨⟨p, _⟩⟩ := hA_irred.2 u v
+  have h_u_not : u ∉ Sᶜ := by
+    simpa [Set.mem_compl] using hu
+  have h_v_in  : v ∈ Sᶜ := by
+    simpa [Set.mem_compl] using hv
+  obtain ⟨i, j, e, _, _, hi_mem, hj_mem, _⟩ :=
+    Quiver.Path.exists_boundary_edge p (Sᶜ) h_u_not h_v_in
+  have hi : i ∈ S := by
+    simpa [Set.mem_compl] using hi_mem
+  have hj : j ∉ S := by
+    simpa [Set.mem_compl] using hj_mem
+  obtain ⟨e⟩ := (⟨e⟩ : Nonempty (i ⟶ j))
+  let p_out : Path i j := e.toPath
+  refine ⟨i, j, p_out, hi, hj, ?_⟩
+  intro k hk
+  have hk_mem : (k : n) ∈ ([j] : List n) := by
+    simpa [p_out,
+           Quiver.Path.vertices_toPath_tail] using hk
+  have hk_eq : k = j := by
+    simpa [List.mem_singleton] using hk_mem
+  subst hk_eq
+  exact hj
+
+/-- If `A` is irreducible, any two vertices of the same strongly–connected
+component `S` can be joined by a path **staying inside** `S`. -/
+lemma path_exists_in_component {A : Matrix n n ℝ}
+    (S : Set n) [DecidablePred (· ∈ S)]
+    (hS_strong_conn :
+      letI : Quiver n := A.toQuiver;
+      IsStronglyConnected (inducedQuiver S))
+    (i j : n) (hi : i ∈ S) (hj : j ∈ S) :
+    letI : Quiver n := A.toQuiver
+    ∃ p : Path i j, ∀ k, k ∈ p.vertices → k ∈ S := by
+  letI : Quiver n := A.toQuiver
+  letI G_S : Quiver S := inducedQuiver S
+  let i' : S := ⟨i, hi⟩
+  let j' : S := ⟨j, hj⟩
+  obtain ⟨⟨p_sub, _⟩⟩ : Nonempty {p : Path i' j' // p.length > 0} := by
+    letI : Quiver n := A.toQuiver
+    exact hS_strong_conn i' j'
+  let p := Prefunctor.mapPath (Quiver.Subquiver.embedding S) p_sub
+  refine ⟨p, ?_⟩
+  intro k hk
+  have hka : k ∈ p.activeVertices :=
+    mem_vertices_to_active hk
+  exact (Quiver.Subquiver.mapPath_embedding_vertices_in_set S p_sub _ hka)
+
+lemma Irreducible.exists_edge_out {A : Matrix n n ℝ}
+    (hA_irred : A.Irreducible)
+    (S : Set n) (hS_ne_empty : S.Nonempty) (hS_ne_univ : S ≠ Set.univ) :
+    ∃ (i : n) (_ : i ∈ S) (j : n) (_ : j ∉ S), 0 < A i j := by
+  letI G := toQuiver A
+  obtain ⟨i, hi⟩ := hS_ne_empty
+  obtain ⟨j, hj_compl⟩ := Set.nonempty_compl.mpr hS_ne_univ
+  obtain ⟨⟨p, _⟩⟩ := hA_irred.2 i j
+  have hi_not_in_compl : i ∉ Sᶜ := Set.not_mem_compl_iff.mpr hi
+  obtain ⟨u, v, e, _, _, hu_not_in_compl, hv_in_compl, _⟩ :=
+    exists_boundary_edge p Sᶜ hi_not_in_compl hj_compl
+  have hu_in_S : u ∈ S := Set.not_mem_compl_iff.mp hu_not_in_compl
+  have hv_not_in_S : v ∉ S := hv_in_compl
+  exact ⟨u, hu_in_S, v, hv_not_in_S, e⟩
+
+-- Lemma: Simple paths have bounded length by vertex count
+lemma length_bounded_by_support_size [Quiver n] [DecidableEq n] [Fintype n] {_ : Matrix n n ℝ}
+    {support : Set n} [DecidablePred (· ∈ support)] (_ : Set.Finite support)
+    {i j : n} (p : Path i j)
+    (hp_support : ∀ k, k ∈ p.vertices → k ∈ support) (hp_simple : IsStrictlySimple p) :
+    p.length < support.toFinite.toFinset.card := by
+  have h_subset : p.vertexFinset ⊆ support.toFinite.toFinset := by
+    intro v hv
+    simp only [vertexFinset, Set.Finite.mem_toFinset]
+    exact hp_support v (List.mem_toFinset.mp hv)
+  have h_card := card_vertexFinset_of_isStrictlySimple hp_simple
+  have h_card_le := Finset.card_le_card h_subset
+  rw [h_card] at h_card_le
+  exact h_card_le
+
+
+lemma reachable_in_support_closed [DecidableEq n]
+    {A : Matrix n n ℝ}
+    (support : Set n) [DecidablePred (· ∈ support)] :
+    letI : Quiver n := Matrix.toQuiver A
+    let R := { k | ∃ (i : n) (_ : i ∈ support) (p : Path i k),
+                    ∀ v, v ∈ p.vertices → v ∈ support }
+    R = support := by
+  letI : Quiver n := Matrix.toQuiver A
+  let R := { k | ∃ (i : n) (hi : i ∈ support) (p : Path i k),
+                  ∀ v, v ∈ p.vertices → v ∈ support }
+  apply Set.Subset.antisymm
+  · intro k hkR
+    rcases hkR with ⟨i, hi, p, hp⟩
+    have : k ∈ p.vertices := end_mem_vertices p
+    exact hp k this
+  · intro k hk_supp
+    refine ⟨k, hk_supp, (Path.nil : Path k k), ?_⟩
+    intro v hv
+    simp [Quiver.Path.vertices_nil] at hv
+    subst hv; exact hk_supp

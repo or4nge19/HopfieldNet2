@@ -722,3 +722,19 @@ lemma dotProduct_pos_of_pos_of_nonneg_ne_zero {n : Type*} [Fintype n] [Decidable
   have hi_mem : i ∈ Finset.univ := Finset.mem_univ i
   have h_pos : 0 < u i * v i := mul_pos (hu_pos i) hi
   exact sum_pos_of_mem h_nonneg i hi_mem h_pos
+
+/--
+If a vector `x` lies in the standard simplex, then it cannot be the zero vector.
+Indeed, the coordinates of a simplex‐vector sum to `1`, whereas the coordinates of
+the zero vector sum to `0`.
+-/
+lemma ne_zero_of_mem_stdSimplex
+    {n : Type*} [Fintype n] [Nonempty n] {x : n → ℝ}
+    (hx : x ∈ stdSimplex ℝ n) :
+    x ≠ 0 := by
+  intro h_zero
+  have h_sum_zero : (∑ i, x i) = 0 := by
+    subst h_zero
+    simp_all only [Pi.zero_apply, Finset.sum_const_zero]
+  have h_sum_one : (∑ i, x i) = 1 := hx.2
+  linarith

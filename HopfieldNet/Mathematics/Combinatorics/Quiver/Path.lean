@@ -168,6 +168,20 @@ theorem exists_boundary_edge {a b : V} (p : Path a b) (S : Set V)
       subst h_len
       rfl
 
+/-- A path from a vertex in `S` to a vertex not in `S` must cross the boundary. -/
+theorem exists_boundary_edge_from_set {a b : V} (p : Path a b) (S : Set V)
+    (ha_in_S : a ∈ S) (hb_not_in_S : b ∉ S) :
+    ∃ (u v : V) (e : u ⟶ v) (p₁ : Path a u) (p₂ : Path v b),
+      u ∈ S ∧ v ∉ S ∧ p = p₁.comp (e.toPath.comp p₂) := by
+  classical
+  have ha_not_in_compl : a ∉ Sᶜ := by simpa
+  have hb_in_compl : b ∈ Sᶜ := by simpa
+  obtain ⟨u, v, e, p₁, p₂, hu_not_in_compl, hv_in_compl, hp⟩ :=
+    exists_boundary_edge p Sᶜ ha_not_in_compl hb_in_compl
+  refine ⟨u, v, e, p₁, p₂, ?_, ?_, hp⟩
+  · simpa using hu_not_in_compl
+  · simpa using hv_in_compl
+
 /-- Alternative formulation: there exists an edge crossing the boundary. -/
 theorem exists_crossing_edge {a b : V} (p : Path a b) (S : Set V)
     (ha_not_in_S : a ∉ S) (hb_in_S : b ∈ S) :
@@ -989,3 +1003,68 @@ lemma length_le_card_minus_one_of_isSimple [Fintype n] [DecidableEq n] [Quiver n
     exact Finset.card_le_univ p.vertexFinset
   rw [h_card_verts] at h_card_le_univ
   exact Nat.le_sub_one_of_lt h_card_le_univ
+
+@[simp] lemma vertices_toPath {i j : V} (e : i ⟶ j) :
+    (e.toPath).vertices = [i, j] := by
+  change (Path.nil.cons e).vertices = [i, j]
+  simp [vertices_cons, vertices_nil]; rfl
+
+@[simp] lemma vertices_toPath_tail {i j : V} (e : i ⟶ j) :
+    (e.toPath).vertices.tail = [j] := by
+  simp [vertices_toPath]
+
+@[simp] lemma end_mem_vertices {a b : V} (p : Path a b) : b ∈ p.vertices := by
+  have h₁ : p.vertices.getLast (vertices_nonempty p) = b :=
+    vertices_getLast p (vertices_nonempty p)
+  have h₂ := List.getLast_mem (l := p.vertices) (vertices_nonempty p)
+  simpa [h₁] using h₂
+
+lemma mem_vertices_to_active {V : Type*} [Quiver V]
+    {a b : V} {p : Path a b} {x : V} :
+    x ∈ p.vertices → x ∈ p.activeVertices := by
+  intro hx
+  induction p with
+  | nil =>
+      simpa [Quiver.Path.vertices_nil,
+             Quiver.Path.activeVertices_nil] using hx
+  | cons p' e ih =>
+      have hxSplit : x ∈ p'.vertices.dropLast ∨ x ∈ e.toPath.vertices := by
+        simpa [Quiver.Path.vertices_cons] using hx
+      cases hxSplit with
+      | inl h_in_drop =>
+          have : x ∈ p'.vertices := List.mem_of_mem_dropLast h_in_drop
+          have : x ∈ p'.activeVertices := ih this
+          exact (by
+            simpa [Quiver.Path.activeVertices_cons] using Or.inl this)
+      | inr h_in_edge =>
+          have h_edge : x = p'.end ∨ x = (p'.cons e).end := by
+            simpa [Quiver.Path.vertices_toPath,
+                   List.mem_cons, List.mem_singleton] using h_in_edge
+          cases h_edge with
+          | inl h_eq =>
+              have : x ∈ p'.activeVertices := by
+                subst h_eq; simp_all only [end_mem_vertices, forall_const, cons_eq_comp_toPath, vertices_comp,
+                  vertices_toPath, mem_append, mem_cons, not_mem_nil, or_false, true_or, or_true]--simpa using Quiver.Path.end_mem_vertices (p := p')
+              exact (by
+                simpa [Quiver.Path.activeVertices_cons] using Or.inl this)
+          | inr h_eq =>
+              have : x ∈ ({ (p'.cons e).end } : Set V) := by
+                simp only [cons_eq_comp_toPath, h_eq, Set.mem_singleton_iff]
+              exact (by
+                simpa [Quiver.Path.activeVertices_cons] using Or.inr this)
+
+/--
+If a path in the original quiver only visits vertices in a set `S`, it can be lifted
+to a path in the induced subquiver on `S`.
+-/
+def lift_path_to_induced {S : Set n} [DecidablePred (· ∈ S)]
+    {i j : n} [Quiver n] (p : Path i j) (hp : ∀ k, k ∈ p.vertices → k ∈ S) :
+    letI : Quiver n := inferInstance
+    letI : Quiver S := inducedQuiver S
+    Path (⟨i, hp i (start_mem_vertices p)⟩ : S) (⟨j, hp j (end_mem_vertices p)⟩ : S) := by
+  letI : Quiver n := inferInstance
+  letI : Quiver S := inducedQuiver S
+  induction p with
+  | nil => exact Path.nil
+  | cons p' e ih =>
+    exact Path.cons (ih (fun k hk => hp k ((mem_vertices_cons p' e).mpr (Or.inl hk)))) e
