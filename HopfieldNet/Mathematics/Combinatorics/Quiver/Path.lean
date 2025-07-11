@@ -9,55 +9,49 @@ open List
 /-!
 # Quiver.Path
 
-This module provides a rich collection of definitions and lemmas for manipulating
-paths in a `Quiver`:
+This module provides definitions, theorems, and lemmas for manipulating and
+reasoning about paths in a `Quiver` (directed graph). The key concepts and results include:
 
 ## 1. Weights on Paths
-  - `weight` and `weightFromVertices`: assign values in a monoid (or semiring) to edges
-    and extend multiplicatively to paths.
-  - `weight_comp` and `weightFromVertices_comp`: show multiplicativity under path composition.
-  - `weight_pos`, `weightFromVertices_pos`, `weightFromVertices_nonneg`: positivity
-    and non-negativity under ordered ring hypotheses.
+  - **Definitions:** `weight`, `weightFromVertices` assign values in a monoid/semiring to edges
+  and extend multiplicatively to paths.
+  - **Lemmas:** `weight_comp`, `weightFromVertices_comp` (multiplicativity under composition);
+    `weight_pos`, `weightFromVertices_pos`, `weightFromVertices_nonneg` (positivity/non-negativity results).
 
-## 2. Path Decomposition
-  - `path_decomposition_last_edge` / `path_decomposition_first_edge`:
-    decompose a non‐empty path into an initial segment plus one arrow
-    (or one arrow plus a remaining segment).
+## 2. Path Decomposition and Splitting
+  - **Theorems/Lemmas:**
+    - `path_decomposition_first_edge`, `path_decomposition_last_edge`: decompose a path at the first or last edge.
+    - `exists_decomp_at_length`: split a path so the first component has a specified length.
+    - `exists_decomp_of_mem_vertices`, `exists_decomp_of_mem_vertices_prop`: split at an arbitrary visited vertex, with a proposition version.
+    - `split_at_vertex`: decompose a path precisely at the position of a chosen vertex.
 
 ## 3. Boundary and Crossing Edges
-  - `exists_boundary_edge`: along any path from outside a set `S` into `S`
-    there is an edge crossing the boundary.
-  - `exists_crossing_edge`: a streamlined version extracting just the crossing arrow.
+  - **Theorems:**
+    - `exists_boundary_edge`, `exists_crossing_edge`: existence of boundary/crossing arrows for paths entering a set.
 
 ## 4. Vertices of a Path
-  - `«end»`: the end vertex of a path.
-  - `activeVertices`: the set of all visited vertices.
-  - `vertices`: the full list of vertices (including start and end).
-  - `activeFinset`: a `Finset` of all vertices except the final one.
-  - Various lemmas: `vertices_length`, `vertices_head?`, `vertices_nonempty`,
-    `vertices_comp`, `start_mem_vertices`, and extraction of head/last.
+  - **Definitions:** `«end»`, `activeVertices`, `vertices`, `activeFinset`.
+  - **Lemmas:**
+    - `vertices_length`, `vertices_head?`, `vertices_nonempty`, `vertices_comp`, `start_mem_vertices`.
+    - Extraction lemmas for head/last and vertex membership.
 
-## 5. Induced Subquivers and Embeddings
-  - `Quiver.inducedQuiver`: restrict a quiver to a subset of vertices.
-  - `Subquiver.embedding`: embed an induced subquiver into the ambient quiver.
-  - `mapPath_embedding_vertices_in_set`: all images of embedded paths stay in the subset.
+## 5. Path Properties and Simplicity
+  - **Definitions:**
+    - `isStrictlySimple`: predicate for strictly simple (no repeated vertices except possibly endpoints) paths.
+  - **Theorems/Lemmas:**
+    - `isStrictlySimple_of_shortest`: shortest path between two vertices is strictly simple.
+    - Related characterizations and implications for path minimality and structure.
 
-## 6. Prefunctor Interaction
-  - `Prefunctor.end_map`: compatibility of `end` with functorial path mapping.
+## 6. Induced Subquivers and Embeddings
+  - **Definitions:** `Quiver.inducedQuiver`, `Subquiver.embedding`.
+  - **Lemma:** `mapPath_embedding_vertices_in_set` (embedded paths remain in the subset).
 
-## 7. Path Replication
-  - `replicate`: iterate a loop path \(n\) times.
-  - `length_replicate`: the total length scales linearly in \(n\).
+## 7. Prefunctor Interaction
+  - **Lemma:** `Prefunctor.end_map` (compatibility of path endpoint with functorial mapping).
 
-## 8. Path Splitting by Index or Vertex
-  - `exists_decomp_at_length`: split a path so that the first component has a given length.
-  - `exists_decomp_of_mem_vertices`: split at an arbitrary visited vertex.
-  - `split_at_vertex`: decompose a path precisely at the position of a chosen vertex.
-
-
-These tools underpin combinatorial and algebraic reasoning on paths in quivers,
-including boundary‐crossing arguments, weight‐based estimates, and fine‐grained
-decompositions for inductive proofs.
+## 8. Path Replication
+  - **Definitions:** `replicate`.
+  - **Lemma:** `length_replicate` (length scales with replication).
 -/
 
 namespace Quiver.Path
