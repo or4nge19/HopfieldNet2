@@ -218,7 +218,8 @@ lemma vertices_cons {a b c : V} (p : Path a b) (e : b ⟶ c) :
 -- Vertices of a path are always non-empty
 lemma vertices_nonempty' {V : Type*} [Quiver V] {a b : V} (p : Path a b) : p.vertices.length > 0 := by
   induction p with
-  | nil => simp? [vertices_nil]
+  | nil => simp only [vertices_nil, List.length_cons, List.length_nil, le_refl, Nat.eq_of_le_zero,
+    zero_add, gt_iff_lt, Nat.lt_one_iff, pos_of_gt]
   | cons p' e ih =>
     rw [vertices_cons]
     simp only [List.concat_eq_append, List.length_append, List.length_cons, List.length_nil,
