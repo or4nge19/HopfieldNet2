@@ -50,17 +50,6 @@ def toQuiver (A : Matrix n n ℝ) : Quiver n :=
 
 abbrev IsStronglyConnected (G : Quiver n) : Prop :=   ∀ i j : n, Nonempty { p : Path i j // p.length > 0 }
 
-/-def Irreducible' (A : Matrix n n ℝ) : Prop :=
-  IsStronglyConnected (toQuiver A)
-
--- The new, refined definition:
-def Irreducible'' (A : Matrix n n ℝ) : Prop :=
-  letI := toQuiver A;
-  ∀ i j : n, Nonempty { p : Path i j // p.length > 0 }
-
-def IsPrimitive' [DecidableEq n] (A : Matrix n n ℝ) : Prop :=
-  ∃ k, k > 0 ∧ ∀ i j, 0 < (A ^ k) i j-/
-
 def Irreducible (A : Matrix n n ℝ) : Prop :=
   (∀ i j, 0 ≤ A i j) ∧ IsStronglyConnected (toQuiver A)
 
@@ -191,40 +180,6 @@ theorem Irreducible.transpose [DecidableEq n] (hA_nonneg : ∀ i j, 0 ≤ A i j)
   erw [← transpose_pow]
   exact hk
 
-open Quiver
-
-omit [Fintype n] in
-/-- A path in the submatrix `A.submatrix Subtype.val Subtype.val` lifts to a path in the
-original quiver `toQuiver A`, and all vertices along that lifted path lie in `S`. -/
-lemma path_in_submatrix_to_original [DecidableEq n] {A : Matrix n n ℝ}
-  (S : Set n) [DecidablePred S]
-  {i j : S}
-  (p : @Quiver.Path S (letI := Matrix.toQuiver A; inducedQuiver S) i j) :
-  letI : Quiver n := Matrix.toQuiver A
-  letI : Quiver S := inducedQuiver S
-  ∃ p' : @Path n (Matrix.toQuiver A) i.val j.val,
-    ∀ k, k ∈ p'.activeVertices → k ∈ S := by
-  letI : Quiver n := Matrix.toQuiver A
-  letI : Quiver S := inducedQuiver S
-  let p' := (Subquiver.embedding S).mapPath p
-  exact ⟨p', Subquiver.mapPath_embedding_vertices_in_set S p⟩
-
-omit [Fintype n] in
-/-- A path exists between vertices in `S` using only vertices in `S` when the submatrix is irreducible -/
-theorem path_exists_in_support_of_irreducible [DecidableEq n] {A : Matrix n n ℝ}
-    (S : Set n) [DecidablePred S]
-    (hS : Irreducible (A.submatrix (Subtype.val : S → n) (Subtype.val : S → n)))
-    (i j : n) (hi : i ∈ S) (hj : j ∈ S) :
-  letI : Quiver n := Matrix.toQuiver A
-  letI : Quiver S := inducedQuiver S
-    ∃ p : Quiver.Path i j, ∀ k, k ∈ p.activeVertices → k ∈ S := by
-  letI : Quiver n := Matrix.toQuiver A
-  let i' : S := ⟨i, hi⟩
-  let j' : S := ⟨j, hj⟩
-  have h_submatrix := hS.2
-  obtain ⟨⟨p_sub, _⟩⟩ := h_submatrix i' j'
-  obtain ⟨p, hp⟩ := path_in_submatrix_to_original S p_sub
-  exact ⟨p, hp⟩
 
 end PerronFrobeniusTheorems
 end Matrix
