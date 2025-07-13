@@ -646,6 +646,15 @@ lemma disjoint_kernel_support {v : n → ℝ} :
   simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hi_support hi_kernel
   exact (hi_support.ne hi_kernel.symm).elim
 
+/-- If a submodule contains a non-zero vector, then it is not the zero submodule. -/
+theorem Submodule.ne_bot_of_mem {R M : Type*} [Semiring R] [AddCommGroup M] [Module R M]
+    {p : Submodule R M} (v : M) (hv_mem : v ∈ p) (hv_ne_zero : v ≠ 0) : p ≠ ⊥ := by
+  intro h_bot
+  have h_zero : v = 0 := by
+    rw [h_bot] at hv_mem
+    exact hv_mem
+  exact hv_ne_zero h_zero
+
 omit [DecidableEq n] in
 lemma support_nonempty_of_ne_zero {v : n → ℝ}
   (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
@@ -662,5 +671,13 @@ lemma support_nonempty_of_ne_zero {v : n → ℝ}
   have : v = 0 := funext fun i =>
     le_antisymm (h_all_nonpos i) (hv_nonneg i)
   exact hv_ne_zero this
+
+lemma spectrum.of_eigenspace_ne_bot
+    {K V : Type*} [Field K] [AddCommGroup V] [Module K V] [FiniteDimensional K V]
+    {f : V →ₗ[K] V} {μ : K}
+    (h : Module.End.eigenspace f μ ≠ ⊥) :
+    μ ∈ spectrum K f := by
+  rw [← Module.End.hasEigenvalue_iff_mem_spectrum]
+  exact h
 
 end Matrix

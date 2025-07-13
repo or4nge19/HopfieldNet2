@@ -5,6 +5,8 @@ import Mathlib.Analysis.Normed.Order.Lattice
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Data.Matrix.Mul
 import Mathlib.Topology.Semicontinuous
+import HopfieldNet.Mathematics.LinearAlgebra.Matrix.Spectrum
+import Mathlib
 
 open Filter Set Finset Matrix Topology Convex
 
@@ -405,7 +407,7 @@ lemma Finset.inf'_eq_ciInf {α β} [ConditionallyCompleteLinearOrder β] {s : Fi
   simp [Set.mem_image, Set.mem_range]
 
 /-- The standard simplex is a closed set. -/
-lemma isClosed_stdSimplex [Fintype n] : IsClosed (stdSimplex ℝ n) := by
+lemma isClosed_stdSimplex' [Fintype n] : IsClosed (stdSimplex ℝ n) := by
   have h₁ : IsClosed (⋂ i, {x : n → ℝ | 0 ≤ x i}) :=
     isClosed_iInter (fun i ↦ isClosed_le continuous_const (continuous_apply i))
   have h_set_eq : {x : n → ℝ | ∀ i, 0 ≤ x i} = ⋂ i, {x | 0 ≤ x i} := by { ext; simp }
@@ -738,3 +740,104 @@ lemma ne_zero_of_mem_stdSimplex
     simp_all only [Pi.zero_apply, Finset.sum_const_zero]
   have h_sum_one : (∑ i, x i) = 1 := hx.2
   linarith
+
+lemma Real.le_sSup {s : Set ℝ} {y : ℝ} (h_mem : y ∈ s) (h_bdd : BddAbove s) :
+    y ≤ sSup s :=
+  le_csSup h_bdd h_mem
+
+/-- The supremum of the image of `s` under `f` equals the indexed supremum over the subtype. -/
+lemma csSup_image' {α β : Type*} [ConditionallyCompleteLattice α]
+  {f : β → α} {s : Set β} (hs : s.Nonempty) (hb : BddAbove (f '' s)) :
+  sSup (f '' s) = ⨆ i : s, f i := by
+  have h₁ : IsLUB (f '' s) (sSup (f '' s)) := isLUB_csSup (hs.image _) hb
+  have h₂ := isLUB_ciSup_set (f := f) (s := s) hb hs
+  exact h₁.unique h₂
+
+lemma iSup_eq_sSup {α β : Type*} [ConditionallyCompleteLattice α]
+    (f : β → α) (s : Set β) :
+    (⨆ i : s, f i) = sSup (f '' s) := by
+  classical
+  -- `sSup_image'` gives `sSup (f '' s) = ⨆ i : s, f i`
+  simpa using (sSup_image' (f := f) (s := s)).symm
+
+namespace Matrix
+
+/-- Dot‐product is linear in the first argument. -/
+lemma dotProduct_smul_left {n : Type*} [Fintype n]
+    (c : ℝ) (v w : n → ℝ) :
+    (c • v) ⬝ᵥ w = c * (v ⬝ᵥ w) := by
+  unfold dotProduct
+  simp [smul_eq_mul, Finset.mul_sum, mul_comm, mul_left_comm, mul_assoc]
+
+/-- The dot product is linear in the right argument. -/
+lemma dotProduct_smul_right {n : Type*} [Fintype n]
+    (c : ℝ) (v w : n → ℝ) :
+    v ⬝ᵥ (c • w) = c * (v ⬝ᵥ w) := by
+  simp [dotProduct, smul_eq_mul, Finset.mul_sum, mul_comm, mul_left_comm, mul_assoc]
+
+/--
+If `u` is a non-negative vector and `v ≤ w` component-wise, then `u ⬝ᵥ v ≤ u ⬝ᵥ w`.
+This is because the dot product is a sum of products, and multiplying by non-negative
+numbers preserves the inequality.
+-/
+lemma dotProduct_le_dotProduct_of_nonneg {n : Type*} [Fintype n] {u v w : n → ℝ}
+    (hu_nonneg : ∀ i, 0 ≤ u i) (h_le : v ≤ w) :
+    u ⬝ᵥ v ≤ u ⬝ᵥ w := by
+  simp_rw [dotProduct, Pi.le_def] at h_le ⊢
+  apply Finset.sum_le_sum
+  intro i _
+  exact mul_le_mul_of_nonneg_left (h_le i) (hu_nonneg i)
+
+/--
+The dot product is "associative" with matrix-vector multiplication, in the sense
+that `v ⬝ᵥ (A *ᵥ w) = (Aᵀ *ᵥ v) ⬝ᵥ w`. This is a consequence of the definition of
+the matrix transpose and dot product.
+-/
+lemma dotProduct_mulVec_assoc {n : Type*} [Fintype n] [DecidableEq n]
+    (A : Matrix n n ℝ) (v w : n → ℝ) :
+    v ⬝ᵥ (A *ᵥ w) = (Aᵀ *ᵥ v) ⬝ᵥ w := by
+  simp only [dotProduct, mulVec, transpose_apply, Finset.mul_sum, Finset.sum_mul]
+  rw [Finset.sum_comm]
+  simp [mul_assoc, mul_comm, mul_left_comm]
+
+-- Matrix-vector multiplication component
+theorem matrix_mulVec_component {n : Type*} [Fintype n] [DecidableEq n]
+    (A : Matrix n n ℝ) (v : n → ℝ) (j : n) :
+    (A *ᵥ v) j = ∑ i, A j i * v i := by
+  simp [Matrix.mulVec]; rfl
+
+/--
+The dot product `v ⬝ᵥ (A *ᵥ w)` can be rewritten by moving the matrix `A`
+to the other argument, where it becomes its transpose `Aᵀ`.
+-/
+lemma transpose_mulVec {n : Type*} [Fintype n] (A : Matrix n n ℝ) (v w : n → ℝ) :
+    v ⬝ᵥ (A *ᵥ w) = (Aᵀ *ᵥ v) ⬝ᵥ w := by
+  classical
+  simp only [dotProduct, mulVec_apply, transpose_apply,
+        Finset.mul_sum, Finset.sum_mul];
+  rw [Finset.sum_comm]
+  simp [mul_comm, mul_left_comm, mul_assoc]
+
+/--
+Commutativity property for dot product with matrix-vector multiplication.
+For vectors `u`, `v` and matrix `A`: `u ⬝ᵥ (A *ᵥ v) = (A *ᵥ u) ⬝ᵥ v`.
+This follows from the fact that `u ⬝ᵥ (A *ᵥ v) = u ᵥ* A ⬝ᵥ v = (Aᵀ *ᵥ u) ⬝ᵥ v`.
+-/
+lemma dotProduct_mulVec_comm {n : Type*} [Fintype n] (u v : n → ℝ) (A : Matrix n n ℝ) :
+    u ⬝ᵥ (A *ᵥ v) = (Aᵀ *ᵥ u) ⬝ᵥ v := by
+  rw [dotProduct_mulVec, vecMul_eq_mulVec_transpose]
+
+-- This could be a general lemma in the Matrix API
+lemma diagonal_mulVec_ones [DecidableEq n][Fintype n] (d : n → ℝ) :
+    diagonal d *ᵥ (fun _ => 1) = d := by
+  ext i; simp [mulVec_diagonal]
+
+-- This could also be a general lemma
+lemma diagonal_inv_mulVec_self [DecidableEq n][Fintype n] {d : n → ℝ} (hd : ∀ i, d i ≠ 0) :
+    diagonal (d⁻¹) *ᵥ d = fun _ => 1 := by
+  ext i
+  simp [mulVec_diagonal]
+  simp_all only [ne_eq, isUnit_iff_ne_zero, not_false_eq_true, IsUnit.inv_mul_cancel]
+
+
+end Matrix

@@ -424,3 +424,20 @@ lemma reachable_in_support_closed [DecidableEq n]
     intro v hv
     simp [Quiver.Path.vertices_nil] at hv
     subst hv; exact hk_supp
+
+/-!
+If the principal sub-matrix supported on `support` is irreducible,
+then any two vertices in `support` can be joined by a path that
+stays *inside* `support`.
+-/
+lemma path_exists_in_support
+    (support : Set n) [DecidablePred (· ∈ support)]
+    (h_sub_irred :
+      (A.submatrix (Subtype.val : support → n) (Subtype.val : support → n)).Irreducible)
+    {i j : n} (hi : i ∈ support) (hj : j ∈ support) :
+    letI : Quiver n := Matrix.toQuiver A
+    ∃ p : Quiver.Path i j, ∀ k, k ∈ p.activeVertices → k ∈ support := by
+  classical
+  simpa using
+    Matrix.path_exists_in_support_of_irreducible
+      (A := A) (S := support) h_sub_irred i j hi hj

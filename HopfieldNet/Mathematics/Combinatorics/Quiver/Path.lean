@@ -1044,7 +1044,7 @@ lemma mem_vertices_to_active {V : Type*} [Quiver V]
           | inl h_eq =>
               have : x ∈ p'.activeVertices := by
                 subst h_eq; simp_all only [end_mem_vertices, forall_const, cons_eq_comp_toPath, vertices_comp,
-                  vertices_toPath, mem_append, mem_cons, not_mem_nil, or_false, true_or, or_true]--simpa using Quiver.Path.end_mem_vertices (p := p')
+                  vertices_toPath, mem_append, mem_cons, not_mem_nil, or_false, true_or, or_true]
               exact (by
                 simpa [Quiver.Path.activeVertices_cons] using Or.inl this)
           | inr h_eq =>
@@ -1057,7 +1057,7 @@ lemma mem_vertices_to_active {V : Type*} [Quiver V]
 If a path in the original quiver only visits vertices in a set `S`, it can be lifted
 to a path in the induced subquiver on `S`.
 -/
-def lift_path_to_induced {S : Set n} [DecidablePred (· ∈ S)]
+def lift_path_to_induced {S : Set n} [DecidablePred (· ∈ S)]  [Quiver V]
     {i j : n} [Quiver n] (p : Path i j) (hp : ∀ k, k ∈ p.vertices → k ∈ S) :
     letI : Quiver n := inferInstance
     letI : Quiver S := inducedQuiver S
