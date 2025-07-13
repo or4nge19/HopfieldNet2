@@ -352,7 +352,7 @@ theorem uniqueness_of_positive_eigenvector_gen
       smul_eq_mul, sub_nonneg, sub_pos, mem_univ, lt_self_iff_false, z, c]
 
 
-/-- **Perron–Frobenius, primitive case (existence & uniqueness)** -/
+/-- **Perron–Frobenius, primitive case (existence, positvity and uniqueness)** -/
 theorem pft_primitive
     {n : Type*} [Fintype n] [Nonempty n] [DecidableEq n]
     {A : Matrix n n ℝ} (hA_prim : IsPrimitive A)
@@ -530,7 +530,7 @@ lemma Irreducible.exists_pos_entry
   exact ⟨i₀, j, e⟩
 
 /--
-**Perron–Frobenius theorem for irreducible real matrices (Existence, positivity, uniqueness**.
+**Perron–Frobenius theorem for irreducible real matrices (Existence, positivity, uniqueness)**.
 
 Let A : Matrix n n ℝ be an irreducible nonnegative matrix indexed by a finite nonempty type n.
 Then there exists a unique eigenpair (v, r) where
