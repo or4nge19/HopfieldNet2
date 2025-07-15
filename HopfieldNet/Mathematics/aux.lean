@@ -839,5 +839,11 @@ lemma diagonal_inv_mulVec_self [DecidableEq n][Fintype n] {d : n → ℝ} (hd : 
   simp [mulVec_diagonal]
   simp_all only [ne_eq, isUnit_iff_ne_zero, not_false_eq_true, IsUnit.inv_mul_cancel]
 
+variable {α ι : Type*} {f : ι → α} {s : Set ι}
+open Set
+-- Indexed supremum equals the supremum of the image
+theorem iSup_eq_sSup_image [ConditionallyCompleteLattice α] :
+    (⨆ x : s, f x) = sSup (f '' s) := by
+  simp [iSup, image_eq_range]
 
 end Matrix

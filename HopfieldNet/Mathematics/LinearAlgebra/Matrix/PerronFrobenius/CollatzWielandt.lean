@@ -146,12 +146,12 @@ theorem upperSemicontinuousOn
 -- The set of vectors we are optimizing over.
 def P_set := {x : n → ℝ | (∀ i, 0 ≤ x i) ∧ x ≠ 0}
 
--- The Collatz-Wielandt value is the supremum of `r_x` over P.
+/-- The Collatz-Wielandt value is the supremum of `r_x` over P. -/
 noncomputable def r (A : Matrix n n ℝ) [Fintype n] := ⨆ x ∈ P_set, collatzWielandtFn A x
 
 /-- The Collatz-Wielandt function attains its maximum on the standard simplex.
     [Giaquinta-Modica, Theorem 6.24 (dual), p: 235] -/
-theorem exists_maximizer :
+theorem exists_maximizer (A : Matrix n n ℝ) :
     ∃ v ∈ stdSimplex ℝ n, IsMaxOn (collatzWielandtFn A) (stdSimplex ℝ n) v := by
   have h_compact : IsCompact (stdSimplex ℝ n) := by exact _root_.isCompact_stdSimplex n
   have h_nonempty : (stdSimplex ℝ n).Nonempty := stdSimplex_nonempty
@@ -324,25 +324,63 @@ lemma smul [Fintype n] [Nonempty n] [DecidableEq n] {c : ℝ} (hc : 0 < c) (_ : 
   simp only [mulVec_smul, smul_eq_mul, Pi.smul_apply]
   rw [mul_div_mul_left _ _ (ne_of_gt hc)]
 
-/- The Perron root of a matrix `A`, defined as the supremum of the Collatz-Wielandt function
-    over the set of non-negative, non-zero vectors. -/
+/-- The minimum ratio `(Ax)_i / x_i` for a positive vector `x`. -/
+noncomputable def minRatio (A : Matrix n n ℝ) (x : n → ℝ) : ℝ :=
+  ⨅ i, (A.mulVec x i) / x i
 
+/-- The maximum ratio `(Ax)_i / x_i` for a positive vector `x`. -/
+noncomputable def maxRatio (A : Matrix n n ℝ) (x : n → ℝ) : ℝ :=
+  ⨆ i, (A.mulVec x i) / x i
+
+/-- The Collatz-Wielandt formula for the Perron root, defined as a supremum of infima. -/
 noncomputable def perronRoot (A : Matrix n n ℝ) : ℝ :=
-  ⨆ x ∈ {x : n → ℝ | (∀ i, 0 ≤ x i) ∧ x ≠ 0}, collatzWielandtFn A x
+  ⨆ (x : n → ℝ) (_ : ∀ i, 0 < x i), minRatio A x
 
- omit [Nonempty n] in
-lemma perronRoot_eq_sup_collatzWielandt (A : Matrix n n ℝ) :
-  perronRoot A = ⨆ x ∈ {x : n → ℝ | (∀ i, 0 ≤ x i) ∧ x ≠ 0}, collatzWielandtFn A x := rfl
-
+/-- The Collatz-Wielandt formula for the Perron root, defined as an infimum of suprema. -/
 noncomputable def perronRoot' (A : Matrix n n ℝ) : ℝ :=
-  sSup (collatzWielandtFn A '' P_set)
-/-
+  ⨅ (x : n → ℝ) (_ : ∀ i, 0 < x i), maxRatio A x
 
-theorem perronRoot_eq_perronRoot' (A : Matrix n n ℝ) :
-  perronRoot A = perronRoot' A := by
-  unfold perronRoot perronRoot' P_set
-  simp [iSup_eq_sSup]
-  -/
+/-- An alternative definition of the Perron root, as the supremum of the Collatz-Wielandt function. -/
+noncomputable def perronRoot_alt (A : Matrix n n ℝ) : ℝ :=
+  sSup (collatzWielandtFn A '' P_set)
+
+omit [Nonempty n] in
+lemma minRatio_le_maxRatio (A : Matrix n n ℝ) (x : n → ℝ) :
+    minRatio A x ≤ maxRatio A x := by
+  cases isEmpty_or_nonempty n
+  · simp [minRatio, maxRatio, iSup_of_empty, iInf_of_empty]
+  · haveI : Nonempty n := inferInstance
+    exact ciInf_le_ciSup (Set.finite_range _).bddBelow (Set.finite_range _).bddAbove
+
+omit [Nonempty n] in
+-- Auxiliary lemma: the sets used in sSup and sInf are nonempty
+lemma min_max_sets_nonempty [Nonempty n] (A : Matrix n n ℝ) :
+  ({r | ∃ x : n → ℝ, (∀ i, 0 < x i) ∧ r = minRatio A x}.Nonempty) ∧
+  ({r | ∃ x : n → ℝ, (∀ i, 0 < x i) ∧ r = maxRatio A x}.Nonempty) := by
+  constructor
+  · use minRatio A (fun _ => 1)
+    use fun _ => 1
+    constructor
+    · intro i; exact zero_lt_one
+    · rfl
+  · use maxRatio A (fun _ => 1)
+    use fun _ => 1
+    constructor
+    · intro i; exact zero_lt_one
+    · rfl
+
+omit [Nonempty n] in
+-- Auxiliary lemma: for any minimum ratio, there exists a maximum ratio that's greater
+lemma forall_exists_min_le_max [Nonempty n] (A : Matrix n n ℝ) :
+  ∀ r ∈ {r | ∃ x : n → ℝ, (∀ i, 0 < x i) ∧ r = minRatio A x},
+    ∃ s ∈ {s | ∃ y : n → ℝ, (∀ i, 0 < y i) ∧ s = maxRatio A y}, r ≤ s := by
+  intro r hr
+  rcases hr with ⟨x, hx_pos, hr_eq⟩
+  use maxRatio A x
+  constructor
+  · use x
+  · rw [hr_eq]
+    exact minRatio_le_maxRatio A x
 
 theorem eq_eigenvalue_of_positive_eigenvector
   {n : Type*} [Fintype n] [DecidableEq n] [Nonempty n]
@@ -405,7 +443,7 @@ theorem eigenvalue_le_perron_root_of_positive_eigenvector
     [Nonempty n] [DecidableEq n]
     (hA_nonneg : ∀ i j, 0 ≤ A i j) (_ : 0 < r)
     (hv_pos : ∀ i, 0 < v i) (h_eig : A *ᵥ v = r • v) :
-    r ≤ perronRoot' A := by
+    r ≤ perronRoot_alt A := by
   have hv_nonneg : ∀ i, 0 ≤ v i := fun i ↦ (hv_pos i).le
   have hv_ne_zero : v ≠ 0 := by
     intro h
@@ -415,8 +453,8 @@ theorem eigenvalue_le_perron_root_of_positive_eigenvector
     exact (lt_irrefl _ hcontr).elim
   have h_r : r = collatzWielandtFn A v :=
     (eq_eigenvalue_of_positive_eigenvector hv_pos h_eig).symm
-  have h_le : collatzWielandtFn A v ≤ perronRoot' A := by
-    dsimp [perronRoot']
+  have h_le : collatzWielandtFn A v ≤ perronRoot_alt A := by
+    dsimp [perronRoot_alt]
     have h_bdd : BddAbove (collatzWielandtFn A '' P_set) :=
       bddAbove_image_P_set A hA_nonneg
     apply le_csSup h_bdd
@@ -454,13 +492,13 @@ lemma mulVec_eq_smul_of_eigenvector {n : Type*} [Fintype n] [DecidableEq n]
 /--
 If `u` is a strictly positive left eigenvector of `A` for eigenvalue `r > 0`,
 then the Perron root of `A` is less than or equal to `r`.
-That is, `perronRoot' A ≤ r`.
+That is, `perronRoot_alt A ≤ r`.
 -/
 lemma perron_root_le_eigenvalue_of_left_eigenvector [Nonempty n] [DecidableEq n]
     (hA_nonneg : ∀ i j, 0 ≤ A i j) {r : ℝ} (hr_pos : 0 < r) {u : n → ℝ} (hu_pos : ∀ i, 0 < u i)
     (h_eig : u ᵥ* A = r • u) :
-    perronRoot' A ≤ r := by
-  dsimp [perronRoot']
+    perronRoot_alt A ≤ r := by
+  dsimp [perronRoot_alt]
   apply csSup_le
   · exact CollatzWielandt.set_nonempty
   · rintro _ ⟨w, ⟨hw_nonneg, hw_ne_zero⟩, rfl⟩
@@ -514,7 +552,7 @@ lemma ones_eigenvector_of_similarity_transform [DecidableEq n]
         rw [h_D_inv_v]
     _ = fun _ => r := by
         ext x
-        simp [ones, Pi.smul_apply, smul_eq_mul, mul_one]
+        simp only [Pi.smul_apply, smul_eq_mul, mul_one, ones]
 
 /--
 If `v` is a strictly positive right eigenvector of `A` with eigenvalue `r`, then the
@@ -655,8 +693,8 @@ upper bound for the range of the Collatz-Wielandt function.
 theorem eigenvalue_is_ub_of_positive_eigenvector [Nonempty n]  [DecidableEq n]
     (hA_nonneg : ∀ i j, 0 ≤ A i j) {r : ℝ} (hr_pos : 0 < r)
     {v : n → ℝ} (hv_pos : ∀ i, 0 < v i) (h_eig : A *ᵥ v = r • v) :
-    perronRoot' A ≤ r := by
-  dsimp [perronRoot']
+    perronRoot_alt A ≤ r := by
+  dsimp [perronRoot_alt]
   apply csSup_le (CollatzWielandt.set_nonempty (A := A))
   rintro _ ⟨w, ⟨hw_nonneg, hw_ne_zero⟩, rfl⟩
   exact CollatzWielandt.le_eigenvalue_of_right_eigenvector
@@ -669,25 +707,106 @@ theorem eq_perron_root_of_positive_eigenvector
     (hv_pos    : ∀ i, 0 < v i)
     (hr_pos    : 0 < r)
     (h_eig     : A *ᵥ v = r • v) :
-    r = CollatzWielandt.perronRoot' (A := A) := by
-  -- 1.  `r ≤ perronRoot' A`.
-  have h₁ : r ≤ CollatzWielandt.perronRoot' (A := A) :=
+    r = CollatzWielandt.perronRoot_alt (A := A) := by
+  -- 1.  `r ≤ perronRoot_alt A`.
+  have h₁ : r ≤ CollatzWielandt.perronRoot_alt (A := A) :=
     CollatzWielandt.eigenvalue_le_perron_root_of_positive_eigenvector
       (A := A) hA_nonneg hr_pos hv_pos h_eig
-  -- 2.  `perronRoot' A ≤ r`.
-  have h₂ : CollatzWielandt.perronRoot' (A := A) ≤ r :=
+  -- 2.  `perronRoot_alt A ≤ r`.
+  have h₂ : CollatzWielandt.perronRoot_alt (A := A) ≤ r :=
     CollatzWielandt.eigenvalue_is_ub_of_positive_eigenvector
       hA_nonneg hr_pos hv_pos h_eig
   exact le_antisymm h₁ h₂
 
-theorem perronRoot_eq_sup_collatzWielandt'
-  (A : Matrix n n ℝ) (_ : ∀ i j, 0 ≤ A i j)
-  [DecidableEq n] [Nonempty n] :
-  perronRoot A = ⨆ x ∈ P_set, collatzWielandtFn A x := by
-  dsimp [perronRoot, P_set]
+lemma perronRoot'_le_maxRatio_of_min_ge_perronRoot'
+    [Nonempty n] {A : Matrix n n ℝ} {x : n → ℝ}
+    (hr : perronRoot' A ≤ minRatio A x) :
+    perronRoot' A ≤ maxRatio A x :=
+  hr.trans (minRatio_le_maxRatio A x)
 
+/--
+For a function `f` on a non-empty finite type `ι`, the indexed infimum `⨅ i, f i` is equal
+to the infimum over the universal finset.
+-/
+lemma ciInf_eq_finset_inf' {α ι : Type*} [Fintype ι] [Nonempty ι] [ConditionallyCompleteLinearOrder α]
+  (f : ι → α) :
+  ⨅ i, f i = Finset.univ.inf' Finset.univ_nonempty f := by
+  -- This is the symmetric version of `Finset.inf'_univ_eq_ciInf`.
+  exact (Finset.inf'_univ_eq_ciInf f).symm
 
-end CollatzWielandt
-end PerronFrobenius
+@[simp]
+theorem Finset.sum_def {α M : Type*} [AddCommMonoid M] {s : Finset α} (f : α → M) :
+  (∑ i ∈ s, f i) = s.sum f :=
+rfl
 
-end Matrix
+/--  A finite sum of non-negative terms is strictly positive as soon as one
+     summand is strictly positive.  -/
+lemma Finset.sum_pos_of_nonneg_of_exists_pos {α β : Type*}
+  [AddCommMonoid β] [PartialOrder β] [IsOrderedCancelAddMonoid β]
+ {s : Finset α} {f : α → β}
+    (h_nonneg : ∀ i ∈ s, 0 ≤ f i)
+    (h_exists : ∃ i ∈ s, 0 < f i) :
+    0 < ∑ i ∈ s, f i :=
+  Finset.sum_pos' h_nonneg h_exists
+
+lemma maximizer_satisfies_le_mulVec
+    [Fintype n] [Nonempty n] [DecidableEq n]
+    (A : Matrix n n ℝ) (hA_nonneg : ∀ i j, 0 ≤ A i j) :
+    let r := perronRoot_alt A
+    ∃ v ∈ stdSimplex ℝ n, r • v ≤ A *ᵥ v := by
+  let r := perronRoot_alt A
+  obtain ⟨v, v_in_simplex, v_is_max⟩ := exists_maximizer (A := A)
+  have v_ne_zero : v ≠ 0 := by
+    intro hv
+    have h_sum_one : (∑ i, v i) = 1 := v_in_simplex.2
+    rw [hv] at h_sum_one
+    simp only [Pi.zero_apply, Finset.sum_const_zero] at h_sum_one
+    norm_num at h_sum_one
+  have v_nonneg : ∀ i, 0 ≤ v i := v_in_simplex.1
+  have r_eq : (perronRoot_alt A) = collatzWielandtFn A v := by
+    dsimp [perronRoot_alt]
+    apply le_antisymm
+    · -- `perronRoot_alt A ≤ collatzWielandtFn A v`
+      apply csSup_le set_nonempty
+      rintro _ ⟨x, ⟨hx_nonneg, hx_ne_zero⟩, rfl⟩
+      -- Normalize `x` so that it lives in the simplex
+      set s : ℝ := ∑ i, x i with hs
+      have s_pos : 0 < s := by
+        obtain ⟨i, hi⟩ := exists_pos_of_ne_zero hx_nonneg hx_ne_zero
+        have : 0 < ∑ i, x i :=
+          Finset.sum_pos_of_nonneg_of_exists_pos
+            (λ j _ ↦ hx_nonneg j)
+            ⟨i, Finset.mem_univ _, hi⟩
+        simpa [hs] using this
+      set x' : n → ℝ := s⁻¹ • x with hx'
+      have hx'_in_simplex : x' ∈ stdSimplex ℝ n := by
+        -- Positivity
+        constructor
+        · intro i
+          have : 0 ≤ s⁻¹ := inv_nonneg.2 s_pos.le
+          have : 0 ≤ s⁻¹ * x i := mul_nonneg this (hx_nonneg i)
+          simpa [hx'] using this
+        -- Sum = 1
+        · have : (∑ i, x' i) = 1 := by
+            simp only [hx', Pi.smul_apply, smul_eq_mul, ← Finset.mul_sum, ← hs]
+            field_simp [ne_of_gt s_pos]
+          exact this
+      -- Maximality of `v`
+      have h_max : collatzWielandtFn A x' ≤ collatzWielandtFn A v :=
+        v_is_max hx'_in_simplex
+      -- Scale invariance
+      have h_scale : collatzWielandtFn A x = collatzWielandtFn A x' := by
+        have h_smul := smul (inv_pos.mpr s_pos) hA_nonneg hx_nonneg hx_ne_zero
+        rw [← hx'] at h_smul
+        exact h_smul.symm
+      rwa [h_scale]
+    · -- `collatzWielandtFn A v ≤ perronRoot_alt A`
+      apply le_csSup (bddAbove_image_P_set A hA_nonneg)
+      exact Set.mem_image_of_mem _ ⟨v_nonneg, v_ne_zero⟩
+  have h_le : (perronRoot_alt A) • v ≤ A *ᵥ v := by
+    -- Basic inequality with `v`
+    have : (collatzWielandtFn A v) • v ≤ A *ᵥ v :=
+      le_mulVec hA_nonneg v_nonneg v_ne_zero
+    simpa [r_eq] using this
+  refine ⟨v, v_in_simplex, ?_⟩
+  simpa [r] using h_le

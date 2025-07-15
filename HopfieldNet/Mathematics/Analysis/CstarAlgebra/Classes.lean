@@ -296,4 +296,20 @@ theorem triangle_equality_iff_aligned {v : n → ℂ} (hv_nonzero : ∀ i, v i �
       _ = (∑ i, ‖v i‖) * 1 := by rw [hc_norm_one]
       _ = ∑ i, ‖v i‖ := by rw [mul_one]
 
+/--
+If `u = ∑ i in s, v i`, `‖u‖ = ∑ i in s, ‖v i‖`, and `u ≠ 0`, then each `v i`
+is aligned with `u`.
+-/
+lemma aligned_of_triangle_eq {u : ℂ} {v : ι → ℂ} {s : Finset ι}
+  (h_eq : u = ∑ i ∈ s, v i) (h_sum : ‖u‖ = ∑ i ∈ s, ‖v i‖) (h_ne : u ≠ 0) :
+  ∀ i ∈ s, v i ≠ 0 → v i / ↑‖v i‖ = u / ↑‖u‖ := by
+  intro i hi hvi_ne_zero
+  have hu_norm_ne_zero : ‖u‖ ≠ 0 := norm_ne_zero_iff.mpr h_ne
+  have hvi_norm_ne_zero : ‖v i‖ ≠ 0 := norm_ne_zero_iff.mpr hvi_ne_zero
+  have h_aligned := align_each_with_sum h_eq h_sum h_ne i hi
+  rw [smul_eq_mul, smul_eq_mul] at h_aligned
+  rw [mul_comm] at h_aligned
+  field_simp [h_aligned, hu_norm_ne_zero, hvi_norm_ne_zero]
+
+
 end Complex
