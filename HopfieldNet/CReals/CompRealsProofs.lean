@@ -172,7 +172,6 @@ def CReal_eq : CReal_repr → CReal_repr → Prop := sorry
 def CReal : Type := sorry -- CReal_repr modulo CReal_eq
 
 --Start working with quotients
-#exit
 
 /--
 Compute a bound for a constructive real number.

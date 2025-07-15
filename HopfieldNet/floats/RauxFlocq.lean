@@ -1,5 +1,6 @@
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Data.Complex.Exponential
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import HopfieldNet.compareAux
 
 set_option checkBinderAnnotations false
@@ -629,91 +630,93 @@ theorem Rcompare_ceil_floor_middle (x : ℝ) (h : (Zfloor x : ℝ) ≠ x) :
     -- d > 1/2 → 1 - d < d
     have : 1 - d < d := by sorry--linarith
     rw [Rcompare_Gt d (1 - d) this]
-#exit
+
 /--
 For integers `x` and nonzero `y`, the floor of `x / y` as a real is the integer quotient.
 -/
-theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) = x / y := by stop
-  -- Use division with remainder: x = (x / y) * y + (x % y)
-  have hdiv : x = (x / y) * y + (x % y) := sorry--Int.ediv_add_emod x y
-  -- (x : ℝ) / (y : ℝ) = (x / y : ℝ) + (x % y : ℝ) / (y : ℝ)
-  have hyR : (y : ℝ) ≠ 0 := by exact_mod_cast hy
-  have : ((x : ℝ) / (y : ℝ)) = (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) := by sorry
-    --rw [← Int.cast_add, ← Int.cast_mul, hdiv, add_div, mul_div_cancel_left _ hyR]
-  rw [this]
-  -- Now, show that (x / y : ℝ) ≤ (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) < (x / y : ℝ) + 1
-  apply Zfloor_imp
-  constructor
-  · -- Lower bound: (x / y : ℝ) ≤ (x / y : ℝ) + (x % y : ℝ) / (y : ℝ)
-    apply le_add_of_nonneg_right
-    -- 0 ≤ (x % y : ℝ) / (y : ℝ) if y > 0, or (x % y : ℝ) / (y : ℝ) ≤ 0 if y < 0
-    cases lt_or_gt_of_ne hy with hlt hgt
-    · -- y < 0
-      have hy_neg : (y : ℝ) < 0 := by exact_mod_cast hlt
-      have hmod_le_0 : (x % y : ℝ) ≤ 0 := by
-        have := Int.emod_lt x y hlt
-        rw [Int.emod_def] at this
-        -- emod always has same sign as y, so ≤ 0
-        exact_mod_cast Int.emod_nonpos x y hlt
-      have hdiv_nonneg : (x % y : ℝ) / (y : ℝ) ≥ 0 := by
-        rw [div_nonneg_iff]
-        left; constructor
-        · exact hmod_le_0
-        · exact le_of_lt hy_neg
-      exact hdiv_nonneg
-    · -- y > 0
-      have hy_pos : (0 : ℤ) < y := hgt
-      have hmod_ge_0 : 0 ≤ (x % y : ℝ) := by
-        have := Int.emod_nonneg x y hy_pos
-        exact_mod_cast this
-      have hyR_pos : (0 : ℝ) < (y : ℝ) := by exact_mod_cast hy_pos
-      have hdiv_nonneg : 0 ≤ (x % y : ℝ) / (y : ℝ) := by
-        apply div_nonneg hmod_ge_0 (le_of_lt hyR_pos)
-      exact hdiv_nonneg
-  · -- Upper bound: (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) < (x / y : ℝ) + 1
-    -- So, (x % y : ℝ) / (y : ℝ) < 1
-    cases lt_or_gt_of_ne hy with hlt hgt
-    · -- y < 0
-      have hy_neg : (y : ℝ) < 0 := by exact_mod_cast hlt
-      have hmod_gt_y : (y : ℝ) < (x % y : ℝ) := by
-        have := Int.emod_lt x y hlt
-        exact_mod_cast this
-      have hdiv_lt_1 : (x % y : ℝ) / (y : ℝ) < 1 := by
-        -- (x % y) < 0, y < 0, so (x % y) / y > 1? Actually, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
-        -- But since y < 0, (x % y) ≤ 0, (x % y) > y
-        -- So (x % y) / y > 1? Actually, (x % y) / y > 1 if (x % y) < y, but (x % y) > y
-        -- Let's use that (x % y) > y, so (x % y) / y > 1, but (x % y) ≤ 0, so (x % y) / y ≥ 0
-        -- But in fact, for y < 0, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
-        have hy_neg' : (y : ℝ) < 0 := by exact_mod_cast hlt
-        have hmod_le_0 : (x % y : ℝ) ≤ 0 := by exact_mod_cast Int.emod_nonpos x y hlt
-        have hmod_gt_y : (y : ℝ) < (x % y : ℝ) := by exact_mod_cast Int.emod_lt x y hlt
-        have : (x % y : ℝ) / (y : ℝ) < 1 := by
-          -- (x % y) < 0, y < 0, so (x % y) / y > 0
-          -- (x % y) < 0, y < 0, so (x % y) / y > 0
-          -- But (x % y) > y, so (x % y) / y > 1
-          -- Actually, since y < 0, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
-          -- Let's show (x % y : ℝ) / (y : ℝ) < 1
-          have h : (x % y : ℝ) < (y : ℝ) * 1 := by
-            rw [mul_one]
-            exact hmod_gt_y
-          rw [div_lt_one hy_neg']
-          exact h
-        exact this
-      exact hdiv_lt_1
-    · -- y > 0
-      have hy_pos : (0 : ℤ) < y := hgt
-      have hmod_lt_y : (x % y : ℝ) < (y : ℝ) := by
-        have := Int.emod_lt x y hy_pos
-        exact_mod_cast this
-      have hyR_pos : (0 : ℝ) < (y : ℝ) := by exact_mod_cast hy_pos
-      have hdiv_lt_1 : (x % y : ℝ) / (y : ℝ) < 1 := by
-        rw [div_lt_one hyR_pos]
-        exact hmod_lt_y
-      exact hdiv_lt_1
+theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) = x / y := by sorry
+  -- -- Use division with remainder: x = (x / y) * y + (x % y)
+  -- have hdiv : x = (x / y) * y + (x % y) := sorry--Int.ediv_add_emod x y
+  -- -- (x : ℝ) / (y : ℝ) = (x / y : ℝ) + (x % y : ℝ) / (y : ℝ)
+  -- have hyR : (y : ℝ) ≠ 0 := by exact_mod_cast hy
+  -- have : ((x : ℝ) / (y : ℝ)) = (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) := by sorry
+  --   --rw [← Int.cast_add, ← Int.cast_mul, hdiv, add_div, mul_div_cancel_left _ hyR]
+  -- rw [this]
+  -- -- Now, show that (x / y : ℝ) ≤ (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) < (x / y : ℝ) + 1
+  -- apply Zfloor_imp
+  -- constructor
+  -- · -- Lower bound: (x / y : ℝ) ≤ (x / y : ℝ) + (x % y : ℝ) / (y : ℝ)
+  --   apply le_add_of_nonneg_right
+  --   -- 0 ≤ (x % y : ℝ) / (y : ℝ) if y > 0, or (x % y : ℝ) / (y : ℝ) ≤ 0 if y < 0
+  --   cases lt_or_gt_of_ne hy with hlt hgt
+  --   · -- y < 0
+  --     have hy_neg : (y : ℝ) < 0 := by exact_mod_cast hlt
+  --     have hmod_le_0 : (x % y : ℝ) ≤ 0 := by
+  --       have := Int.emod_lt x y hlt
+  --       rw [Int.emod_def] at this
+  --       -- emod always has same sign as y, so ≤ 0
+  --       exact_mod_cast Int.emod_nonpos x y hlt
+  --     have hdiv_nonneg : (x % y : ℝ) / (y : ℝ) ≥ 0 := by
+  --       rw [div_nonneg_iff]
+  --       left; constructor
+  --       · exact hmod_le_0
+  --       · exact le_of_lt hy_neg
+  --     exact hdiv_nonneg
+  --   · -- y > 0
+  --     have hy_pos : (0 : ℤ) < y := hgt
+  --     have hmod_ge_0 : 0 ≤ (x % y : ℝ) := by
+  --       have := Int.emod_nonneg x y hy_pos
+  --       exact_mod_cast this
+  --     have hyR_pos : (0 : ℝ) < (y : ℝ) := by exact_mod_cast hy_pos
+  --     have hdiv_nonneg : 0 ≤ (x % y : ℝ) / (y : ℝ) := by
+  --       apply div_nonneg hmod_ge_0 (le_of_lt hyR_pos)
+  --     exact hdiv_nonneg
+  -- · -- Upper bound: (x / y : ℝ) + (x % y : ℝ) / (y : ℝ) < (x / y : ℝ) + 1
+  --   -- So, (x % y : ℝ) / (y : ℝ) < 1
+  --   cases lt_or_gt_of_ne hy with hlt hgt
+  --   · -- y < 0
+  --     have hy_neg : (y : ℝ) < 0 := by exact_mod_cast hlt
+  --     have hmod_gt_y : (y : ℝ) < (x % y : ℝ) := by
+  --       have := Int.emod_lt x y hlt
+  --       exact_mod_cast this
+  --     have hdiv_lt_1 : (x % y : ℝ) / (y : ℝ) < 1 := by
+  --       -- (x % y) < 0, y < 0, so (x % y) / y > 1? Actually, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
+  --       -- But since y < 0, (x % y) ≤ 0, (x % y) > y
+  --       -- So (x % y) / y > 1? Actually, (x % y) / y > 1 if (x % y) < y, but (x % y) > y
+  --       -- Let's use that (x % y) > y, so (x % y) / y > 1, but (x % y) ≤ 0, so (x % y) / y ≥ 0
+  --       -- But in fact, for y < 0, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
+  --       have hy_neg' : (y : ℝ) < 0 := by exact_mod_cast hlt
+  --       have hmod_le_0 : (x % y : ℝ) ≤ 0 := by exact_mod_cast Int.emod_nonpos x y hlt
+  --       have hmod_gt_y : (y : ℝ) < (x % y : ℝ) := by exact_mod_cast Int.emod_lt x y hlt
+  --       have : (x % y : ℝ) / (y : ℝ) < 1 := by
+  --         -- (x % y) < 0, y < 0, so (x % y) / y > 0
+  --         -- (x % y) < 0, y < 0, so (x % y) / y > 0
+  --         -- But (x % y) > y, so (x % y) / y > 1
+  --         -- Actually, since y < 0, (x % y) ∈ (y, 0], so (x % y) / y ∈ [0,1)
+  --         -- Let's show (x % y : ℝ) / (y : ℝ) < 1
+  --         have h : (x % y : ℝ) < (y : ℝ) * 1 := by
+  --           rw [mul_one]
+  --           exact hmod_gt_y
+  --         rw [div_lt_one hy_neg']
+  --         exact h
+  --       exact this
+  --     exact hdiv_lt_1
+  --   · -- y > 0
+  --     have hy_pos : (0 : ℤ) < y := hgt
+  --     have hmod_lt_y : (x % y : ℝ) < (y : ℝ) := by
+  --       have := Int.emod_lt x y hy_pos
+  --       exact_mod_cast this
+  --     have hyR_pos : (0 : ℝ) < (y : ℝ) := by exact_mod_cast hy_pos
+  --     have hdiv_lt_1 : (x % y : ℝ) / (y : ℝ) < 1 := by
+  --       rw [div_lt_one hyR_pos]
+  --       exact hmod_lt_y
+  --     exact hdiv_lt_1
 
--- Theorem Ztrunc_div :
---   forall x y, y <> 0%Z ->
---   Ztrunc (IZR x / IZR y) = Z.quot x y.
+/--
+For integers `x` and nonzero `y`, truncating `x / y` toward zero as a real gives the integer quotient.
+-/
+theorem Ztrunc_div (x y : ℤ) (hy : y ≠ 0) : Ztrunc ((x : ℝ) / (y : ℝ)) = x / y := by
+sorry
 -- Proof.
 --   destruct y; [easy | |]; destruct x; intros _.
 --   - rewrite Z.quot_0_l; [| easy]. unfold Rdiv. rewrite Rmult_0_l.
@@ -734,7 +737,8 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 --     rewrite Rlt_bool_true.
 --     + unfold Zceil. now rewrite Ropp_involutive.
 --     + apply Ropp_lt_gt_0_contravar. apply Rdiv_lt_0_compat; now apply IZR_lt.
---   - rewrite <-2Pos2Z.opp_pos. rewrite Z.quot_opp_l; [| easy]. rewrite Z.quot_opp_r; [| easy].
+--   - rewrite <-2Pos2Z.opp_pos. rewrite Z.quot_opp_l; [| easy]. rewrite Z.quot_opp_r;
+  --  [| easy].
 --     rewrite Z.quot_div_nonneg; [| easy | easy]. rewrite <-Zfloor_div; [| easy].
 --     rewrite 2Ropp_Ropp_IZR. rewrite Ropp_div. rewrite Ropp_div_den; [| easy].
 --     rewrite Z.opp_involutive. rewrite Ropp_involutive.
@@ -742,18 +746,16 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 --     apply Rle_mult_inv_pos; [now apply IZR_le | now apply IZR_lt].
 -- Qed.
 
--- Section pow.
+section pow
 
--- Variable r : radix.
+variable (r : Radix)
 
--- Theorem radix_pos : (0 < IZR r)%R.
--- Proof.
--- destruct r as (v, Hr). simpl.
--- apply IZR_lt.
--- apply Z.lt_le_trans with 2%Z.
--- easy.
--- now apply Zle_bool_imp_le.
--- Qed.
+theorem radix_pos : (0 : ℝ) < (r.val : ℝ) := by {
+  cases' r with v Hr
+  simp only [Int.cast_pos]
+  linarith}
+
+end pow
 
 -- (** Well-used function called bpow for computing the power function #&beta;#^e *)
 -- Definition bpow e :=
@@ -762,6 +764,29 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 --   | Zneg p => Rinv (IZR (Zpower_pos r p))
 --   | Z0 => 1%R
 --   end.
+
+/-- Well-used function called `bpow` for computing the power function β^e. -/
+noncomputable def bpow (r : Radix) (e : ℤ) : ℝ :=
+  match e with
+  | Int.ofNat n => (r.val : ℝ) ^ n
+  | Int.negSucc n => ((r.val : ℝ) ^ (n + 1))⁻¹
+
+
+/--
+For positive `m`, `↑(n ^ m) = (↑n : ℝ) ^ m`.
+This matches Coq's `IZR (Zpower_pos n m) = powerRZ (IZR n) (Zpos m)`.
+-/
+theorem IZR_Zpower_pos (n : ℤ) (m : ℕ) (hm : 0 < m) :
+  (↑(n ^ m) : ℝ) = (↑n : ℝ) ^ m := by
+  induction m with
+  | zero =>
+    exfalso; exact Nat.not_lt_zero _ hm
+  | succ m ih =>
+    cases m with
+    | zero => simp
+    | succ m' =>
+      simp only [pow_succ, Int.cast_mul, ih (Nat.succ_pos _)]
+      simp only [Int.cast_pow]
 
 -- Theorem IZR_Zpower_pos :
 --   forall n m,
@@ -778,6 +803,20 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 -- apply Rmult_eq_compat_l.
 -- exact IHn0.
 -- Qed.
+
+/--
+For all exponents `e`, `bpow r e = (r.val : ℝ) ^ e`.
+This matches Coq's `bpow e = powerRZ (IZR r) e`.
+-/
+theorem bpow_powerRZ (r : Radix) (e : ℤ) : bpow r e = (r.val : ℝ) ^ e := by
+  cases e with
+  | ofNat n =>
+    -- e = n : ℕ
+    simp [bpow, Int.ofNat_eq_coe, Int.cast_ofNat]
+  | negSucc n =>
+    simp only [zpow_negSucc]
+    rfl
+
 
 -- Theorem bpow_powerRZ :
 --   forall e,
@@ -798,6 +837,19 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 -- apply radix_pos.
 -- Qed.
 
+theorem bpow_ge_0 (r : Radix) (e : ℤ) : 0 ≤ bpow r e := by
+  rw [bpow_powerRZ]
+  apply zpow_nonneg
+  rw [le_iff_lt_or_eq]
+  left
+  apply radix_pos
+
+theorem bpow_gt_0 (r : Radix) (e : ℤ) : 0 < bpow r e := by
+  rw [bpow_powerRZ]
+  apply zpow_pos
+  apply radix_pos
+
+
 -- Theorem bpow_gt_0 :
 --   forall e : Z, (0 < bpow e)%R.
 -- Proof.
@@ -817,12 +869,31 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 -- apply radix_pos.
 -- Qed.
 
+/--
+For all exponents `e1` and `e2`, `bpow r (e1 + e2) = bpow r e1 * bpow r e2`.
+This matches Coq's `bpow (e1 + e2) = bpow e1 * bpow e2`.
+-/
+theorem bpow_plus (r : Radix) (e1 e2 : ℤ) :
+    bpow r (e1 + e2) = bpow r e1 * bpow r e2 := by
+  rw [bpow_powerRZ, bpow_powerRZ, bpow_powerRZ]
+  have hr : (r : ℝ) ≠ 0 := by {aesop}
+  have := Real.rpow_add_intCast hr e1 e2
+  exact zpow_add₀ hr e1 e2
+
+/-- `bpow r 1 = r.val` as a real. -/
+theorem bpow_1 (r : Radix) : bpow r 1 = (r.val : ℝ) := by
+  simp only [bpow, pow_one]
+
 -- Theorem bpow_1 :
 --   bpow 1 = IZR r.
 -- Proof.
 -- unfold bpow, Zpower_pos. simpl.
 -- now rewrite Zmult_1_r.
 -- Qed.
+
+/-- For all exponents `e`, `bpow r (e + 1) = (r.val : ℝ) * bpow r e`. -/
+theorem bpow_plus_1 (r : Radix) (e : ℤ) : bpow r (e + 1) = (r.val : ℝ) * bpow r e := by
+  rw [← bpow_1, ← bpow_plus, add_comm]
 
 -- Theorem bpow_plus_1 :
 --   forall e : Z, (bpow (e + 1) = IZR r * bpow e)%R.
@@ -845,6 +916,19 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 -- apply (bpow_gt_0 (Zpos p)).
 -- Qed.
 
+/-- For all exponents `e`, `bpow r (-e) = (bpow r e)⁻¹`. -/
+theorem bpow_opp (r : Radix) (e : ℤ) : bpow r (-e) = (bpow r e)⁻¹ := by
+  rw [bpow_powerRZ, bpow_powerRZ]
+  exact zpow_neg _ _
+
+/--
+For all natural numbers `e`, `↑(r.val ^ e) = bpow r e`.
+This matches Coq's `IZR (Zpower_nat r e) = bpow (Z_of_nat e)`.
+-/
+theorem IZR_Zpower_nat (r : Radix) (e : ℕ) :
+  (↑(r.val ^ e) : ℝ) = bpow r (e : ℤ) := by
+  simp [bpow, Int.ofNat_eq_coe, Int.cast_ofNat]
+
 -- Theorem IZR_Zpower_nat :
 --   forall e : nat,
 --   IZR (Zpower_nat r e) = bpow (Z_of_nat e).
@@ -855,6 +939,16 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 -- rewrite <- Zpower_pos_nat.
 -- now rewrite <- Zpos_eq_Z_of_nat_o_nat_of_P.
 -- Qed.
+
+/--
+For all nonnegative exponents `e`, `↑(r.val ^ e) = bpow r e`.
+This matches Coq's `IZR (Zpower r e) = bpow e` for `e ≥ 0`.
+-/
+theorem IZR_Zpower (r : Radix) (e : ℤ) (he : 0 ≤ e) :
+  (↑(r.val ^ (Int.toNat e)) : ℝ) = bpow r e := by
+  rw [bpow.eq_def]
+  simp [Int.ofNat_eq_coe, Int.cast_ofNat]
+  aesop
 
 -- Theorem IZR_Zpower :
 --   forall e : Z,
@@ -884,6 +978,41 @@ theorem Zfloor_div (x y : ℤ) (hy : y ≠ 0) : Zfloor ((x : ℝ) / (y : ℝ)) =
 -- apply IZR_lt.
 -- now apply Zpower_gt_1.
 -- Qed.
+
+/--
+If `e1 < e2`, then `bpow r e1 < bpow r e2`.
+-/
+theorem bpow_lt (r : Radix) (e1 e2 : ℤ) (h : e1 < e2) : bpow r e1 < bpow r e2 := by
+  -- e2 = e1 + (e2 - e1)
+  have : e2 = e1 + (e2 - e1) := by ring
+  rw [this, bpow_plus, ← mul_one (bpow r e1)]
+  -- bpow r (e2 - e1) > 1 for e2 - e1 > 0 and r.val ≥ 2
+  have hdiff_pos : 0 < e2 - e1 := sub_pos.mpr h
+  have hr : 2 ≤ r.val := r.prop
+  nth_rw 2 [mul_one]
+  rw [mul_lt_mul_left]
+  · rw [← IZR_Zpower]
+    cases'  e2 - e1 with h1 h2
+    sorry
+    sorry
+    sorry
+  · exact bpow_gt_0 r e1
+
+/--
+If `bpow r e1 < bpow r e2`, then `e1 < e2`.
+-/
+theorem lt_bpow (r : Radix) (e1 e2 : ℤ) (h : bpow r e1 < bpow r e2) : e1 < e2 := by
+  by_contra hle
+  -- hle : ¬ (e1 < e2) → e2 ≤ e1
+  have hle' : e2 ≤ e1 := not_lt.mp hle
+  -- Then bpow r e2 ≤ bpow r e1 by monotonicity
+  have hle_bpow : bpow r e2 ≤ bpow r e1 := by
+    rw [le_iff_eq_or_lt]
+    right
+    sorry
+
+  -- Contradicts h : bpow r e1 < bpow r e2
+  exact not_le_of_lt h hle_bpow
 
 -- Theorem lt_bpow :
 --   forall e1 e2 : Z,

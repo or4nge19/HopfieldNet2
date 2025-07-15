@@ -662,7 +662,7 @@ def rationalExp (tol x : Base) : CReal :=
   rationalExpAux tol x 100 -- 100 is an arbitrary recursion limit; increase as needed
 
 -- Example: Compute exp(1) with tolerance 1/2
-#time #eval (rationalExp (1/2) 1).approx { val := 1/100, --property := by norm_num
+#time #eval (rationalExp (1/10) 1).approx { val := 1/100, --property := by norm_num
  }
 
 /--
