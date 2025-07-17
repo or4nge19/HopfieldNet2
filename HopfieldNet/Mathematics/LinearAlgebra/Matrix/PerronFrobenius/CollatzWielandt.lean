@@ -1,19 +1,12 @@
 import HopfieldNet.Mathematics.Topology.Compactness.ExtremeValueUSC
-import HopfieldNet.Mathematics.Combinatorics.Quiver.Path
 import HopfieldNet.Mathematics.aux
-import Mathlib.Algebra.Lie.OfAssociative
-import Mathlib.Analysis.Normed.Field.Instances
-import Mathlib.Analysis.RCLike.Lemmas
-import Mathlib.Topology.Algebra.Module.ModuleTopology
-import Mathlib.Topology.Metrizable.CompletelyMetrizable
-import HopfieldNet.Mathematics.LinearAlgebra.Matrix.Spectrum
-import Mathlib
+--import HopfieldNet.Mathematics.LinearAlgebra.Matrix.Spectrum
 
 namespace Matrix
 open Finset Quiver
 variable {n : Type*} [Fintype n]
 /-!
-### TThe Collatz-Wielandt function for  Matrices
+### TThe Collatz-Wielandt function for Matrices
 
 -/
 section PerronFrobenius
@@ -749,6 +742,7 @@ lemma Finset.sum_pos_of_nonneg_of_exists_pos {α β : Type*}
     0 < ∑ i ∈ s, f i :=
   Finset.sum_pos' h_nonneg h_exists
 
+omit [Fintype n] in
 lemma maximizer_satisfies_le_mulVec
     [Fintype n] [Nonempty n] [DecidableEq n]
     (A : Matrix n n ℝ) (hA_nonneg : ∀ i j, 0 ≤ A i j) :
@@ -769,7 +763,6 @@ lemma maximizer_satisfies_le_mulVec
     · -- `perronRoot_alt A ≤ collatzWielandtFn A v`
       apply csSup_le set_nonempty
       rintro _ ⟨x, ⟨hx_nonneg, hx_ne_zero⟩, rfl⟩
-      -- Normalize `x` so that it lives in the simplex
       set s : ℝ := ∑ i, x i with hs
       have s_pos : 0 < s := by
         obtain ⟨i, hi⟩ := exists_pos_of_ne_zero hx_nonneg hx_ne_zero
@@ -804,9 +797,60 @@ lemma maximizer_satisfies_le_mulVec
       apply le_csSup (bddAbove_image_P_set A hA_nonneg)
       exact Set.mem_image_of_mem _ ⟨v_nonneg, v_ne_zero⟩
   have h_le : (perronRoot_alt A) • v ≤ A *ᵥ v := by
-    -- Basic inequality with `v`
     have : (collatzWielandtFn A v) • v ≤ A *ᵥ v :=
       le_mulVec hA_nonneg v_nonneg v_ne_zero
     simpa [r_eq] using this
   refine ⟨v, v_in_simplex, ?_⟩
   simpa [r] using h_le
+
+/--
+The conditional supremum of a non-empty, bounded above set of non-negative numbers is non-negative.
+-/
+lemma csSup_nonneg {s : Set ℝ} (hs_nonempty : s.Nonempty) (hs_bdd : BddAbove s)
+    (hs_nonneg : ∀ x ∈ s, 0 ≤ x) :
+    0 ≤ sSup s := by
+  obtain ⟨y, hy_mem⟩ := hs_nonempty
+  have h_y_nonneg : 0 ≤ y := hs_nonneg y hy_mem
+  have h_y_le_sSup : y ≤ sSup s := le_csSup hs_bdd hy_mem
+  exact le_trans h_y_nonneg h_y_le_sSup
+
+/-- The Perron root of a non-negative matrix is non-negative. -/
+lemma perronRoot_nonneg {n : Type*} [Fintype n] [Nonempty n] [DecidableEq n]
+    {A : Matrix n n ℝ} (hA_nonneg : ∀ i j, 0 ≤ A i j) :
+    0 ≤ perronRoot_alt A := by
+  unfold perronRoot_alt
+  apply csSup_nonneg
+  · exact CollatzWielandt.set_nonempty
+  · exact CollatzWielandt.bddAbove A hA_nonneg
+  · rintro _ ⟨x, ⟨hx_nonneg, hx_ne_zero⟩, rfl⟩
+    dsimp [collatzWielandtFn]
+    split_ifs with h_supp_nonempty
+    · apply Finset.le_inf'
+      intro i hi_mem
+      apply div_nonneg
+      · exact mulVec_nonneg hA_nonneg hx_nonneg i
+      · exact (Set.mem_toFinset.mp hi_mem).le
+    · exact le_rfl
+
+/--
+If an inequality lambda•w ≤ A•w holds for a non-negative non-zero vector w,
+then lambda is bounded by the Collatz-Wielandt function value for w.
+This is the property that the Collatz-Wielandt function gives
+the maximum lambda satisfying such an inequality.
+-/
+theorem le_of_subinvariant [DecidableEq n]
+    {A : Matrix n n ℝ} (_ : ∀ i j, 0 ≤ A i j)
+    {w : n → ℝ} (hw_nonneg : ∀ i, 0 ≤ w i) (hw_ne_zero : w ≠ 0)
+    {lambda : ℝ} (h_sub : lambda • w ≤ A *ᵥ w) :
+    lambda ≤ collatzWielandtFn A w := by
+  obtain ⟨i, hi⟩ := exists_pos_of_ne_zero hw_nonneg hw_ne_zero
+  let S := {j | 0 < w j}.toFinset
+  have hS_nonempty : S.Nonempty := ⟨i, by simp [S]; exact hi⟩
+  rw [collatzWielandtFn, dif_pos hS_nonempty]
+  apply Finset.le_inf'
+  intro j hj
+  have h_j : lambda * w j ≤ (A *ᵥ w) j := by
+    simp_all only [ne_eq, Set.toFinset_setOf, Finset.mem_filter, Finset.mem_univ, true_and, S]
+    apply h_sub
+  have hw_j_pos : 0 < w j := by simpa [S] using hj
+  exact (le_div_iff₀ hw_j_pos).mpr (h_sub j)

@@ -680,4 +680,48 @@ lemma spectrum.of_eigenspace_ne_bot
   rw [← Module.End.hasEigenvalue_iff_mem_spectrum]
   exact h
 
+/-- If a finite sum of non-negative terms is positive, at least one term must be positive. -/
+lemma exists_pos_of_sum_pos {ι : Type*} [Fintype ι] {f : ι → ℝ}
+    (h_nonneg : ∀ i, 0 ≤ f i) (h_sum_pos : 0 < ∑ i, f i) :
+    ∃ i, 0 < f i := by
+  by_contra h_not_exists
+  push_neg at h_not_exists
+  have h_all_zero : ∀ i, f i = 0 := by
+    intro i
+    exact le_antisymm (h_not_exists i) (h_nonneg i)
+  have h_sum_zero : ∑ i, f i = 0 := by
+    exact Finset.sum_eq_zero (fun i _ => h_all_zero i)
+  exact h_sum_pos.ne' h_sum_zero
+
+/-- For a non-negative `a`, `a * b` is positive iff both `a` and `b` are positive. -/
+lemma mul_pos_iff_of_nonneg_left {a b : ℝ} (ha_nonneg : 0 ≤ a) :
+    0 < a * b ↔ 0 < a ∧ 0 < b := by
+  refine' ⟨fun h_mul_pos => _, fun ⟨ha_pos, hb_pos⟩ => mul_pos ha_pos hb_pos⟩
+  have ha_pos : 0 < a := by
+    refine' lt_of_le_of_ne ha_nonneg fun ha_zero => _
+    rw [ha_zero] at h_mul_pos
+    subst ha_zero
+    simp_all only [le_refl, zero_mul, lt_self_iff_false]
+  simp_all only [mul_pos_iff_of_pos_left, and_self]
+
+/-- If a scalar `μ` is an eigenvalue of a matrix `A`, then it is a root of its
+characteristic polynomial. -/
+lemma isRoot_of_hasEigenvalue {A : Matrix n n ℝ} {μ : ℝ}
+    (h_eig : Module.End.HasEigenvalue (toLin' A) μ) :
+    (charpoly A).IsRoot μ := by
+  rw [← mem_spectrum_iff_isRoot_charpoly, spectrum_eq_spectrum_toLin']
+  exact Module.End.hasEigenvalue_iff_mem_spectrum.mp h_eig
+
+/-- The spectrum of a matrix `A` is equal to the spectrum of its corresponding linear map
+`Matrix.toLin' A`. -/
+theorem spectrum.Matrix_toLin'_eq_spectrum {R n : Type*} [CommRing R] [Fintype n] [DecidableEq n] (A : Matrix n n R) :
+    spectrum R (Matrix.toLin' A) = spectrum R A := by
+  exact AlgEquiv.spectrum_eq (Matrix.toLinAlgEquiv (Pi.basisFun R n)) A
 end Matrix
+
+/-- If a linear map `f` has an eigenvector `v` for an eigenvalue `μ`, then `μ` is in the spectrum of `f`. -/
+lemma Module.End.mem_spectrum_of_hasEigenvector {K V : Type*} [Field K] [AddCommGroup V] [Module K V] [FiniteDimensional K V]
+    {f : V →ₗ[K] V} {μ : K} {v : V} (h : HasEigenvector f μ v) :
+    μ ∈ spectrum K f := by
+  rw [← Module.End.hasEigenvalue_iff_mem_spectrum]
+  exact Module.End.hasEigenvalue_of_hasEigenvector h
