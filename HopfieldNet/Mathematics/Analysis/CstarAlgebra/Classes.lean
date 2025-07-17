@@ -51,6 +51,12 @@ lemma RCLike.norm_conj {K} [RCLike K] (z : K) : ‖star z‖ = ‖z‖ := by exa
 lemma RCLike.re_sum {F : Type*} [RCLike F] {v : ι → F} {s : Finset ι} :
     RCLike.re (∑ i ∈ s, v i) = ∑ i ∈ s, RCLike.re (v i) := by exact map_sum RCLike.re v s
 
+/--
+An equality between a real number `r` and its coercion to the complex numbers `↑r`
+is true by definition.
+-/
+lemma ofReal_eq_coe (r : ℝ) : (r : ℂ) = ↑r := rfl
+
 /-- The real part of a product of complex numbers is less than or equal to the product of their norms.
 This is a consequence of the Cauchy-Schwarz inequality. -/
 lemma re_mul_le_norm (z w : ℂ) : re (z * w) ≤ ‖z‖ * ‖w‖ := by
@@ -99,6 +105,32 @@ lemma star_mul_self (z : ℂ) : z * star z = ↑(‖z‖ ^ 2) := by
 
 @[simp] lemma re_ofReal (r : ℝ) : (r : ℂ).re = r :=
 rfl
+
+/--  `u = conj z / ‖z‖` satisfies `z * u = ‖z‖`. -/
+lemma unit_of_norm_div_star {z : ℂ} (hz : z ≠ 0) :
+    let u := star z / (‖z‖ : ℂ); z * u = (‖z‖ : ℂ) := by
+  intro u
+  have h₁ : (‖z‖ : ℂ) ≠ 0 := by
+    simpa using (ofReal_ne_zero.mpr ((norm_ne_zero_iff).2 hz))
+  field_simp [u, h₁]
+  rw [mul_conj']; rw [@sq]
+
+/--
+If `c` is a complex number of norm 1, and `c^k = 1` and `c^(k+1) = 1` for some
+integer `k ≥ 1`, then `c` must be 1.
+-/
+lemma eq_one_of_root_of_unity_of_consecutive_powers
+  {c : ℂ} (k : ℕ) (hk_pos : 1 ≤ k)
+  (h_ck : c ^ k = 1) (h_ck1 : c ^ (k + 1) = 1) : c = 1 := by
+  have hc_ne_zero : c ≠ 0 := by
+    intro hc_zero
+    have : (1 : ℂ) = 0 := by rw [← h_ck, hc_zero, zero_pow (Nat.ne_zero_of_lt hk_pos)]
+    exact one_ne_zero this
+  calc
+    c = c * 1 := (mul_one c).symm
+    _ = c * (c^k) := by rw [h_ck]
+    _ = c^(k+1) := by rw [← pow_succ']
+    _ = 1 := h_ck1
 
 /-- The square of the norm of a sum is the sum of the real parts of the products of each term
 with the conjugate of the sum. -/
@@ -295,5 +327,68 @@ theorem triangle_equality_iff_aligned {v : n → ℂ} (hv_nonzero : ∀ i, v i �
       _ = (∑ i, ‖v i‖) * ‖c‖ := by rw [abs_of_nonneg (sum_nonneg (fun i _ => norm_nonneg _))]
       _ = (∑ i, ‖v i‖) * 1 := by rw [hc_norm_one]
       _ = ∑ i, ‖v i‖ := by rw [mul_one]
+
+/--
+If `u = ∑ i in s, v i`, `‖u‖ = ∑ i in s, ‖v i‖`, and `u ≠ 0`, then each `v i`
+is aligned with `u`.
+-/
+lemma aligned_of_triangle_eq {u : ℂ} {v : ι → ℂ} {s : Finset ι}
+  (h_eq : u = ∑ i ∈ s, v i) (h_sum : ‖u‖ = ∑ i ∈ s, ‖v i‖) (h_ne : u ≠ 0) :
+  ∀ i ∈ s, v i ≠ 0 → v i / ↑‖v i‖ = u / ↑‖u‖ := by
+  intro i hi hvi_ne_zero
+  have hu_norm_ne_zero : ‖u‖ ≠ 0 := norm_ne_zero_iff.mpr h_ne
+  have hvi_norm_ne_zero : ‖v i‖ ≠ 0 := norm_ne_zero_iff.mpr hvi_ne_zero
+  have h_aligned := align_each_with_sum h_eq h_sum h_ne i hi
+  rw [smul_eq_mul, smul_eq_mul] at h_aligned
+  rw [mul_comm] at h_aligned
+  field_simp [h_aligned, hu_norm_ne_zero, hvi_norm_ne_zero]
+
+/--
+If a complex number `z` is a positive real multiple of another complex number `w`,
+then they are aligned (i.e., have the same phase).
+-/
+lemma aligned_of_mul_of_real_pos
+    {z w : ℂ} {c : ℝ}
+    (hc_pos     : 0 < c)
+    (h          : z = (c : ℂ) * w)
+    (hw_ne_zero : w ≠ 0) :
+    z / ↑‖z‖ = w / ↑‖w‖ := by
+  have hz_ne_zero : z ≠ 0 := by
+    rw [h, mul_ne_zero_iff]
+    exact ⟨ofReal_ne_zero.mpr hc_pos.ne', hw_ne_zero⟩
+  field_simp [ h,
+               norm_mul,
+               norm_ofReal,
+               abs_of_pos hc_pos,
+               norm_ne_zero_iff.mpr hw_ne_zero,
+               norm_ne_zero_iff.mpr hz_ne_zero ]
+  have hc_ne_zero   : (c : ℂ) ≠ 0       := ofReal_ne_zero.mpr hc_pos.ne'
+  have hnormw_ne    : ‖w‖ ≠ 0           := (norm_ne_zero_iff.mpr hw_ne_zero)
+  have hnormw_neC   : (↑‖w‖ : ℂ) ≠ 0    := ofReal_ne_zero.mpr hnormw_ne
+  field_simp [hc_ne_zero, hnormw_neC]
+  ring_nf
+
+/--
+If `z = λw` for a positive real scalar `λ`, then `z` and `w` are aligned.
+-/
+lemma aligned_of_eigenvalue {z w : ℂ} {lam : ℝ}
+    (h_rel : z = (lam : ℂ) * w) (h_lam_pos : 0 < lam) (h_w_ne_zero : w ≠ 0) :
+    z / ↑‖z‖ = w / ↑‖w‖ := by
+  exact Complex.aligned_of_mul_of_real_pos h_lam_pos h_rel h_w_ne_zero
+
+/--
+If `u = ∑ i in s, v i`, `‖u‖ = ∑ i in s, ‖v i‖`, and `u ≠ 0`, then each `v i`
+is aligned with `u`.
+-/
+lemma aligned_of_triangle_eq' {u : ℂ} {v : ι → ℂ} {s : Finset ι}
+  (h_eq : u = ∑ i ∈ s, v i) (h_sum : ‖u‖ = ∑ i ∈ s, ‖v i‖) (h_ne : u ≠ 0) :
+  ∀ i ∈ s, v i ≠ 0 → v i / ↑‖v i‖ = u / ↑‖u‖ := by
+  intro i hi hvi_ne_zero
+  have hu_norm_ne_zero : ‖u‖ ≠ 0 := norm_ne_zero_iff.mpr h_ne
+  have hvi_norm_ne_zero : ‖v i‖ ≠ 0 := norm_ne_zero_iff.mpr hvi_ne_zero
+  have h_aligned := align_each_with_sum h_eq h_sum h_ne i hi
+  rw [smul_eq_mul, smul_eq_mul] at h_aligned
+  rw [mul_comm] at h_aligned
+  field_simp [h_aligned, hu_norm_ne_zero, hvi_norm_ne_zero]
 
 end Complex

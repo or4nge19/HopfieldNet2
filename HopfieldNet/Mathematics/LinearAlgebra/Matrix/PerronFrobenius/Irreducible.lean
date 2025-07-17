@@ -1,14 +1,12 @@
 import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Uniqueness
 
 open Quiver.Path
-
 namespace Matrix
 open Quiver
 
 open CollatzWielandt
 variable {n : Type*} [DecidableEq n]
 variable {A : Matrix n n ℝ}
-
 
 /-- If `A` is irreducible then so is `1 + A`. -/
 theorem Irreducible.add_one (h_irred : Irreducible A) : Irreducible (1 + A) := by
@@ -23,29 +21,24 @@ theorem Irreducible.add_one (h_irred : Irreducible A) : Irreducible (1 + A) := b
     · simpa [B, h] using h_irred.1 i j
   · intro i j
     rcases h_irred.2 i j with ⟨pA, hpA_pos⟩
-    -- two quiver structures on the same vertex set
     letI GA : Quiver n := toQuiver A
     let GB : Quiver n := toQuiver B
-    /- Every `A`-arrow is still an arrow in `B`. -/
     have arrow_map : ∀ {u v : n}, GA.Hom u v → GB.Hom u v := by
       intro u v e
       change 0 < B u v
       by_cases h_eq : u = v
       · subst h_eq
-        -- diagonal entry: `B u u = 1 + A u u`
         have : (0 : ℝ) < 1 + A u u := by
           have : (0 : ℝ) < A u u := e
           linarith
         simpa [B] using this
-      · -- off-diagonal entry unchanged
-        simpa [B, h_eq] using e
+      · simpa [B, h_eq] using e
     have hB_diag_pos : ∀ i, 0 < B i i := by
       intro i
       have : (0 : ℝ) < 1 + A i i := by
         have hAi : 0 ≤ A i i := h_irred.1 i i
         linarith
       simpa [B] using this
-    /- Lift an `A`-path to a `B`-path (length is preserved). -/
     have rec_path : ∀ {u v : n}, GA.Path u v → GB.Path u v := by
       intro u v q
       induction q with
@@ -215,6 +208,7 @@ theorem exists_positive_eigenvector_of_irreducible
   have hrA_pos : 0 < rB - 1 := sub_pos.mpr hrB_gt_one
   exact ⟨rB - 1, v, hrA_pos, hv_pos, h_eig_A⟩
 
+omit [Nonempty n] in
 /-!
 A non-zero, non-negative eigenvector of an irreducible matrix is in fact **strictly** positive.
 -/

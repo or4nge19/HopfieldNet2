@@ -839,5 +839,20 @@ lemma diagonal_inv_mulVec_self [DecidableEq n][Fintype n] {d : n → ℝ} (hd : 
   simp [mulVec_diagonal]
   simp_all only [ne_eq, isUnit_iff_ne_zero, not_false_eq_true, IsUnit.inv_mul_cancel]
 
+variable {α ι : Type*} {f : ι → α} {s : Set ι}
+open Set
+-- Indexed supremum equals the supremum of the image
+theorem iSup_eq_sSup_image [ConditionallyCompleteLattice α] :
+    (⨆ x : s, f x) = sSup (f '' s) := by
+  simp [iSup, image_eq_range]
+
+lemma eq_zero_of_sum_eq_zero {ι : Type*} [Fintype ι]
+  (f : ι → ℝ) (hf : ∀ i, 0 ≤ f i) (hsum : ∑ j, f j = 0) (i : ι) : f i = 0 := by
+  by_contra hne0
+  have hne : ¬ 0 = f i := mt Eq.symm hne0
+  have hgt : 0 < f i := lt_iff_le_and_ne.mpr ⟨hf i, hne⟩
+  have hsum_pos : 0 < ∑ j, f j :=
+    Finset.sum_pos' (fun j _ => hf j) ⟨i, Finset.mem_univ i, hgt⟩
+  simpa [hsum] using ne_of_gt hsum_pos
 
 end Matrix
