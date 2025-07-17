@@ -86,6 +86,8 @@ structure MetricSpace' where
   ball_e_wd : ∀ (e d : ℚ) (x y : carrier), e = d → (ball e x y ↔ ball d x y)
   is_metric : IsMetricSpace ball
 
+#check MetricSpace
+
 -- Record MetricSpace : Type :=
 -- { msp_car :> Type
 -- ; ball : Q -> msp_car -> msp_car -> Prop
@@ -176,7 +178,6 @@ theorem ball_wd {m : MetricSpace'} {e d : ℚ} {x y x' y' : m.carrier}
 -- Proof.
 --   intros. apply (msp_refl (msp m) (Qle_refl 0)).
 -- Qed.
-
 
 
 theorem msp_eq_refl {m : MetricSpace'} (x : m.carrier) : msp_eq x x :=
@@ -395,3 +396,15 @@ attribute [simp] ball_refl ball_sym ball_triangle ball_weak
 -- #[global]
 -- Hint Resolve ball_refl ball_sym ball_triangle ball_weak : metric.
 -- (* end hide *)
+
+-- Definition ball_ex (X: MetricSpace) (e: QposInf): X -> X -> Prop :=
+--  match e with
+--   | Qpos2QposInf e' => ball (proj1_sig e')
+--   | QposInfinity => fun a b => True
+--  end.
+
+-- Definition ball_ex (X: MetricSpace) (e: QposInf): X -> X -> Prop :=
+--  match e with
+--   | Qpos2QposInf e' => ball (proj1_sig e')
+--   | QposInfinity => fun a b => True
+--  end.

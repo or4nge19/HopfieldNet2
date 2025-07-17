@@ -1,3 +1,7 @@
+import HopfieldNet.CReals.Core.Cornmodelmetric2CRmetric
+import HopfieldNet.CReals.Core.CoRNmetric2Metric
+import HopfieldNet.CReals.Core.metric2UniformContinuity
+
 -- (*
 -- Copyright © 2006-2008 Russell O’Connor
 -- Copyright © 2020 Vincent Semeria
@@ -39,6 +43,12 @@
 -- Local Open Scope uc_scope.
 -- Opaque Qmin Qmax Qred.
 
+open Rat
+open scoped Rat
+
+-- Provide an instance of LE for ℚ if not already present
+instance : LE ℚ := ⟨fun a b => a ≤ b⟩
+
 -- (**
 -- ** Strict Inequality
 -- First we defined positivity.  We define positivity to contain a
@@ -47,7 +57,34 @@
 -- for functions (such as inverse and logorithm) that have domains
 -- restricted to the positive reals.
 -- *)
+
+-- You must ensure CR is defined or imported before this point.
+-- For example, add the following import if CR is defined elsewhere:
+
+abbrev CR' := CR_carrier
+
+instance : LE CR_carrier := by {
+  unfold CR_carrier
+  unfold Q_as_MetricSpace
+  constructor
+  exact fun a a ↦ PEmpty.{0}}
+
+instance : Neg CR_carrier := by {
+  unfold CR_carrier
+  unfold Q_as_MetricSpace
+  constructor
+  exact fun a ↦ a
+}
+
+/-- A constructive real is positive if there
+exists a positive rational lower bound. -/
+def CRpos (x : CR') : Prop := ∃ (e : ℚ), 0 < e ∧ (e ≤ x)
+
 -- Definition CRpos (x:CR) := sig (fun e:Qpos => ' proj1_sig e <= x)%CR.
+
+lemma CRpos_wd {x y : CR'} (hxy : x = y) (h : CRpos x) : CRpos y :=
+  let ⟨e, he⟩ := h
+  ⟨e, by rw [←hxy]; exact he⟩
 
 -- Lemma CRpos_wd : forall x y, (x==y)%CR -> (CRpos x) -> (CRpos y).
 -- Proof.
@@ -56,14 +93,49 @@
 --  abstract ( rewrite <- Hxy; assumption ).
 -- Defined.
 
+
 -- (** This is a characterization closer to Bishop's definiton.  If we
 -- replace [2*e] with [e], the theorem still holds, but it could be
 -- very expensive to call.  We prefer to avoid that. *)
 
+/--
+A constructive real is positive if there exists a positive rational lower bound.
+This is a characterization closer to Bishop's definition.
+If (2 * e) ≤ approximate x e, then x is positive.
+-/
+-- def CRpos_char (e : Qpos) (x : CR')
+--   (h₂ : (2 : ℚ) * e.val ≤ RegularFunction.approximate x (QposInf.Qpos2QposInf e)) :
+--      CRpos x :=
+--   ⟨e.val,
+--     by {
+--       constructor
+--       · exact Qpos_ispos e
+--       · sorry
+
+--     }
+-- ⟩
+
+-- Lean4 version of the Coq proof for CRpos_char
+
+lemma CRpos_char_proof {e : Qpos} {x : CR'}
+  (h₂ : (2 : ℚ) * e.val ≤ RegularFunction.approximate x (QposInf.Qpos2QposInf e)) :
+  e.val ≤ x := by sorry
+
+-- Now use this lemma to fill in the `sorry` in CRpos_char
+def CRpos_char (e : Qpos) (x : CR')
+  (h₂ : (2 : ℚ) * e.val ≤ RegularFunction.approximate x (QposInf.Qpos2QposInf e)) :
+     CRpos x :=
+  ⟨e.val,
+    by
+      constructor
+      · exact Qpos_ispos e
+      · exact CRpos_char_proof h₂
+    ⟩
+
+
 -- Program Definition CRpos_char (e:Qpos) (x:CR)
 --         (H: (2#1)*proj1_sig e <= (approximate x e))
 --   : CRpos x := e.
-
 -- Next Obligation.
 --  change (CRle (inject_Q_CR (proj1_sig e)) x).
 --  intros a.
@@ -85,8 +157,13 @@
 --  ring_simplify. apply Qle_refl.
 -- Qed.
 
+
 -- (** Negative reals are defined similarly. *)
+
 -- Definition CRneg (x:CR) := sig (fun e:Qpos => x <= ' (-proj1_sig e)%Q)%CR.
+
+/-- A constructive real is negative if there exists a positive rational upper bound on its negation. -/
+def CRneg (x : CR') : Prop := ∃ (e : ℚ), 0 < e ∧ (x ≤ -e)
 
 -- Lemma CRneg_wd : forall x y, (x==y)%CR -> (CRneg x) -> (CRneg y).
 -- Proof.
@@ -94,6 +171,25 @@
 --  exists e.
 --  abstract ( rewrite <- Hxy; assumption ).
 -- Defined.
+
+lemma CRneg_wd {x y : CR'} (hxy : x = y) (h : CRneg x) : CRneg y :=
+  let ⟨e, he⟩ := h
+  ⟨e, by rw [←hxy]; exact he⟩
+
+instance : LE Q_as_MetricSpace.carrier := sorry
+
+/--
+A constructive real is negative if there exists a positive rational upper bound on its negation.
+This is a characterization similar to the positive case.
+If (approximate x e) ≤ -(2 * e), then x is negative.
+-/
+def CRneg_char (e : Qpos) (x : CR')
+  (h : RegularFunction.approximate x (QposInf.Qpos2QposInf e) ≤ -(2 : ℚ) * e.val) : CRneg x :=
+  ⟨e.val, by
+    constructor
+    · exact Qpos_ispos e
+    · sorry
+  ⟩
 
 -- Program Definition CRneg_char (e:Qpos) (x:CR) (H: (approximate x e) <= -(2#1)*e): CRneg x := e.
 
@@ -118,8 +214,17 @@
 -- (** Strict inequality is defined in terms of positivity. *)
 -- Definition CRltT (x y:CR) := CRpos (y-x)%CR.
 
--- Infix "<" := CRltT : CR_scope.
+/-- Strict inequality for constructive reals: x < y iff y - x is positive. -/
+instance : HSub CR' CR' CR' where
+  hSub x y := sorry -- Provide the actual subtraction implementation for CR'
 
+def CRltT (x y : CR') : Prop := CRpos (y - x)
+
+namespace CR
+scoped infix:50 "<" => CRltT
+
+
+-- Infix "<" := CRltT : CR_scope.
 -- Lemma CRltT_wd : forall x1 x2, (x1==x2 -> forall y1 y2, y1==y2 -> x1 < y1 -> x2 < y2)%CR.
 -- Proof.
 --  intros x1 x2 Hx y1 y2 Hy H.
@@ -127,12 +232,22 @@
 --  abstract ( rewrite <- Hx; rewrite <- Hy; reflexivity ).
 -- Defined.
 
+/-- If `x1 = x2` and `y1 = y2`, then `x1 < y1` iff `x2 < y2`. -/
+lemma CRltT_wd {x1 x2 y1 y2 : CR'} (Hx : x1 = x2) (Hy : y1 = y2) (H : CRltT x1 y1) : CRltT x2 y2 :=
+  CRpos_wd (by rw [←Hx, ←Hy]) H
+
 -- (**
 -- ** Apartness
 -- *)
 -- Definition CRapartT (x y:CR) := (sum (x < y) (y < x))%CR.
 
 -- Notation "x >< y" := (CRapartT x y) (at level 70, no associativity) : CR_scope.
+
+/-- Apartness for constructive reals: x >< y iff x < y or y < x. -/
+def CRapartT (x y : CR') : Prop := (CRltT x y) ∨ (CRltT y x)
+
+scoped infix:70 " >< " => CRapartT
+
 
 -- Lemma CRapartT_wd : forall x1 x2, (x1==x2 -> forall y1 y2, y1==y2 -> x1><y1 -> x2><y2)%CR.
 -- Proof.
@@ -148,6 +263,55 @@
 -- | (Zpos an) # ad => Qpos2QposInf ((ad # an) * e)
 -- | (Zneg an) # ad => Qpos2QposInf ((ad # an) * e)
 -- end.
+
+/-- If `x1 = x2` and `y1 = y2`, then `x1 >< y1` iff `x2 >< y2`. -/
+lemma CRapartT_wd {x1 x2 y1 y2 : CR'} (Hx : x1 = x2)
+ (Hy : y1 = y2) (h : CRapartT x1 y1) : CRapartT x2 y2 :=
+  match h with
+  | Or.inl hlt => Or.inl (CRltT_wd Hx Hy hlt)
+  | Or.inr hgt => Or.inr (CRltT_wd Hy Hx hgt)
+
+/--
+The modulus of continuity for multiplication by a constant.
+If `a = 0`, returns infinity. Otherwise, returns a function of `a` and `e`.
+-/
+def Qscale_modulus (a : ℚ) (e : Qpos) : QposInf :=
+  match a.num with
+  | 0 => QposInf.QposInfinity
+  | Int.ofNat an =>
+      QposInf.Qpos2QposInf ⟨(a.den : ℚ) / (an : ℚ) * e.val, by
+        -- Proof that this is positive
+        have : 0 < (an : ℚ) := by exact_mod_cast Nat.cast_pos.mpr (Nat.pos_of_ne_zero (sorry))
+        have : 0 < (a.den : ℚ) := by sorry
+        have : 0 < e.val := Qpos_ispos e
+        apply mul_pos
+        · apply div_pos <;> assumption
+        · assumption
+      ⟩
+  | Int.negSucc an =>
+      QposInf.Qpos2QposInf ⟨(a.den : ℚ) / (an.succ : ℚ) * e.val, by
+        have : 0 < (an.succ : ℚ) := by exact_mod_cast Nat.cast_pos.mpr (Nat.succ_pos _)
+        have : 0 < (a.den : ℚ) := by sorry
+        have : 0 < e.val := Qpos_ispos e
+        apply mul_pos
+        · apply div_pos <;> assumption
+        · assumption
+      ⟩
+
+/-
+Elimination principle for `Qscale_modulus`.
+Given a predicate `P : QposInf → Type`, a rational `x : ℚ`, and `e : Qpos`,
+if `x = 0` implies `P QposInfinity`, and for all `y : Qpos`, `QAbsSmall (e.val / y.val) x` implies `P (Qpos2QposInf y)`,
+then `P (Qscale_modulus x e)`.
+-/
+def Qscale_modulus_elim
+  (P : QposInf → Type)
+  (x : ℚ) (e : Qpos)
+  (h0 : x = 0 → P QposInf.QposInfinity)
+  (h1 : ∀ y : Qpos, QAbsSmall (e.val / y.val) x → P (QposInf.Qpos2QposInf y)) :
+  P (Qscale_modulus x e) :=
+sorry
+
 
 -- Lemma Qscale_modulus_elim : forall (P:QposInf -> Type) (x:Q) (e:Qpos),
 -- (x==0 -> P QposInfinity)%Q ->
@@ -1692,3 +1856,4 @@
 --     rewrite <- Qplus_0_r at 1. apply Qplus_le_r. discriminate.
 --     exact xyfactor_le.
 -- Qed.
+end CR
