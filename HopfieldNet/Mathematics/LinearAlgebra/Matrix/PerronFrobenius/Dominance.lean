@@ -4,7 +4,6 @@ import HopfieldNet.Mathematics.LinearAlgebra.Matrix.Spectrum
 import Mathlib
 
 open Quiver.Path
---set_option maxHeartbeats 0
 namespace Matrix
 open CollatzWielandt
 
@@ -525,3 +524,9 @@ theorem perron_root_is_spectral_radius (hA_irred : Irreducible A) (hA_nonneg : �
       exact mem_spectrum_of_eigenvalue hvc_ne_zero hvc_eig
     have h_bound := eigenvalue_abs_le_perron_root hA_irred hA_nonneg hμ_complex
     rwa [Complex.norm_ofReal] at h_bound
+
+/-- **Spectral Dominance for Primitive Matrices** -/
+theorem spectral_dominance_of_primitive (hA_prim : IsPrimitive A) (hA_nonneg : ∀ i j, 0 ≤ A i j)
+    (μ : ℂ) (h_is_eigenvalue : μ ∈ spectrum ℂ (A.map (algebraMap ℝ ℂ)))
+    (h_ne_perron : μ ≠ perronRoot_alt A) :
+    ‖μ‖ < perronRoot_alt A := by sorry
