@@ -1,3 +1,7 @@
+import HopfieldNet.CReals.Core.CoRNmodeltotalorderQMinMax
+import HopfieldNet.CReals.Core.CornQposMinMax
+import HopfieldNet.CReals.cornmetric2Complete
+import HopfieldNet.CReals.Core.metric2UniformContinuity
 -- (*
 -- Copyright © 2006-2008 Russell O’Connor
 
@@ -20,10 +24,12 @@
 -- *)
 
 -- Require Export CoRN.metric2.Metric.
+
 -- Require Import CoRN.metric2.UniformContinuity.
 -- Require Import CoRN.metric2.Complete.
 -- Require Import CoRN.model.totalorder.QMinMax.
 -- Require Import CoRN.model.totalorder.QposMinMax.
+
 -- Require Import CoRN.stdlib_omissions.List.
 -- Require Import CoRN.stdlib_omissions.Q.
 

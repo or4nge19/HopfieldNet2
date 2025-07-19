@@ -26,6 +26,7 @@ import HopfieldNet.CReals.modelstructuresPosinf
 -- Require Export CoRN.metric2.UniformContinuity.
 -- Require Export CoRN.model.structures.QposInf.
 -- Require Export CoRN.metric2.Classification.
+
 -- Require Import CoRN.model.totalorder.QposMinMax.
 -- Require Import CoRN.model.totalorder.QMinMax.
 
