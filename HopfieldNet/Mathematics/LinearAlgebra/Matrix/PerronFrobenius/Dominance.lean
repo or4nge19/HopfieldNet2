@@ -1,7 +1,5 @@
 import HopfieldNet.Mathematics.LinearAlgebra.Matrix.PerronFrobenius.Irreducible
 import HopfieldNet.Mathematics.Analysis.CstarAlgebra.Classes
-import HopfieldNet.Mathematics.LinearAlgebra.Matrix.Spectrum
-import Mathlib
 
 open Quiver.Path
 namespace Matrix
@@ -173,33 +171,64 @@ theorem exists_eigenvector_of_mem_spectrum
   rw [toLin'_apply] at h_mul_eq
   exact h_mul_eq
 
-/--
-If `v` is an eigenvector of `A` with eigenvalue `r`, then `v` is an eigenvector of `A^m`
+/- If `v` is an eigenvector of `A` with eigenvalue `r`, then `v` is an eigenvector of `A^m`
 with eigenvalue `r^m`.
 -/
-lemma pow_eigenvector_of_eigenvector {R : Type*} [CommRing R] {A : Matrix n n R} {r : R} {v : n → R}
+lemma pow_eigenvector_of_eigenvector {R : Type*} [DecidableEq n][CommSemiring R] {A : Matrix n n R} {r : R} {v : n → R}
     (h_eig : A *ᵥ v = r • v) (m : ℕ) :
     (A ^ m) *ᵥ v = (r ^ m) • v := by
   induction m with
   | zero =>
-    simp only [le_refl, pow_zero, one_mulVec, one_smul]
+      simp [pow_zero]            -- (A ^ 0) *ᵥ v = v  and  (r ^ 0) • v = v
   | succ m ih =>
-    calc
-      (A ^ (m + 1)) *ᵥ v = A *ᵥ (A ^ m *ᵥ v) := by rw [pow_succ', Matrix.mulVec_mulVec]
-      _ = A *ᵥ (r ^ m • v) := by rw [ih]
-      _ = (r ^ m) • (A *ᵥ v) := by rw [mulVec_smul]
-      _ = (r ^ m) • (r • v) := by rw [h_eig]
-      _ = (r ^ (m + 1)) • v := by rw [smul_smul, pow_succ']; rw [@pow_mul_comm']
+      -- Goal: (A ^ (m + 1)) *ᵥ v = r ^ (m + 1) • v
+      calc
+        (A ^ m.succ) *ᵥ v
+            = (A ^ m * A) *ᵥ v := by
+                simp [pow_succ]
+        _   = A ^ m *ᵥ (A *ᵥ v) := by
+                rw [Matrix.mulVec_mulVec]
+        _   = A ^ m *ᵥ (r • v) := by
+                simp [h_eig]
+        _   = r • (A ^ m *ᵥ v) := by
+                rw [mulVec_smul]
+        _   = r • (r ^ m • v) := by
+                simp [ih]
+        _   = r ^ (m + 1) • v := by
+                simp [pow_succ', smul_smul]
+
+
+theorem mul_mulVec [NonUnitalSemiring α] [Fintype m]  [Fintype l]
+    (M : Matrix l m α) (N : Matrix m n α) (v : n → α) :
+    (M * N) *ᵥ v = M *ᵥ (N *ᵥ v) := by
+  ext i
+  simp only [mulVec, mul_apply, dotProduct]
+  apply dotProduct_assoc
+
+private lemma sum_component_norms_eq_perron_power_norm [DecidableEq n] -- [CommSemiring R]
+    {A : Matrix n n ℝ} {x : n → ℂ}
+    (h_x_abs_eig : A *ᵥ (fun i ↦ ‖x i‖) = (perronRoot_alt A) • (fun i ↦ ‖x i‖))
+    (k : ℕ) (m : n) (hAk_pos : ∀ i j, 0 < (A ^ k) i j) :
+    ∑ l, ‖((A ^ k) m l : ℂ) * x l‖ = (perronRoot_alt A) ^ k * ‖x m‖ := by
+  have h_pow_eig : (A ^ k) *ᵥ (fun i ↦ ‖x i‖) = (perronRoot_alt A) ^ k • (fun i ↦ ‖x i‖) :=
+    pow_eigenvector_of_eigenvector h_x_abs_eig k
+  calc ∑ l, ‖((A ^ k) m l : ℂ) * x l‖
+    = ∑ l, |(A ^ k) m l| * ‖x l‖ := by
+        simp_rw [norm_mul, Complex.norm_ofReal]
+    _ = ∑ l, (A ^ k) m l * ‖x l‖ := by
+      simp_rw [abs_of_pos (hAk_pos m _)]
+    _ = ((A ^ k) *ᵥ (fun i ↦ ‖x i‖)) m := by simp [mulVec_apply]
+    _ = ((perronRoot_alt A) ^ k • (fun i ↦ ‖x i‖)) m := by rw [h_pow_eig]
+    _ = (perronRoot_alt A) ^ k * ‖x m‖ := by simp [Pi.smul_apply, smul_eq_mul]
 
 /--
 Mapping a matrix power with a ring homomorphism is the same as taking the power of the
 mapped matrix.
 -/
-lemma map_pow {R S : Type*} [Semiring R] [Semiring S] (f : R →+* S) (A : Matrix n n R) (k : ℕ) :
-    (A ^ k).map f = (A.map f) ^ k := by
+lemma map_pow {R S : Type*} [Semiring R] [Semiring S] (f : R →+* S)
+    (A : Matrix n n R) (k : ℕ) : (A ^ k).map f = (A.map f) ^ k := by
   induction k with
-  | zero =>
-    simp only [le_refl, pow_zero, map_zero, map_one, Matrix.map_one]
+  | zero => simp [pow_zero, Matrix.map_one]
   | succ k ih =>
     rw [pow_succ, Matrix.map_mul, ih, pow_succ]
 
@@ -207,11 +236,23 @@ lemma map_pow {R S : Type*} [Semiring R] [Semiring S] (f : R →+* S) (A : Matri
 If `x` is a complex eigenvector of a real matrix `A` with eigenvalue `μ`, then `x` is an
 eigenvector of `A^m` with eigenvalue `μ^m`. This is the complex version of the lemma.
 -/
-lemma pow_eigenvector_of_eigenvector' {A : Matrix n n ℝ} {μ : ℂ} {x : n → ℂ}
+lemma pow_eigenvector_of_eigenvector' [DecidableEq n] {A : Matrix n n ℝ} {μ : ℂ} {x : n → ℂ}
     (h_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x) (m : ℕ) :
     ((A ^ m).map (algebraMap ℝ ℂ)) *ᵥ x = (μ ^ m) • x := by
-  rw [Matrix.map_pow]
-  exact pow_eigenvector_of_eigenvector h_eig m
+  induction m with
+  | zero =>
+    simp [pow_zero, Matrix.map_one, one_mulVec, one_smul]
+  | succ m ih =>
+    calc
+      ((A ^ (m + 1)).map (algebraMap ℝ ℂ)) *ᵥ x
+          = ((A * A ^ m).map (algebraMap ℝ ℂ)) *ᵥ x := by rw [pow_succ']
+      _ = ((A.map (algebraMap ℝ ℂ)) * ((A ^ m).map (algebraMap ℝ ℂ))) *ᵥ x := by rw [Matrix.map_mul]
+      _ = (A.map (algebraMap ℝ ℂ)) *ᵥ (((A ^ m).map (algebraMap ℝ ℂ)) *ᵥ x) := by rw [Matrix.mulVec_mulVec]
+      _ = (A.map (algebraMap ℝ ℂ)) *ᵥ ((μ ^ m) • x) := by rw [ih]
+      _ = (μ ^ m) • ((A.map (algebraMap ℝ ℂ)) *ᵥ x) := by rw [mulVec_smul]
+      _ = (μ ^ m) • (μ • x) := by rw [h_eig]
+      _ = ((μ ^ m) * μ) • x := by rw [smul_smul]
+      _ = (μ ^ (m + 1)) • x := by rw [pow_succ']; rw [@pow_mul_comm']
 
 /--
 For an eigenvalue μ of a nonnegative matrix A with eigenvector x,
@@ -601,7 +642,7 @@ lemma sum_s_ne_zero_of_triangle_eq {A : Matrix n n ℝ} (hA_irred : Irreducible 
   have h_pos := mulVec_x_abs_pos_of_irreducible hA_irred
       (by
         intro k
-        simp [x_abs])     -- 0 ≤ |x k|
+        simp [x_abs])
       h_x_abs_eig hx_abs_ne_zero i
   exact h_pos.ne' h_Ax_abs_i_zero
 
@@ -767,7 +808,7 @@ lemma aligned_term_of_triangle_eq {ι : Type*} {s : Finset ι} {v : ι → ℂ}
     then the sum equals the sum of magnitudes times that common phase factor.
     This is a key property for proving eigenvalue relationships in the complex case. -/
 lemma Complex.triangle_eq_sum_with_common_phase {ι : Type*} [Fintype ι]
-    {v : ι → ℂ} {c : ℂ} (h_norm_c : ‖c‖ = 1)
+    {v : ι → ℂ} {c : ℂ} (_ : ‖c‖ = 1)
     (h_triangle_eq : ‖∑ i, v i‖ = ∑ i, ‖v i‖)
     (h_aligned : ∀ i, v i ≠ 0 → v i / ↑‖v i‖ = c) :
     ∑ i, v i = (∑ i, ‖v i‖ : ℂ) * c := by
@@ -907,3 +948,305 @@ lemma phase_propagates_within_row
     x j / ↑‖x j‖ = x k / ↑‖x k‖ :=
   row_entries_aligned_of_triangle_eq hA_irred hA_nonneg hx_ne_zero
     h_triangle_eq h_x_abs_eig i j k h_ij_pos h_ik_pos
+
+/--
+If an eigenvalue `μ` of a primitive matrix `A` has norm equal to the Perron root,
+then the vector of norms of its eigenvector `x`, `|x|`, is strictly positive.
+-/
+lemma eigenvector_norm_pos_of_primitive_and_norm_eq_perron_root
+    {A : Matrix n n ℝ} (hA_prim : IsPrimitive A) (hA_nonneg : ∀ i j, 0 ≤ A i j)
+    {μ : ℂ} (_ : μ ∈ spectrum ℂ (A.map (algebraMap ℝ ℂ)))
+    (_ : ‖μ‖ = perronRoot_alt A)
+    {x : n → ℂ} (hx_ne_zero : x ≠ 0) (_ : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x)
+    (h_x_abs_eig : A *ᵥ (fun i => ‖x i‖) = (perronRoot_alt A) • (fun i => ‖x i‖)) :
+    ∀ i, 0 < ‖x i‖ := by
+  have h_x_abs_ne_zero : (fun j => ‖x j‖) ≠ 0 := by
+    contrapose! hx_ne_zero
+    ext j
+    exact norm_eq_zero.mp (congr_fun hx_ne_zero j)
+  have h_x_abs_nonneg : ∀ j, 0 ≤ ‖x j‖ := fun j => norm_nonneg _
+  have h_r_pos : 0 < perronRoot_alt A := by
+    obtain ⟨r', v, hr'_pos, hv_pos, h_eig'⟩ := exists_positive_eigenvector_of_primitive hA_prim hA_nonneg
+    have : r' = perronRoot_alt A := by
+      apply eigenvalue_is_perron_root_of_positive_eigenvector
+      · exact IsPrimitive.to_Irreducible hA_prim hA_nonneg
+      · exact hA_nonneg
+      · exact hr'_pos
+      · exact hv_pos
+      · exact h_eig'
+    rwa [← this]
+  exact eigenvector_of_primitive_is_positive hA_prim h_r_pos h_x_abs_eig h_x_abs_nonneg h_x_abs_ne_zero
+
+/-- Reference phase is unit: `‖x i₀ / ‖x i₀‖‖ = 1`. -/
+lemma reference_phase_norm_one_of_primitive
+    {_ : Matrix n n ℝ} {x : n → ℂ} {i₀ : n}
+    (hx_abs_pos : 0 < ‖x i₀‖) :
+    ‖x i₀ / ‖x i₀‖‖ = (1 : ℝ) := by
+  simp [norm_div, Complex.norm_ofReal, abs_norm, hx_abs_pos.ne']
+
+/-- The norm of a matrix-vector product equals the perron root to the kth power times the norm of the vector component. -/
+lemma norm_matrix_power_vec_eq_perron_power_norm
+    {A : Matrix n n ℝ} {μ : ℂ} {x : n → ℂ}
+    (hx_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x)
+    (h_norm_eq_r : ‖μ‖ = perronRoot_alt A)
+    (k : ℕ) (m : n) :
+    ‖(((A ^ k).map (algebraMap ℝ ℂ)) *ᵥ x) m‖ = (perronRoot_alt A) ^ k * ‖x m‖ := by
+  have h_k_power : ((A ^ k).map (algebraMap ℝ ℂ)) *ᵥ x = (μ ^ k) • x :=
+    pow_eigenvector_of_eigenvector' hx_eig k
+  have h_component : ((μ ^ k) • x) m = (μ ^ k) * x m := by simp [Pi.smul_apply]
+  calc ‖(((A ^ k).map (algebraMap ℝ ℂ)) *ᵥ x) m‖
+    = ‖((μ ^ k) • x) m‖ := by rw [h_k_power]
+    _ = ‖(μ ^ k) * x m‖ := by rw [h_component]
+    _ = ‖μ ^ k‖ * ‖x m‖ := by rw [norm_mul]
+    _ = ‖μ‖ ^ k * ‖x m‖ := by rw [norm_pow]
+    _ = (perronRoot_alt A) ^ k * ‖x m‖ := by rw [h_norm_eq_r]
+
+/-- For a primitive matrix power, triangle equality holds for the eigenvector equation. -/
+lemma triangle_equality_for_primitive_power
+    {A : Matrix n n ℝ} (_ : IsPrimitive A)
+    {μ : ℂ} {x : n → ℂ}
+    (hx_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x)
+    (h_x_abs_eig : A *ᵥ (fun i ↦ ‖x i‖) = (perronRoot_alt A) • (fun i ↦ ‖x i‖))
+    (h_norm_eq_r : ‖μ‖ = perronRoot_alt A)
+    (m : n) (k : ℕ) (hAk_pos : ∀ i j, 0 < (A ^ k) i j) :
+    ‖∑ l, ((A ^ k) m l : ℂ) * x l‖ = ∑ l, ‖((A ^ k) m l : ℂ) * x l‖ := by
+  have h_left : ‖∑ l, ((A ^ k) m l : ℂ) * x l‖ = (perronRoot_alt A) ^ k * ‖x m‖ := by
+    have h_eq : ‖∑ l, ((A ^ k) m l : ℂ) * x l‖ = ‖(((A ^ k).map (algebraMap ℝ ℂ)) *ᵥ x) m‖ := by
+      simp_all only [coe_algebraMap]
+      rfl
+    rw [h_eq]
+    exact norm_matrix_power_vec_eq_perron_power_norm hx_eig h_norm_eq_r k m
+  have h_right : ∑ l, ‖((A ^ k) m l : ℂ) * x l‖ = (perronRoot_alt A) ^ k * ‖x m‖ :=
+    sum_component_norms_eq_perron_power_norm h_x_abs_eig k m hAk_pos
+  rw [h_left, h_right]
+
+/-- Components align with their weighted versions under positive scaling. -/
+lemma component_phase_alignment
+    {A : Matrix n n ℝ} {x : n → ℂ} {k : ℕ} {m i : n}
+    (hAk_pos : 0 < (A ^ k) m i)
+    (hx_abs_pos : 0 < ‖x i‖) :
+    x i / ‖x i‖ = ((A ^ k) m i : ℂ) * x i / ‖((A ^ k) m i : ℂ) * x i‖ := by
+  have h_ne : x i ≠ 0 := norm_pos_iff.mp hx_abs_pos
+  exact (Complex.aligned_of_mul_of_real_pos hAk_pos rfl h_ne).symm
+
+/--  Phase propagation along a strictly-positive power of a primitive matrix. -/
+lemma entries_share_phase_of_primitive
+    {A : Matrix n n ℝ} (hA_prim : IsPrimitive A)
+    {μ : ℂ} {x : n → ℂ}
+    (hx_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x)
+    (h_x_abs_eig : A *ᵥ (fun i ↦ ‖x i‖) =
+                     (perronRoot_alt A) • (fun i ↦ ‖x i‖))
+    (h_norm_eq_r : ‖μ‖ = perronRoot_alt A)
+    (hx_abs_pos : ∀ i, 0 < ‖x i‖) :
+    ∀ i j : n, x i / ‖x i‖ = x j / ‖x j‖ := by
+  classical
+  obtain ⟨k, _hk_pos, hAk_pos⟩ := hA_prim.2
+  intro i j
+  let m := Classical.arbitrary n
+  have tri := triangle_equality_for_primitive_power
+              hA_prim hx_eig h_x_abs_eig h_norm_eq_r m k hAk_pos
+  have align_i :=
+    aligned_term_of_triangle_eq tri (Finset.mem_univ i)
+      (term_ne_zero_of_pos_entry (hAk_pos m i) (norm_pos_iff.mp (hx_abs_pos i)))
+  have align_j :=
+    aligned_term_of_triangle_eq tri (Finset.mem_univ j)
+      (term_ne_zero_of_pos_entry (hAk_pos m j) (norm_pos_iff.mp (hx_abs_pos j)))
+  have phase_i := component_phase_alignment (hAk_pos m i) (hx_abs_pos i)
+  have phase_j := component_phase_alignment (hAk_pos m j) (hx_abs_pos j)
+  trans ((A ^ k) m i : ℂ) * x i / ‖((A ^ k) m i : ℂ) * x i‖
+  · exact phase_i
+  trans (∑ l, ((A ^ k) m l : ℂ) * x l) / ‖∑ l, ((A ^ k) m l : ℂ) * x l‖
+  · exact align_i
+  trans ((A ^ k) m j : ℂ) * x j / ‖((A ^ k) m j : ℂ) * x j‖
+  · exact align_j.symm
+  · exact phase_j.symm
+
+lemma eigenvector_phase_aligned_of_primitive
+    {A : Matrix n n ℝ} (hA_prim : IsPrimitive A) (_ : ∀ i j, 0 ≤ A i j)
+    {μ : ℂ} (h_norm_eq_r : ‖μ‖ = perronRoot_alt A)
+    {x : n → ℂ} (hx_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x)
+    (h_x_abs_eig : A *ᵥ (fun i ↦ ‖x i‖) = (perronRoot_alt A) • (fun i ↦ ‖x i‖))
+    (hx_abs_pos : ∀ i, 0 < ‖x i‖) :
+    ∃ c : ℂ, ‖c‖ = 1 ∧ x = fun i ↦ c * ‖x i‖ := by
+  classical
+  let i₀ : n := Classical.arbitrary _
+  let c   : ℂ := x i₀ / ‖x i₀‖
+  have hc_norm : ‖c‖ = 1 := by
+    have h_pos : 0 < ‖x i₀‖ := hx_abs_pos i₀
+    simp [c, norm_div, Complex.norm_ofReal, abs_norm, h_pos.ne']
+  have h_same_phase : ∀ j : n, x j / ‖x j‖ = c := by
+    intro j
+    simp_rw [c]
+    exact entries_share_phase_of_primitive hA_prim hx_eig h_x_abs_eig h_norm_eq_r hx_abs_pos j i₀
+  refine ⟨c, hc_norm, ?_⟩
+  funext j
+  have hnorm_ne_zero : ‖x j‖ ≠ 0 := (hx_abs_pos j).ne'
+  calc
+    x j = (x j / ‖x j‖) * ‖x j‖ := by field_simp [hnorm_ne_zero]
+    _ = c * ‖x j‖ := by rw [h_same_phase j]
+
+/--
+If an eigenvector `x` is phase‐aligned, i.e. `x i = c * ‖x i‖` for every `i`,
+then its eigenvalue `μ` is real and coincides with the eigenvalue `r`
+of the real vector `‖x‖`.
+-/
+lemma eigenvalue_eq_of_phase_aligned
+    {A : Matrix n n ℝ} {μ : ℂ} {c : ℂ} (hc_norm : ‖c‖ = 1)
+    {x : n → ℂ} (hx_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x)
+    (h_phase : ∀ i, x i = c * ‖x i‖)
+    {r : ℝ} (h_x_abs_eig : A *ᵥ (fun i ↦ ‖x i‖) = r • (fun i ↦ ‖x i‖))
+    {i : n} (hx_abs_pos_i : 0 < ‖x i‖) :
+    μ = r := by
+  have hc_ne_zero : c ≠ 0 := by
+    intro hc
+    have : (‖(0 : ℂ)‖ : ℝ) = 1 := by
+      rw [hc, norm_zero] at hc_norm
+      aesop
+    norm_num at this
+  set x_abs : n → ℂ := fun j ↦ (‖x j‖ : ℂ) with hx_abs_def
+  have hx_repr : x = fun j ↦ c * x_abs j := by
+    funext j
+    rw [h_phase j, hx_abs_def]
+  have h_factored :
+      c • ((A.map (algebraMap ℝ ℂ)) *ᵥ x_abs) = c • (μ • x_abs) := by
+    have : (A.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x := hx_eig
+    rw [hx_repr] at this
+    have h_left : (A.map (algebraMap ℝ ℂ)) *ᵥ (fun j ↦ c * x_abs j) =
+                  c • ((A.map (algebraMap ℝ ℂ)) *ᵥ x_abs) := by
+      rw [← mulVec_smul]; rw [hx_abs_def]; simp; rfl
+    have h_right : μ • (fun j ↦ c * x_abs j) = c • (μ • x_abs) := by
+      ext j
+      simp only [Pi.smul_apply, smul_eq_mul]
+      ring
+    rw [h_left, h_right] at this
+    exact this
+  have h_cancelled :
+      (A.map (algebraMap ℝ ℂ)) *ᵥ x_abs = μ • x_abs := by
+    have := congrArg (fun v : n → ℂ ↦ c⁻¹ • v) h_factored
+    simp only [← smul_smul] at this
+    have h_left : c⁻¹ • (c • ((A.map (algebraMap ℝ ℂ)) *ᵥ x_abs)) = (A.map (algebraMap ℝ ℂ)) *ᵥ x_abs := by
+      rw [smul_smul, inv_mul_cancel₀ hc_ne_zero, one_smul]
+    have h_right : c⁻¹ • (c • (μ • x_abs)) = μ • x_abs := by
+      rw [smul_smul, ← smul_smul]
+      have : c⁻¹ * c * μ = μ := by
+        rw [mul_assoc]; rw [propext (inv_mul_eq_iff_eq_mul₀ hc_ne_zero)]
+      rw [propext (inv_smul_eq_iff₀ hc_ne_zero)]
+    rw [h_left, h_right] at this
+    exact this
+  have h_real :
+      (A *ᵥ fun j ↦ ‖x j‖) i = r * ‖x i‖ := by
+    rw [h_x_abs_eig]
+    simp only [Pi.smul_apply, smul_eq_mul]
+  have h_real_C :
+      ((A.map (algebraMap ℝ ℂ)) *ᵥ x_abs) i = (r : ℂ) * x_abs i := by
+    have h_sum : (A.map (algebraMap ℝ ℂ)) *ᵥ x_abs =
+                fun j ↦ ∑ k, (A j k : ℂ) * (‖x k‖ : ℂ) := by
+      ext j
+      rfl
+    have h_real_sum : (A *ᵥ fun j ↦ ‖x j‖) i =
+                     ∑ k, A i k * ‖x k‖ := by
+      rfl
+    calc ((A.map (algebraMap ℝ ℂ)) *ᵥ x_abs) i
+        = ∑ k, (A i k : ℂ) * (‖x k‖ : ℂ) := by rw [h_sum]
+      _ = (∑ k, A i k * ‖x k‖ : ℂ) := by
+          simp only [← map_sum]
+      _ = ((A *ᵥ fun j ↦ ‖x j‖) i : ℂ) := by
+          rw [h_real_sum]; simp
+      _ = (r * ‖x i‖ : ℂ) := by rw [h_real]; simp
+      _ = (r : ℂ) * (‖x i‖ : ℂ) := by simp only [Complex.ofReal_mul]
+      _ = (r : ℂ) * x_abs i := by rw [hx_abs_def]
+  have h_key : (r : ℂ) * x_abs i = μ * x_abs i := by
+    rw [← h_real_C]
+    have := congr_fun h_cancelled i
+    simp only [Pi.smul_apply, smul_eq_mul] at this
+    exact this
+  have h_norm_ne_zero : x_abs i ≠ 0 := by
+    rw [hx_abs_def]
+    exact Complex.ofReal_ne_zero.mpr hx_abs_pos_i.ne'
+  have h_final : (r : ℂ) = μ := by
+    apply (mul_right_cancel₀ h_norm_ne_zero)
+    exact h_key
+  exact h_final.symm
+
+theorem spectral_dominance_of_primitive
+    {A : Matrix n n ℝ} (hA_prim : IsPrimitive A)
+    (hA_nonneg : ∀ i j, 0 ≤ A i j)
+    {μ : ℂ} (h_is_eigenvalue : μ ∈ spectrum ℂ (A.map (algebraMap ℝ ℂ)))
+    (h_norm_eq_r : ‖μ‖ = perronRoot_alt A) :
+    μ = perronRoot_alt A := by
+  -- 1.  we obtain a (non-zero) eigenvector `x` corresponding to `μ`.
+  let B := A.map (algebraMap ℝ ℂ)
+  have h_spec : μ ∈ spectrum ℂ (toLin' B) := by
+    rwa [spectrum.Matrix_toLin'_eq_spectrum]
+  obtain ⟨x, hx_ne_zero, hx_eig_lin⟩ := Module.End.exists_eigenvector_of_mem_spectrum h_spec
+  have hx_eig : B *ᵥ x = μ • x := by rwa [toLin'_apply] at hx_eig_lin
+  -- 2.  we build the sub-invariance inequality  r • |x| ≤ A ⋅ |x|.
+  have h_subinv :
+      (perronRoot_alt A) • (fun i => ‖x i‖) ≤ A *ᵥ (fun i => ‖x i‖) := by
+    have := eigenvalue_abs_subinvariant hA_nonneg hx_eig
+    simpa [h_norm_eq_r] using this
+  -- 3. we upgrade sub-invariance to equality, so `|x|` is a Perron eigenvector.
+  have h_x_abs_eig :
+      A *ᵥ (fun i => ‖x i‖) = (perronRoot_alt A) • (fun i => ‖x i‖) := by
+    have hA_irred : Irreducible A := IsPrimitive.to_Irreducible hA_prim hA_nonneg
+    have hx_abs_nonneg : ∀ i, 0 ≤ ‖x i‖ := fun _ ↦ norm_nonneg _
+    have hx_abs_ne_zero : (fun i => ‖x i‖) ≠ 0 := by
+      intro h_abs
+      have : x = 0 := by
+        funext i
+        have : ‖x i‖ = 0 := congrFun h_abs i
+        exact (norm_eq_zero).1 this
+      exact hx_ne_zero this
+    exact
+      subinvariant_equality_implies_eigenvector
+        hA_irred hA_nonneg hx_abs_nonneg hx_abs_ne_zero h_subinv
+  -- 4. we turn the triangle inequality into equality.
+  have h_triangle_eq :
+      ∀ i, ‖∑ j, (A i j : ℂ) * x j‖ = ∑ j, ‖(A i j : ℂ) * x j‖ :=
+    triangle_equality_of_norm_eq_perron_root
+      hA_nonneg hx_eig h_norm_eq_r h_x_abs_eig
+  -- 5.  Strict positivity of `|x|`.
+  have hx_abs_pos : ∀ i, 0 < ‖x i‖ :=
+    eigenvector_norm_pos_of_primitive_and_norm_eq_perron_root
+      hA_prim hA_nonneg h_is_eigenvalue h_norm_eq_r
+      hx_ne_zero hx_eig h_x_abs_eig
+  -- 6.  Global phase alignment of the complex eigenvector `x`.
+  obtain ⟨c, hc_norm, h_phase⟩ :=
+    eigenvector_phase_aligned_of_primitive
+      hA_prim hA_nonneg h_norm_eq_r
+      hx_eig h_x_abs_eig hx_abs_pos
+  -- μ = r  from the phase-aligned situation.
+  have hμ_eq_r :
+      μ = perronRoot_alt A :=
+    eigenvalue_eq_of_phase_aligned
+      hc_norm
+      hx_eig
+      (by
+        intro i
+        exact congrFun h_phase i)
+      h_x_abs_eig
+      (hx_abs_pos (Classical.arbitrary n))
+  exact hμ_eq_r
+
+/--
+**Spectral Dominance for Primitive Matrices**
+(Seneta 1.1 (c)).
+If `A` is primitive with Perron root `r`, every eigenvalue `μ ≠ r`
+satisfies `‖μ‖ < r`.
+-/
+theorem spectral_dominance_of_primitive'
+    (hA_prim   : IsPrimitive A) (hA_nonneg : ∀ i j, 0 ≤ A i j)
+    (μ : ℂ) (h_is_eigenvalue : μ ∈ spectrum ℂ (A.map (algebraMap ℝ ℂ)))
+    (h_ne_perron : μ ≠ perronRoot_alt A) :
+    ‖μ‖ < perronRoot_alt A := by
+  have hA_irred : Irreducible A := IsPrimitive.to_Irreducible hA_prim hA_nonneg
+  have h_le : ‖μ‖ ≤ perronRoot_alt A := by
+    exact @eigenvalue_abs_le_perron_root n _ _ _ A hA_irred hA_nonneg μ h_is_eigenvalue
+  have h_lt_or_eq : ‖μ‖ < perronRoot_alt A ∨ ‖μ‖ = perronRoot_alt A :=
+    lt_or_eq_of_le h_le
+  cases h_lt_or_eq with
+  | inl h_lt   => exact h_lt
+  | inr h_eq   =>
+      have h_eqμ : μ = perronRoot_alt A := by
+        exact @spectral_dominance_of_primitive n _ _ _ A hA_prim hA_nonneg μ h_is_eigenvalue h_eq
+      exact (h_ne_perron h_eqμ).elim
