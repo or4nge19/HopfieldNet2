@@ -391,4 +391,6 @@ lemma aligned_of_triangle_eq' {u : ℂ} {v : ι → ℂ} {s : Finset ι}
   rw [mul_comm] at h_aligned
   field_simp [h_aligned, hu_norm_ne_zero, hvi_norm_ne_zero]
 
+
+
 end Complex
