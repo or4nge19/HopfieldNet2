@@ -52,7 +52,12 @@ open Rat
 def QAbsSmall (e x : ℚ) : Prop := -e ≤ x ∧ x ≤ e
 
 lemma QAbsSmall_opp (x y : ℚ) (h : QAbsSmall x y) : QAbsSmall x (-y) :=
-  ⟨by simpa [neg_le_neg_iff] using h.2, sorry⟩
+  ⟨by simpa [neg_le_neg_iff] using h.2,
+    (by
+     unfold QAbsSmall at *
+     obtain ⟨h1,h2⟩:= h
+     exact neg_le.mp h1
+    )⟩
 
 -- (**
 -- ** Example of a Metric: <Q, Qball>
