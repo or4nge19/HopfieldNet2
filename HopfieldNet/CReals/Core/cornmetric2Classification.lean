@@ -1,5 +1,5 @@
 import Mathlib.Analysis.Normed.Field.Lemmas
-import HopfieldNet.CReals.Core.CoRNmetric2MetricUnifCont
+import HopfieldNet.CReals.Core.CoRNmetric2Metric
 --import HopfieldNet.CReals.CornQposMinMax
 -- (*
 -- Copyright © 2008 Russell O’Connor

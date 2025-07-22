@@ -115,11 +115,9 @@ If (2 * e) ≤ approximate x e, then x is positive.
 --     }
 -- ⟩
 
--- Lean4 version of the Coq proof for CRpos_char
-
 lemma CRpos_char_proof {e : Qpos} {x : CR'}
   (h₂ : (2 : ℚ) * e.val ≤ RegularFunction.approximate x (QposInf.Qpos2QposInf e)) :
-  e.val ≤ x := by sorry
+     e.val ≤ x := by sorry
 
 -- Now use this lemma to fill in the `sorry` in CRpos_char
 def CRpos_char (e : Qpos) (x : CR')
@@ -176,20 +174,9 @@ lemma CRneg_wd {x y : CR'} (hxy : x = y) (h : CRneg x) : CRneg y :=
   let ⟨e, he⟩ := h
   ⟨e, by rw [←hxy]; exact he⟩
 
-instance : LE Q_as_MetricSpace.carrier := sorry
-
-/--
-A constructive real is negative if there exists a positive rational upper bound on its negation.
-This is a characterization similar to the positive case.
-If (approximate x e) ≤ -(2 * e), then x is negative.
--/
-def CRneg_char (e : Qpos) (x : CR')
-  (h : RegularFunction.approximate x (QposInf.Qpos2QposInf e) ≤ -(2 : ℚ) * e.val) : CRneg x :=
-  ⟨e.val, by
-    constructor
-    · exact Qpos_ispos e
-    · sorry
-  ⟩
+instance : LE Q_as_MetricSpace.carrier := by {
+  sorry
+}
 
 -- Program Definition CRneg_char (e:Qpos) (x:CR) (H: (approximate x e) <= -(2#1)*e): CRneg x := e.
 
@@ -211,6 +198,20 @@ def CRneg_char (e : Qpos) (x : CR')
 --  simpl. ring_simplify. apply Qle_refl.
 -- Qed.
 
+/--
+A constructive real is negative if there exists a positive rational upper bound on its negation.
+This is a characterization similar to the positive case.
+If (approximate x e) ≤ -(2 * e), then x is negative.
+-/
+def CRneg_char (e : Qpos) (x : CR')
+  (h : RegularFunction.approximate x (QposInf.Qpos2QposInf e) ≤ -(2 : ℚ) * e.val) : CRneg x :=
+  ⟨e.val, by
+    constructor
+    · exact Qpos_ispos e
+    · sorry
+  ⟩
+
+
 -- (** Strict inequality is defined in terms of positivity. *)
 -- Definition CRltT (x y:CR) := CRpos (y-x)%CR.
 
@@ -222,7 +223,6 @@ def CRltT (x y : CR') : Prop := CRpos (y - x)
 
 namespace CR
 scoped infix:50 "<" => CRltT
-
 
 -- Infix "<" := CRltT : CR_scope.
 -- Lemma CRltT_wd : forall x1 x2, (x1==x2 -> forall y1 y2, y1==y2 -> x1 < y1 -> x2 < y2)%CR.
@@ -282,7 +282,9 @@ def Qscale_modulus (a : ℚ) (e : Qpos) : QposInf :=
       QposInf.Qpos2QposInf ⟨(a.den : ℚ) / (an : ℚ) * e.val, by
         -- Proof that this is positive
         have : 0 < (an : ℚ) := by exact_mod_cast Nat.cast_pos.mpr (Nat.pos_of_ne_zero (sorry))
-        have : 0 < (a.den : ℚ) := by sorry
+        have : 0 < (a.den : ℚ) := by {
+          sorry
+        }
         have : 0 < e.val := Qpos_ispos e
         apply mul_pos
         · apply div_pos <;> assumption
@@ -297,21 +299,6 @@ def Qscale_modulus (a : ℚ) (e : Qpos) : QposInf :=
         · apply div_pos <;> assumption
         · assumption
       ⟩
-
-/-
-Elimination principle for `Qscale_modulus`.
-Given a predicate `P : QposInf → Type`, a rational `x : ℚ`, and `e : Qpos`,
-if `x = 0` implies `P QposInfinity`, and for all `y : Qpos`, `QAbsSmall (e.val / y.val) x` implies `P (Qpos2QposInf y)`,
-then `P (Qscale_modulus x e)`.
--/
-def Qscale_modulus_elim
-  (P : QposInf → Type)
-  (x : ℚ) (e : Qpos)
-  (h0 : x = 0 → P QposInf.QposInfinity)
-  (h1 : ∀ y : Qpos, QAbsSmall (e.val / y.val) x → P (QposInf.Qpos2QposInf y)) :
-  P (Qscale_modulus x e) :=
-sorry
-
 
 -- Lemma Qscale_modulus_elim : forall (P:QposInf -> Type) (x:Q) (e:Qpos),
 -- (x==0 -> P QposInfinity)%Q ->
@@ -347,6 +334,20 @@ sorry
 --  rewrite Qmult_inv_r, Qmult_1_l. reflexivity.
 --  apply Qpos_nonzero.
 -- Qed.
+/-
+Elimination principle for `Qscale_modulus`.
+Given a predicate `P : QposInf → Type`, a rational `x : ℚ`, and `e : Qpos`,
+if `x = 0` implies `P QposInfinity`, and for all `y : Qpos`, `QAbsSmall (e.val / y.val) x` implies `P (Qpos2QposInf y)`,
+then `P (Qscale_modulus x e)`.
+-/
+def Qscale_modulus_elim
+  (P : QposInf → Type)
+  (x : ℚ) (e : Qpos)
+  (h0 : x = 0 → P QposInf.QposInfinity)
+  (h1 : ∀ y : Qpos, QAbsSmall (e.val / y.val) x → P (QposInf.Qpos2QposInf y)) :
+  P (Qscale_modulus x e) :=
+sorry
+
 
 -- Lemma Qscale_modulus_pos (a e: Qpos): exists P,
 --     Qscale_modulus (proj1_sig a) e
@@ -357,6 +358,53 @@ sorry
 --  simpl. unfold Qpos_inv, Qpos_mult.
 --  eauto.
 -- Qed.
+
+
+/--
+If `a` and `e` are positive rationals, then `Qscale_modulus a.val e`
+is equal to `QposInf.Qpos2QposInf ⟨(1 / a.val) * e.val, _⟩` for some proof of positivity.
+-/
+lemma Qscale_modulus_pos (a e : Qpos) :
+  ∃ P : 0 < (1 / a.val) * e.val,
+    Qscale_modulus a.val e = QposInf.Qpos2QposInf ⟨(1 / a.val) * e.val, P⟩ :=
+by
+  -- By definition of Qscale_modulus for positive a
+  have ha : a.val ≠ 0 := Qpos_nonzero a
+  have hpos : 0 < (1 / a.val) * e.val := by
+    apply mul_pos
+    · apply div_pos
+      · simp only [zero_lt_one]
+      · exact Qpos_ispos a
+    · exact Qpos_ispos e
+  use hpos
+  -- Qscale_modulus uses a.num ≠ 0, so a.val = a.num / a.den
+  -- For positive rationals, Qscale_modulus returns Qpos2QposInf ((a.den : ℚ) / (a.num : ℚ) * e.val)
+  -- But a.val = a.num / a.den, so 1 / a.val = a.den / a.num
+  -- Thus, Qscale_modulus a.val e = QposInf.Qpos2QposInf ⟨(1 / a.val) * e.val, hpos⟩
+  rw [Qscale_modulus]
+  -- a.num is positive, so matches Int.ofNat an
+  cases a.val.num
+  case ofNat an =>
+    -- a.val.num = an > 0
+    -- Qscale_modulus returns Qpos2QposInf ((a.den : ℚ) / (an : ℚ) * e.val)
+    -- But a.val = an / a.den, so 1 / a.val = a.den / an
+    -- So Qpos2QposInf ⟨(a.den : ℚ) / (an : ℚ) * e.val, hpos⟩ = Qpos2QposInf ⟨(1 / a.val) * e.val, hpos⟩
+    simp only [Int.ofNat_eq_coe, Nat.succ_eq_add_one, Nat.cast_add, Nat.cast_one, one_div]
+    simp_all only [ne_eq]
+    split
+    next x heq =>
+      simp_all only [Int.natCast_eq_zero, reduceCtorEq]
+      subst heq
+      simp_all only [one_div]
+      sorry
+    next x an_1 x_1 heq =>
+      simp only [QposInf.Qpos2QposInf.injEq]
+      sorry
+    next x an_1 heq => simp_all only [reduceCtorEq]
+  case negSucc an =>
+    simp only [Nat.succ_eq_add_one, Nat.cast_add, Nat.cast_one, one_div,
+    QposInf.Qpos2QposInf.injEq]
+    sorry
 
 -- Lemma Qscale_uc_prf (a:Q) :
 --   @is_UniformlyContinuousFunction

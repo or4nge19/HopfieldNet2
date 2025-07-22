@@ -1,4 +1,4 @@
--- import HopfieldNet.CReals.Core.CoRNmetric2Metric
+import HopfieldNet.CReals.Core.CoRNmetric2Metric
 -- import HopfieldNet.CReals.modelstructuresPosinf
 
 
@@ -42,7 +42,8 @@
 -- (* begin hide *)
 -- Arguments ball_ex [X].
 -- (* end hide *)
--- Lemma ball_ex_weak_le : forall (X:MetricSpace) (e d:QposInf) (a b:X), QposInf_le e d ->  ball_ex e a b -> ball_ex d a b.
+-- Lemma ball_ex_weak_le : forall (X:MetricSpace)
+   --(e d:QposInf) (a b:X), QposInf_le e d ->  ball_ex e a b -> ball_ex d a b.
 -- Proof.
 --  intros X e d a b Hed Hab.
 --  destruct d as [d|]; destruct e as [e|].

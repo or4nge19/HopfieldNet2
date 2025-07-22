@@ -1,8 +1,3 @@
-import HopfieldNet.CReals.Cauchy_CReals
-import Mathlib.Topology.UniformSpace.Cauchy
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import HopfieldNet.CReals.CoRNmodelordfieldsQordfield
-
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe
@@ -51,15 +46,6 @@ import HopfieldNet.CReals.CoRNmodelordfieldsQordfield
 
 -- Definition Cauchy_IR : CReals := R_as_CReals _ Q_is_archemaedian.
 
-def Cauchy_IR : CReals (R := ℚ) := by {
-  constructor
-  · constructor
-    · apply R_is_complete
-    · intros x
-      have := rat_is_archimedean x
-      obtain ⟨N,hN⟩:= this
-      use N
-      exact le_of_lt hN}
 -- (** The term [Cauchy_IR] is of type [CReals]. *)
 
 -- Close Scope Q_scope.

@@ -25,13 +25,12 @@ import  HopfieldNet.CReals.CRcorrect
 -- Require Import CoRN.metric2.UniformContinuity.
 -- Require Import CoRN.model.totalorder.QposMinMax.
 
+-- Require Import CoRN.reals.fast.CRcorrect.
+-- Require Import CoRN.model.metric2.Qmetric.
 
 -- Require Export CoRN.reals.fast.CRFieldOps.
 -- Require Export CoRN.model.ordfields.CRordfield.
 -- Require Export CoRN.reals.CReals.
-
--- Require Import CoRN.reals.fast.CRcorrect.
--- Require Import CoRN.model.metric2.Qmetric.
 -- Require Import CoRN.tactics.CornTac.
 
 -- Opaque CR.

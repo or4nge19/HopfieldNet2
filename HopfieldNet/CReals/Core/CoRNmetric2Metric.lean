@@ -79,14 +79,11 @@ structure IsMetricSpace {X : Type} (B : ℚ → X → X → Prop) : Prop where
   nonneg : ∀ e a b, B e a b → 0 ≤ e
   stable : ∀ e a b, ¬¬ B e a b → B e a b
 
-
 structure MetricSpace' where
   carrier : Type
   ball : ℚ → carrier → carrier → Prop
   ball_e_wd : ∀ (e d : ℚ) (x y : carrier), e = d → (ball e x y ↔ ball d x y)
   is_metric : IsMetricSpace ball
-
-#check MetricSpace
 
 -- Record MetricSpace : Type :=
 -- { msp_car :> Type
@@ -108,6 +105,9 @@ def msp_eq {m : MetricSpace'} (x y : m.carrier) : Prop :=
 def msp_rel (m : MetricSpace') : m.carrier → m.carrier → Prop :=
   λ x y => msp_eq x y
 
+-- #[global]
+-- Instance msp_Equiv (m : MetricSpace) : Equiv m := @msp_eq m.
+
 instance msp_Setoid (m : MetricSpace') : Setoid m.carrier where
   r := msp_eq
   iseqv := ⟨
@@ -123,9 +123,6 @@ instance msp_Setoid (m : MetricSpace') : Setoid m.carrier where
       have tri := m.is_metric.triangle 0 0 x y z hxy hyz
       simp only [zero_add] at tri
       exact tri⟩
-
--- #[global]
--- Instance msp_Equiv (m : MetricSpace) : Equiv m := @msp_eq m.
 
 -- Add Parametric Morphism {m:MetricSpace} : (@ball m)
 --     with signature Qeq ==> (@msp_eq m) ==> (@msp_eq m) ==> iff as ball_wd.
@@ -151,6 +148,7 @@ instance msp_Setoid (m : MetricSpace') : Setoid m.carrier where
 --     exact H2.
 --     apply (msp_sym (msp m)), H1.
 -- Qed.
+
 theorem ball_wd {m : MetricSpace'} {e d : ℚ} {x y x' y' : m.carrier}
   (heq : e = d) (hx : msp_eq x x') (hy : msp_eq y y') :
   (m.ball e x y ↔ m.ball d x' y') := by
@@ -182,7 +180,6 @@ theorem ball_wd {m : MetricSpace'} {e d : ℚ} {x y x' y' : m.carrier}
 
 theorem msp_eq_refl {m : MetricSpace'} (x : m.carrier) : msp_eq x x :=
   m.is_metric.refl 0 (by linarith) x
-
 
 -- Lemma msp_eq_sym : forall {m:MetricSpace} (x y : m),
 --     msp_eq x y -> msp_eq y x.
@@ -221,9 +218,16 @@ theorem msp_eq_trans {m : MetricSpace'} {x y z : m.carrier}
 --       as msp_eq_rel.
 -- (* end hide *)
 
+
+-- The following instance establishes that `msp_eq` is an equivalence relation on `m.carrier`.
 instance msp_eq_setoid (m : MetricSpace') : Setoid m.carrier where
   r := msp_eq
-  iseqv := ⟨msp_eq_refl, @msp_eq_sym m, @msp_eq_trans m⟩
+  iseqv := ⟨
+    msp_eq_refl,
+    msp_eq_sym,
+    msp_eq_trans
+  ⟩
+
 
 -- #[global]
 -- Instance msp_Setoid (m : MetricSpace) : Setoid m := {}.
@@ -265,15 +269,16 @@ theorem ball_refl {e : ℚ} {a : X.carrier} (h : 0 ≤ e) : X.ball e a a :=
 theorem ball_sym {e : ℚ} {a b : X.carrier} (h : X.ball e a b) : X.ball e b a :=
   X.is_metric.symm e h
 
-theorem ball_triangle {e₁ e₂ : ℚ} {a b c : X.carrier}
-  (h₁ : X.ball e₁ a b) (h₂ : X.ball e₂ b c) : X.ball (e₁ + e₂) a c :=
-  X.is_metric.triangle e₁ e₂ a b c h₁ h₂
 
 -- Lemma ball_triangle : forall e1 e2 (a b c:X),
 --     ball e1 a b -> ball e2 b c -> ball (e1 + e2) a c.
 -- Proof.
 --  apply (msp_triangle (msp X)).
 -- Qed.
+
+theorem ball_triangle {e₁ e₂ : ℚ} {a b c : X.carrier}
+  (h₁ : X.ball e₁ a b) (h₂ : X.ball e₂ b c) : X.ball (e₁ + e₂) a c :=
+  X.is_metric.triangle e₁ e₂ a b c h₁ h₂
 
 -- Lemma ball_closed :  forall e (a b:X),
 --     (forall d, 0 < d -> ball (e + d) a b) -> ball e a b.
@@ -397,14 +402,21 @@ attribute [simp] ball_refl ball_sym ball_triangle ball_weak
 -- Hint Resolve ball_refl ball_sym ball_triangle ball_weak : metric.
 -- (* end hide *)
 
--- Definition ball_ex (X: MetricSpace) (e: QposInf): X -> X -> Prop :=
---  match e with
---   | Qpos2QposInf e' => ball (proj1_sig e')
---   | QposInfinity => fun a b => True
---  end.
+attribute [simp] ball_refl ball_sym ball_triangle ball_weak
 
 -- Definition ball_ex (X: MetricSpace) (e: QposInf): X -> X -> Prop :=
 --  match e with
 --   | Qpos2QposInf e' => ball (proj1_sig e')
 --   | QposInfinity => fun a b => True
 --  end.
+
+-- inductive QposInf
+-- | qpos (e : {q : ℚ // 0 < q}) -- positive rational
+-- | infinity
+
+-- open QposInf
+
+-- def ball_ex (X : MetricSpace') (e : QposInf) : X.carrier → X.carrier → Prop :=
+--   match e with
+--   | qpos e'    => X.ball e'.val
+--   | infinity   => fun _ _ => True

@@ -1,6 +1,7 @@
 import  HopfieldNet.CReals.Core.CoRNmodeltotalorderQMinMax
 import HopfieldNet.CReals.Core.CornQposMinMax
 import HopfieldNet.CReals.modelstructuresPosinf
+import HopfieldNet.CReals.Core.metric2UniformContinuity
 -- (*
 -- Copyright © 2006-2008 Russell O’Connor
 -- Copyright © 2020 Vincent Semeria
@@ -195,20 +196,6 @@ by
     rw [h]
     exact H d1 d2
 
-structure IsMetricSpace {X : Type} (B : ℚ → X → X → Prop) : Prop where
-  refl : ∀ e, 0 ≤ e → Reflexive (B e)
-  symm : ∀ e, Symmetric (B e)
-  triangle : ∀ e₁ e₂ a b c, B e₁ a b → B e₂ b c → B (e₁ + e₂) a c
-  closed : ∀ e a b, (∀ d, 0 < d → B (e + d) a b) → B e a b
-  nonneg : ∀ e a b, B e a b → 0 ≤ e
-  stable : ∀ e a b, ¬¬ B e a b → B e a b
-
-
-structure MetricSpace' where
-  carrier : Type
-  ball : ℚ → carrier → carrier → Prop
-  ball_e_wd : ∀ (e d : ℚ) (x y : carrier), e = d → (ball e x y ↔ ball d x y)
-  is_metric : IsMetricSpace ball
 
 -- The metric space structure for regular functions.
 def regFun_is_MetricSpace {X : MetricSpace'} :

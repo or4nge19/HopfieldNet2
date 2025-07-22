@@ -58,7 +58,7 @@ abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRi
   /- The set of hidden neurons, defined as the empty set. -/
   Uh := ∅
   /- A proof that all neurons are in the universal set. -/
-  hU := by simp only [Set.mem_univ, Set.union_self, Set.union_empty]
+  hU := by simp only [Set.union_self, Set.union_empty]
   /- A proof that the input set is not equal to the empty set. -/
   hUi := Ne.symm Set.empty_ne_univ
   /- A proof that the output set is not equal to the empty set. -/
@@ -416,7 +416,7 @@ def NeuralNetwork.State.pluses := ∑ u, if s.act u = 1 then 1 else 0
 
 @[simp]
 theorem energy_lt_zero_or_pluses_increase (hc : (s.Up wθ u).act u ≠ s.act u) :
-    (s.Up wθ u).E wθ < s.E wθ ∨ (s.Up wθ u).E wθ = s.E wθ ∧ s.pluses < (s.Up wθ u).pluses :=
+    (s.Up wθ u).E wθ < s.E wθ ∨ ((s.Up wθ u).E wθ = s.E wθ ∧ s.pluses < (s.Up wθ u).pluses) :=
 (lt_or_eq_of_le (energy_diff_leq_zero wθ hc)).elim Or.inl (fun hr => Or.inr (by
   constructor; assumption; rw [← sub_eq_zero, E_final_Form, mul_eq_zero] at hr
   cases' hr with h1 h2

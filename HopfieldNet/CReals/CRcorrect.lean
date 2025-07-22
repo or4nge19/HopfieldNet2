@@ -3,6 +3,8 @@ import  HopfieldNet.CReals.Core.metric2UniformContinuity
 import  HopfieldNet.CReals.Core.CoRNmodeltotalorderQMinMax
 import  HopfieldNet.CReals.Core.CornQposMinMax
 import  HopfieldNet.CReals.Core.CoRNmodelmetric2Qmetric
+import HopfieldNet.CReals.Core.Cornmodelmetric2CRmetric
+import HopfieldNet.CReals.Cauchy_IR
 -- (*
 -- Copyright © 2006-2008 Russell O’Connor
 
@@ -29,22 +31,21 @@ import  HopfieldNet.CReals.Core.CoRNmodelmetric2Qmetric
 -- Require Import CoRN.metric2.UniformContinuity.
 -- Require Import CoRN.model.totalorder.QposMinMax.
 -- Require Import CoRN.model.reals.Cauchy_IR.
--- Require Import CoRN.tactics.CornTac.
+-- Require Import CoRN.model.metric2.Qmetric.
+-- Require Import CoRN.model.totalorder.QMinMax.
 
+-- Require Import CoRN.tactics.CornTac.
 
 -- From Coq Require Import Lia.
 
--- Require Import CoRN.model.metric2.Qmetric.
-
--- Require Import CoRN.model.totalorder.QMinMax.
-
 -- From Coq Require Import Qabs.
+
+open RegularFunction QposInf
 
 -- Require Export CoRN.reals.fast.CRFieldOps.
 
 -- (* Backwards compatibility for Hint Rewrite locality attributes *)
 -- Set Warnings "-unsupported-attributes".
-
 
 -- Local Open Scope nat_scope.
 
@@ -60,8 +61,47 @@ import  HopfieldNet.CReals.Core.CoRNmodelmetric2Qmetric
 -- *** CR to Cauchy_IR
 -- *)
 
+#check Cauchy_IR
+#check CR
+
 -- Definition CRasCauchy_IR_raw (x:CR) (n:nat)
 --   := approximate x (Qpos2QposInf (1 # P_of_succ_nat n)).
+
+--do this for 0 = n maybe too.
+def CRasCauchy_IR_raw (x : CR_carrier) (n : Nat) ( hn : 0 < n) : ℚ :=
+  approximate x (Qpos2QposInf (⟨1/n+1, by {
+    refine Right.add_pos_of_pos_of_nonneg ?_ rfl
+    simp only [one_div, inv_pos, Nat.cast_pos]
+    exact hn
+  }⟩))
+
+-- Lemma CRasCauchy_IR_raw_is_Cauchy : forall (x:CR),
+-- Cauchy_prop (R:=Q_as_COrdField) (CRasCauchy_IR_raw x).
+-- Proof.
+--  intros x e He.
+--  destruct e as [en ed].
+--  destruct en as [|en|en]. inversion He. 2: inversion He.
+--  unfold CRasCauchy_IR_raw.
+--  exists (pred (nat_of_P (2*ed))).
+--  rewrite <- anti_convert_pred_convert.
+--  intros m Hm.
+--  change (ball (en#ed) (approximate x (Qpos2QposInf (1 # P_of_succ_nat m)))
+--               (approximate x (Qpos2QposInf (1#(2*ed))))).
+--  eapply ball_weak_le ;[|apply regFun_prf].
+--  simpl.
+--  apply Qle_trans with (((1 # P_of_succ_nat (pred (nat_of_P (2*ed)))) + (1 # 2 * ed)))%Q.
+--   eapply plus_resp_leEq.
+--   change (P_of_succ_nat (pred (nat_of_P (2*ed))) <= P_of_succ_nat m)%Z.
+--   rewrite <-!POS_anti_convert. apply inj_le. lia.
+--  rewrite <- anti_convert_pred_convert.
+--  stepl ((2#1)*(1#(2*ed)))%Q; [|simpl; ring].
+--  change ((2#1)*((1/2)*(1/ed)) <= en#ed)%Q.
+--  ring_simplify.
+--  change ((2#2)*(1/ed)<=en#ed)%Q.
+--  setoid_replace (2#2)%Q  with 1%Q by constructor.
+--  ring_simplify.
+--  auto with *.
+-- Qed.
 
 -- Lemma CRasCauchy_IR_raw_is_Cauchy : forall (x:CR),
 -- Cauchy_prop (R:=Q_as_COrdField) (CRasCauchy_IR_raw x).
@@ -547,6 +587,7 @@ import  HopfieldNet.CReals.Core.CoRNmodelmetric2Qmetric
 --  refine (proj2 (Hn1 _ _)).
 --  apply Nat.le_trans with n; [unfold n;auto with *|assumption].
 -- Qed.
+
 
 -- #[global]
 -- Hint Rewrite Cauchy_IR_le_as_CR_le : CRtoCauchy_IR.

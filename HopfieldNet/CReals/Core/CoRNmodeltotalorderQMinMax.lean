@@ -35,7 +35,7 @@ import Mathlib.Analysis.Normed.Field.Lemmas
 --   destruct (x?=y); intros H; (right; abstract(apply H; discriminate)) || (left; reflexivity).
 --  refine (Qnot_lt_le _ _).
 -- Defined.
-
+set_option linter.unusedVariables false
 /--
 Decidable comparison for rationals: either `x < y` or `y ≤ x`.
 -/
@@ -122,7 +122,7 @@ def Qmin_case {P : ℚ → Sort*} (x y : ℚ)
   if h : x ≤ y then by
     dsimp [Qmin]; rw [if_pos h]; exact h₁ h
   else by
-    dsimp [Qmin]; rw [if_neg h]; exact h₂ (le_of_not_le h)
+    dsimp [Qmin]; rw [if_neg h]; exact h₂ (le_of_not_ge h)
 
 /--
 Case analysis for `Qmax`: given `x y : ℚ` and a predicate `P : ℚ → Sort*`,
@@ -133,9 +133,7 @@ def Qmax_case {P : ℚ → Sort*} (x y : ℚ)
   if h : x ≤ y then by
     dsimp [Qmax]; rw [if_pos h]; exact h₂ h
   else by
-    dsimp [Qmax]; rw [if_neg h]; exact h₁ (le_of_not_le h)
-
-
+    dsimp [Qmax]; rw [if_neg h]; exact h₁ (le_of_not_ge h)
 
 
 -- Definition QTotalOrder : TotalOrder.
@@ -162,8 +160,36 @@ theorem Qmin_le_compat {w x y z : ℚ} (h₁ : w ≤ y) (h₂ : x ≤ z) : Qmin 
   split_ifs with hw hx
   simp_all only
   exact Preorder.le_trans w x z hw h₂
-  · sorry
+  · simp only [not_le] at hw
+    have hw' : x ≤ w := by {
+      rw [le_iff_lt_or_eq]
+      left
+      exact hw
+    }
+    exact le_trans hw' h₁
   · exact h₂
+
+-- Let Qto := QTotalOrder.
+
+-- Definition Qmin_lb_l : forall x y : Q, Qmin x y <= x := @meet_lb_l Qto.
+-- Definition Qmin_lb_r : forall x y : Q, Qmin x y <= y := @meet_lb_r Qto.
+-- Definition Qmin_glb : forall x y z : Q, z <= x -> z <= y -> z <= (Qmin x y) :=
+--  @meet_glb Qto.
+-- Definition Qmin_comm : forall x y : Q, Qmin x y == Qmin y x := @meet_comm Qto.
+-- Definition Qmin_assoc : forall x y z : Q, Qmin x (Qmin y z) == Qmin (Qmin x y) z:=
+--  @meet_assoc Qto.
+-- Definition Qmin_idem : forall x : Q, Qmin x x == x := @meet_idem Qto.
+-- Definition Qle_min_l : forall x y : Q, x <= y <-> Qmin x y == x := @le_meet_l Qto.
+-- Definition Qle_min_r : forall x y : Q, y <= x <-> Qmin x y == y := @le_meet_r Qto.
+-- Definition Qmin_irred : forall x y: Q, {Qmin x y == x} + {Qmin x y == y} := @meet_irred Qto.
+-- Definition Qmin_monotone_r : forall a : Q, Qmonotone (Qmin a) :=
+--  @meet_monotone_r Qto.
+-- Definition Qmin_monotone_l : forall a : Q, Qmonotone (fun x => Qmin x a) :=
+--  @meet_monotone_l Qto.
+-- Definition Qmin_le_compat :
+--  forall w x y z : Q, w <= y -> x <= z -> Qmin w x <= Qmin y z :=
+--  @meet_le_compat Qto.
+
 
 /--
 A total order structure for rationals, with min and max.
@@ -187,7 +213,7 @@ theorem Qmax_le_compat {w x y z : ℚ} (h₁ : w ≤ y) (h₂ : x ≤ z) : Qmax 
   -- Case 1: w ≤ x, y ≤ z
   · exact h₂
   -- Case 2: w ≤ x, ¬(y ≤ z)
-  · have zy : z < y := lt_of_not_le hx
+  · have zy : z < y := lt_of_not_ge hx
     exact le_trans h₂ (le_of_lt zy)
   -- Case 3: ¬(w ≤ x), y ≤ z
   · (expose_names; exact Preorder.le_trans w y z h₁ h)
@@ -199,7 +225,7 @@ theorem Qmin_lb_l (x y : ℚ) : Qmin x y ≤ x := by
   dsimp [Qmin]
   split_ifs with h
   · exact Preorder.le_refl x
-  · exact le_of_not_le h
+  · exact le_of_not_ge h
 
 /-- `Qmin x y ≤ y`. -/
 theorem Qmin_lb_r (x y : ℚ) : Qmin x y ≤ y := by
@@ -218,32 +244,28 @@ theorem Qmin_glb (x y z : ℚ) (hzx : z ≤ x) (hzy : z ≤ y) : z ≤ Qmin x y 
 /-- `Qmin x y = Qmin y x`. -/
 theorem Qmin_comm (x y : ℚ) : Qmin x y = Qmin y x := by
   dsimp [Qmin]
-  by_cases h : x ≤ y
-  · rw [if_pos h]
-    have : y ≤ x ↔ x ≤ y := ⟨fun hyx => le_antisymm h hyx ▸ le_refl x, fun _ => by {
-      sorry
-    }⟩
-    rw [if_neg (mt this.1 ?_)]
-    rw [← this] at h
-    by_contra H
-    sorry
-
-  · rw [if_neg h]
-    have : y ≤ x := le_of_not_le h
-    rw [if_pos this]
+  split
+  · simp_all
+    intros h1
+    refine (Qeq_le_def x y).mpr ?_
+    simp_all only [and_self]
+  · simp_all
+    intros h1
+    refine (Qeq_le_def y x).mpr ?_
+    constructor
+    · rw [le_iff_lt_or_eq]
+      left
+      (expose_names; exact h)
+    · rw [le_iff_lt_or_eq]
+      left
+      exact h1
 
 /-- `Qmin x (Qmin y z) = Qmin (Qmin x y) z`. -/
 theorem Qmin_assoc (x y z : ℚ) : Qmin x (Qmin y z) = Qmin (Qmin x y) z := by
   dsimp [Qmin]
   repeat split_ifs <;> try {exact rfl}
-  · refine (Qeq_le_def x z).mpr ?_
-    constructor
-    · (expose_names; exact Preorder.le_trans x y z h_1 h)
-    · (expose_names; exact le_of_not_ge h_2)
-  · refine (Qeq_le_def x z).mpr ?_
-    constructor
-    · (expose_names; exact h_1)
-    · sorry
+  · linarith
+  · linarith
 
 /-- `Qmin x x = x`. -/
 theorem Qmin_idem (x : ℚ) : Qmin x x = x := by
@@ -258,7 +280,9 @@ theorem Qle_min_l (x y : ℚ) : x ≤ y ↔ Qmin x y = x := by
   · intro h
     by_cases hxy : x ≤ y
     · exact hxy
-    · rw [if_neg hxy] at h; exact (h ▸ (by {aesop?}))
+    · rw [if_neg hxy] at h; exact (h ▸ (by {
+    subst h
+    simp_all only [le_refl, not_true_eq_false]}))
 
 /-- `y ≤ x ↔ Qmin x y = y`. -/
 theorem Qle_min_r (x y : ℚ) : y ≤ x ↔ Qmin x y = y := by
@@ -274,7 +298,7 @@ theorem Qle_min_r (x y : ℚ) : y ≤ x ↔ Qmin x y = y := by
     · rw [if_pos hxy] at h
       rw [h]
     · rw [if_neg hxy] at h
-      exact le_of_not_le hxy
+      exact le_of_not_ge hxy
 
 /-- `Qmin x y = x` or `Qmin x y = y`. -/
 def Qmin_irred (x y : ℚ) : Qmin x y = x ∨ Qmin x y = y := by
@@ -300,43 +324,23 @@ theorem Qmin_monotone_l (a : ℚ) : Qmonotone (fun x => Qmin x a) :=
     split_ifs with hxa hya
     · exact hxy
     · exact hxa
-    · sorry
+    · simp only [not_le] at *
+      linarith
     · exact Preorder.le_refl a
 
 /-- If `w ≤ y` and `x ≤ z`, then `Qmin w x ≤ Qmin y z`. -/
 theorem Qmin_le_compat' (w x y z : ℚ) (h₁ : w ≤ y) (h₂ : x ≤ z) :
     Qmin w x ≤ Qmin y z := by
   dsimp [Qmin]
-  split_ifs with hw hx hy hz
+  split_ifs with hw hx hy
   · exact h₁
   · exact Preorder.le_trans w x z hw h₂
-  · sorry
+  · simp only [not_le] at hw
+    rw [le_iff_lt_or_eq]
+    left
+    calc _ < w := hw
+         _ ≤ y := h₁
   · exact h₂
-
-
-
--- Let Qto := QTotalOrder.
-
--- Definition Qmin_lb_l : forall x y : Q, Qmin x y <= x := @meet_lb_l Qto.
--- Definition Qmin_lb_r : forall x y : Q, Qmin x y <= y := @meet_lb_r Qto.
--- Definition Qmin_glb : forall x y z : Q, z <= x -> z <= y -> z <= (Qmin x y) :=
---  @meet_glb Qto.
--- Definition Qmin_comm : forall x y : Q, Qmin x y == Qmin y x := @meet_comm Qto.
--- Definition Qmin_assoc : forall x y z : Q, Qmin x (Qmin y z) == Qmin (Qmin x y) z:=
---  @meet_assoc Qto.
--- Definition Qmin_idem : forall x : Q, Qmin x x == x := @meet_idem Qto.
--- Definition Qle_min_l : forall x y : Q, x <= y <-> Qmin x y == x := @le_meet_l Qto.
--- Definition Qle_min_r : forall x y : Q, y <= x <-> Qmin x y == y := @le_meet_r Qto.
--- Definition Qmin_irred : forall x y: Q, {Qmin x y == x} + {Qmin x y == y} := @meet_irred Qto.
--- Definition Qmin_monotone_r : forall a : Q, Qmonotone (Qmin a) :=
---  @meet_monotone_r Qto.
--- Definition Qmin_monotone_l : forall a : Q, Qmonotone (fun x => Qmin x a) :=
---  @meet_monotone_l Qto.
--- Definition Qmin_le_compat :
---  forall w x y z : Q, w <= y -> x <= z -> Qmin w x <= Qmin y z :=
---  @meet_le_compat Qto.
-
-
 
 -- Definition Qmax_ub_l : forall x y : Q, x <= Qmax x y := @join_ub_l Qto.
 -- Definition Qmax_ub_r : forall x y : Q, y <= Qmax x y := @join_ub_r Qto.
@@ -357,6 +361,109 @@ theorem Qmin_le_compat' (w x y z : ℚ) (h₁ : w ≤ y) (h₂ : x ≤ z) :
 --  forall w x y z : Q, w<=y -> x<=z -> Qmax w x <= Qmax y z :=
 --  @join_le_compat Qto.
 
+/-- `x ≤ Qmax x y`. -/
+theorem Qmax_ub_l (x y : ℚ) : x ≤ Qmax x y := by
+  dsimp [Qmax]
+  split_ifs with h
+  · exact h
+  · simp_all only [not_le, le_refl]
+
+/-- `y ≤ Qmax x y`. -/
+theorem Qmax_ub_r (x y : ℚ) : y ≤ Qmax x y := by
+  dsimp [Qmax]
+  split_ifs with h
+  · exact le_refl y
+  · linarith
+
+/-- If `x ≤ z` and `y ≤ z`, then `Qmax x y ≤ z`. -/
+theorem Qmax_lub (x y z : ℚ) (hxz : x ≤ z) (hyz : y ≤ z) : Qmax x y ≤ z := by
+  dsimp [Qmax]
+  split_ifs with h
+  · exact hyz
+  · exact hxz
+
+/-- `Qmax x y = Qmax y x`. -/
+theorem Qmax_comm (x y : ℚ) : Qmax x y = Qmax y x := by
+  dsimp [Qmax]
+  split_ifs with hxy hyx
+  · linarith
+  · linarith
+  · linarith
+  · linarith
+
+/-- `Qmax x (Qmax y z) = Qmax (Qmax x y) z`. -/
+theorem Qmax_assoc (x y z : ℚ) : Qmax x (Qmax y z) = Qmax (Qmax x y) z := by
+  dsimp [Qmax]
+  repeat split_ifs <;> try {exact rfl}
+  · linarith
+  · linarith
+
+/-- `Qmax x x = x`. -/
+theorem Qmax_idem (x : ℚ) : Qmax x x = x := by
+  dsimp [Qmax]
+  rw [if_pos (le_refl x)]
+
+/-- `y ≤ x ↔ Qmax x y = x`. -/
+theorem Qle_max_l (x y : ℚ) : y ≤ x ↔ Qmax x y = x := by
+  dsimp [Qmax]
+  constructor
+  · intro h
+    by_cases hxy : x ≤ y
+    · rw [if_pos hxy]
+      exact le_antisymm hxy h ▸ rfl
+    · rw [if_neg hxy]
+  · intro h
+    by_cases hxy : x ≤ y
+    · rw [if_pos hxy] at h
+      rw [h]
+    · rw [if_neg hxy] at h
+      exact le_of_not_ge hxy
+
+/-- `x ≤ y ↔ Qmax x y = y`. -/
+theorem Qle_max_r (x y : ℚ) : x ≤ y ↔ Qmax x y = y := by
+  dsimp [Qmax]
+  constructor
+  · intro h; rw [if_pos h]
+  · intro h
+    by_cases hxy : x ≤ y
+    · exact hxy
+    · rw [if_neg hxy] at h; exact (h ▸ (by {
+    subst h
+    simp_all only [le_refl, not_true_eq_false]}))
+
+/-- `Qmax x y = x` or `Qmax x y = y`. -/
+def Qmax_irred (x y : ℚ) : Qmax x y = x ∨ Qmax x y = y := by
+  dsimp [Qmax]
+  by_cases h : x ≤ y
+  · exact Or.inr (if_pos h)
+  · exact Or.inl (if_neg h)
+
+/-- For any `a`, `Qmax a` is monotone. -/
+theorem Qmax_monotone_r (a : ℚ) : Qmonotone (Qmax a) :=
+  fun {x y} hxy => by
+    dsimp [Qmax]
+    split_ifs with ha1 ha2
+    · exact hxy
+    · linarith
+    · simp only [not_le] at *
+      linarith
+    · exact Preorder.le_refl a
+
+/-- For any `a`, `fun x ↦ Qmax x a` is monotone. -/
+theorem Qmax_monotone_l (a : ℚ) : Qmonotone (fun x => Qmax x a) :=
+  fun {x y} hxy => by
+    dsimp [Qmax]
+    split_ifs with hxa hya
+    · exact Preorder.le_refl a
+    · simp_all
+      linarith
+    · linarith
+    · exact hxy
+
+/-- If `w ≤ y` and `x ≤ z`, then `Qmax w x ≤ Qmax y z`. -/
+theorem Qmax_le_compat' (w x y z : ℚ) (h₁ : w ≤ y) (h₂ : x ≤ z) :
+    Qmax w x ≤ Qmax y z := Qmax_le_compat h₁ h₂
+
 -- Definition Qmin_max_absorb_l_l : forall x y : Q, Qmin x (Qmax x y) == x :=
 --  @meet_join_absorb_l_l Qto.
 -- Definition Qmax_min_absorb_l_l : forall x y : Q, Qmax x (Qmin x y) == x :=
@@ -373,6 +480,38 @@ theorem Qmin_le_compat' (w x y z : ℚ) (h₁ : w ≤ y) (h₂ : x ≤ z) :
 --  @meet_join_absorb_r_r Qto.
 -- Definition Qmax_min_absorb_r_r : forall x y : Q, Qmax (Qmin y x) x == x :=
 --  @join_meet_absorb_r_r Qto.
+
+/-- `Qmin x (Qmax x y) = x`. -/
+theorem Qmin_max_absorb_l_l (x y : ℚ) : Qmin x (Qmax x y) = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
+
+/-- `Qmax x (Qmin x y) = x`. -/
+theorem Qmax_min_absorb_l_l (x y : ℚ) : Qmax x (Qmin x y) = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
+
+/-- `Qmin x (Qmax y x) = x`. -/
+theorem Qmin_max_absorb_l_r (x y : ℚ) : Qmin x (Qmax y x) = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
+
+/-- `Qmax x (Qmin y x) = x`. -/
+theorem Qmax_min_absorb_l_r (x y : ℚ) : Qmax x (Qmin y x) = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
+
+/-- `Qmin (Qmax x y) x = x`. -/
+theorem Qmin_max_absorb_r_l (x y : ℚ) : Qmin (Qmax x y) x = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
+
+/-- `Qmax (Qmin x y) x = x`. -/
+theorem Qmax_min_absorb_r_l (x y : ℚ) : Qmax (Qmin x y) x = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
+
+/-- `Qmin (Qmax y x) x = x`. -/
+theorem Qmin_max_absorb_r_r (x y : ℚ) : Qmin (Qmax y x) x = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
+
+/-- `Qmax (Qmin y x) x = x`. -/
+theorem Qmax_min_absorb_r_r (x y : ℚ) : Qmax (Qmin y x) x = x := by
+  dsimp [Qmin, Qmax]; repeat split_ifs <;> linarith
 
 -- Definition Qmin_max_eq : forall x y : Q, Qmin x y == Qmax x y -> x == y :=
 --  @meet_join_eq Qto.
@@ -404,6 +543,57 @@ theorem Qmin_le_compat' (w x y z : ℚ) (h₁ : w ≤ y) (h₂ : x ≤ z) :
 --  Qmin (Qmax (Qmin x z) y) z == Qmax (Qmin x z) (Qmin y z) :=
 --  @meet_join_modular_l Qto.
 
+
+/-- If `Qmin x y = Qmax x y`, then `x = y`. -/
+theorem Qmin_max_eq (x y : ℚ) (h : Qmin x y = Qmax x y) : x = y := by
+  rw [Qmin_comm, Qmax_comm] at h
+  cases' Qmin_irred x y with hminx hminy
+  · simp only [Qmin, Qmax, ite_eq_left_iff, not_le] at *
+    aesop
+  · simp only [Qmin, Qmax] at *
+    aesop
+
+/-- `Qmax x (Qmin y z) = Qmin (Qmax x y) (Qmax x z)`. -/
+theorem Qmax_min_distr_r (x y z : ℚ) : Qmax x (Qmin y z) = Qmin (Qmax x y) (Qmax x z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmax (Qmin y z) x = Qmin (Qmax y x) (Qmax z x)`. -/
+theorem Qmax_min_distr_l (x y z : ℚ) : Qmax (Qmin y z) x = Qmin (Qmax y x) (Qmax z x) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmin x (Qmax y z) = Qmax (Qmin x y) (Qmin x z)`. -/
+theorem Qmin_max_distr_r (x y z : ℚ) : Qmin x (Qmax y z) = Qmax (Qmin x y) (Qmin x z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmin (Qmax y z) x = Qmax (Qmin y x) (Qmin z x)`. -/
+theorem Qmin_max_distr_l (x y z : ℚ) : Qmin (Qmax y z) x = Qmax (Qmin y x) (Qmin z x) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmax x (Qmin y (Qmax x z)) = Qmin (Qmax x y) (Qmax x z)`. -/
+theorem Qmax_min_modular_r (x y z : ℚ) : Qmax x (Qmin y (Qmax x z)) = Qmin (Qmax x y) (Qmax x z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmax (Qmin (Qmax x z) y) z = Qmin (Qmax x z) (Qmax y z)`. -/
+theorem Qmax_min_modular_l (x y z : ℚ) : Qmax (Qmin (Qmax x z) y) z = Qmin (Qmax x z) (Qmax y z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmin x (Qmax y (Qmin x z)) = Qmax (Qmin x y) (Qmin x z)`. -/
+theorem Qmin_max_modular_r (x y z : ℚ) : Qmin x (Qmax y (Qmin x z)) = Qmax (Qmin x y) (Qmin x z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmin (Qmax (Qmin x z) y) z = Qmax (Qmin x z) (Qmin y z)`. -/
+theorem Qmin_max_modular_l (x y z : ℚ) : Qmin (Qmax (Qmin x z) y) z = Qmax (Qmin x z) (Qmin y z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+
 -- Definition Qmin_max_disassoc : forall x y z : Q, Qmin (Qmax x y) z <= Qmax x (Qmin y z) :=
 --  @meet_join_disassoc Qto.
 
@@ -424,10 +614,63 @@ theorem Qmin_le_compat' (w x y z : ℚ) (h₁ : w ≤ y) (h₂ : x ≤ z) :
 -- Definition Qmax_minus_distr_l : forall x y z : Q, Qmax y z - x == Qmax (y-x) (z-x) :=
 --  (fun x => Qmax_plus_distr_l (-x)).
 
--- Definition Qmin_max_de_morgan : forall x y : Q, -(Qmin x y) == Qmax (-x) (-y) :=
---  @antitone_meet_join_distr Qto _ Qopp_le_compat.
--- Definition Qmax_min_de_morgan : forall x y : Q, -(Qmax x y) == Qmin (-x) (-y) :=
---  @antitone_join_meet_distr Qto _ Qopp_le_compat.
+
+/-- `Qmin (Qmax x y) z ≤ Qmax x (Qmin y z)`. -/
+theorem Qmin_max_disassoc (x y z : ℚ) : Qmin (Qmax x y) z ≤ Qmax x (Qmin y z) := by
+  dsimp [Qmin, Qmax]
+  repeat split_ifs <;> linarith
+
+/-- For any `a`, `Qplus a` is monotone. -/
+theorem Qplus_monotone_r (a : ℚ) : Qmonotone (fun x => a + x) :=
+  fun {x y} hxy => add_le_add_left hxy a
+
+/-- For any `a`, `fun x ↦ x + a` is monotone. -/
+theorem Qplus_monotone_l (a : ℚ) : Qmonotone (fun x => x + a) :=
+  fun {x y} hxy => add_le_add_right hxy a
+
+/-- `x + Qmin y z = Qmin (x + y) (x + z)`. -/
+theorem Qmin_plus_distr_r (x y z : ℚ) : x + Qmin y z = Qmin (x + y) (x + z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmin y z + x = Qmin (y + x) (z + x)`. -/
+theorem Qmin_plus_distr_l (x y z : ℚ) : Qmin y z + x = Qmin (y + x) (z + x) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `x + Qmax y z = Qmax (x + y) (x + z)`. -/
+theorem Qmax_plus_distr_r (x y z : ℚ) : x + Qmax y z = Qmax (x + y) (x + z) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmax y z + x = Qmax (y + x) (z + x)`. -/
+theorem Qmax_plus_distr_l (x y z : ℚ) : Qmax y z + x = Qmax (y + x) (z + x) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmin y z - x = Qmin (y - x) (z - x)`. -/
+theorem Qmin_minus_distr_l (x y z : ℚ) : Qmin y z - x = Qmin (y - x) (z - x) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `Qmax y z - x = Qmax (y - x) (z - x)`. -/
+theorem Qmax_minus_distr_l (x y z : ℚ) : Qmax y z - x = Qmax (y - x) (z - x) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `-(Qmin x y) = Qmax (-x) (-y)`. -/
+theorem Qmin_max_de_morgan (x y : ℚ) : -(Qmin x y) = Qmax (-x) (-y) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+/-- `-(Qmax x y) = Qmin (-x) (-y)`. -/
+theorem Qmax_min_de_morgan (x y : ℚ) : -(Qmax x y) = Qmin (-x) (-y) := by
+  dsimp [Qmax, Qmin]
+  repeat split_ifs <;> linarith
+
+
+
+
 
 -- Lemma Qminus_antitone : forall a : Q, Qantitone (fun x => a - x).
 -- Proof.
@@ -462,6 +705,120 @@ theorem Qmin_le_compat' (w x y z : ℚ) (h₁ : w ≤ y) (h₂ : x ≤ z) :
 --  fun x y z H => @monotone_join_distr Qto _ (Qmult_pos_monotone_r x H) y z.
 -- Definition Qmax_mult_pos_distr_l : forall x y z : Q, 0 <= x -> Qmax y z * x == Qmax (y*x) (z*x) :=
 --  fun x y z H => @monotone_join_distr Qto _ (Qmult_pos_monotone_l x H) y z.
+
+-- End QTotalOrder.
+-- (* begin hide *)
+-- #[global]
+-- Hint Resolve Qmin_lb_l: qarith.
+-- #[global]
+-- Hint Resolve Qmin_lb_r: qarith.
+-- #[global]
+-- Hint Resolve Qmin_glb: qarith.
+-- #[global]
+-- Hint Resolve Qmax_ub_l: qarith.
+-- #[global]
+-- Hint Resolve Qmax_ub_r: qarith.
+-- #[global]
+-- Hint Resolve Qmax_lub: qarith.
+-- (* end hide *)
+
+
+-- Lemma Qminus_antitone : forall a : Q, Qantitone (fun x => a - x).
+-- Proof.
+--  change (forall a x y : Q, x <= y -> a + - y <= a + - x).
+--  intros.
+--  apply Qplus_le_compat; firstorder using Qle_refl, Qopp_le_compat.
+-- Qed.
+
+-- Definition Qminus_min_max_antidistr_r : forall x y z : Q, x - Qmin y z == Qmax (x-y) (x-z) :=
+--  fun a => @antitone_meet_join_distr Qto _ (Qminus_antitone a).
+-- Definition Qminus_max_min_antidistr_r : forall x y z : Q, x - Qmax y z == Qmin (x-y) (x-z) :=
+--  fun a => @antitone_join_meet_distr Qto _ (Qminus_antitone a).
+
+-- Lemma Qmult_pos_monotone_r : forall a, (0 <= a) -> Qmonotone (Qmult a).
+-- Proof.
+--  intros a Ha b c H.
+--  do 2 rewrite -> (Qmult_comm a).
+--  apply Qmult_le_compat_r; auto with *.
+-- Qed.
+
+-- Lemma Qmult_pos_monotone_l : forall a, (0 <= a) -> Qmonotone (fun x => x*a).
+-- Proof.
+--  intros a Ha b c H.
+--  apply Qmult_le_compat_r; auto with *.
+-- Qed.
+
+
+
+/-- For any `a`, `fun x ↦ a - x` is antitone. -/
+theorem Qminus_antitone (a : ℚ) : Qantitone (fun x => a - x) :=
+  fun {x y} hxy => by linarith
+
+/-- `x - Qmin y z = Qmax (x - y) (x - z)`. -/
+theorem Qminus_min_max_antidistr_r (x y z : ℚ) : x - Qmin y z = Qmax (x - y) (x - z) := by
+  dsimp [Qmin, Qmax]
+  split_ifs <;> linarith
+
+/-- `x - Qmax y z = Qmin (x - y) (x - z)`. -/
+theorem Qminus_max_min_antidistr_r (x y z : ℚ) : x - Qmax y z = Qmin (x - y) (x - z) := by
+  dsimp [Qmin, Qmax]
+  split_ifs <;> linarith
+
+/-- For any `a ≥ 0`, `fun x ↦ a * x` is monotone. -/
+def Qmult_pos_monotone_r (a : ℚ) (ha : 0 ≤ a) : Qmonotone (fun x => a * x) := by {
+  intros x
+  exact fun {y} a_1 ↦ mul_le_mul_of_nonneg_left a_1 ha
+}
+  --fun hxy => mul_le_mul_of_nonneg_left hxy ha
+
+/-- For any `a ≥ 0`, `fun x ↦ x * a` is monotone. -/
+def Qmult_pos_monotone_l (a : ℚ) (ha : 0 ≤ a) : Qmonotone (fun x => x * a) :=
+  fun {x y} hxy => mul_le_mul_of_nonneg_right hxy ha
+
+
+-- Definition Qmin_mult_pos_distr_r : forall x y z : Q, 0 <= x -> x * Qmin y z == Qmin (x*y) (x*z)  :=
+--  fun x y z H => @monotone_meet_distr Qto _ (Qmult_pos_monotone_r _ H) y z.
+-- Definition Qmin_mult_pos_distr_l : forall x y z : Q, 0 <= x -> Qmin y z * x == Qmin (y*x) (z*x) :=
+--  fun x y z H => @monotone_meet_distr Qto _ (Qmult_pos_monotone_l x H) y z.
+-- Definition Qmax_mult_pos_distr_r : forall x y z : Q, 0 <= x -> x * Qmax y z == Qmax (x*y) (x*z)  :=
+--  fun x y z H => @monotone_join_distr Qto _ (Qmult_pos_monotone_r x H) y z.
+-- Definition Qmax_mult_pos_distr_l : forall x y z : Q, 0 <= x -> Qmax y z * x == Qmax (y*x) (z*x) :=
+--  fun x y z H => @monotone_join_distr Qto _ (Qmult_pos_monotone_l x H) y z.
+
+
+/-- If `0 ≤ x`, then `x * Qmin y z = Qmin (x * y) (x * z)`. -/
+theorem Qmin_mult_pos_distr_r (x y z : ℚ) (hx : 0 ≤ x) : x * Qmin y z = Qmin (x * y) (x * z) := by
+  sorry
+
+/-- If `0 ≤ x`, then `Qmin y z * x = Qmin (y * x) (z * x)`. -/
+theorem Qmin_mult_pos_distr_l (x y z : ℚ) (hx : 0 ≤ x) : Qmin y z * x = Qmin (y * x) (z * x) := by
+  sorry
+
+/-- If `0 ≤ x`, then `x * Qmax y z = Qmax (x * y) (x * z)`. -/
+theorem Qmax_mult_pos_distr_r (x y z : ℚ) (hx : 0 ≤ x) : x * Qmax y z = Qmax (x * y) (x * z) := by
+  sorry
+
+/-- If `0 ≤ x`, then `Qmax y z * x = Qmax (y * x) (z * x)`. -/
+theorem Qmax_mult_pos_distr_l (x y z : ℚ) (hx : 0 ≤ x) : Qmax y z * x = Qmax (y * x) (z * x) := by
+  sorry
+
+
+-- End QTotalOrder.
+-- (* begin hide *)
+-- #[global]
+-- Hint Resolve Qmin_lb_l: qarith.
+-- #[global]
+-- Hint Resolve Qmin_lb_r: qarith.
+-- #[global]
+-- Hint Resolve Qmin_glb: qarith.
+-- #[global]
+-- Hint Resolve Qmax_ub_l: qarith.
+-- #[global]
+-- Hint Resolve Qmax_ub_r: qarith.
+-- #[global]
+-- Hint Resolve Qmax_lub: qarith.
+-- (* end hide *)
+
 
 -- End QTotalOrder.
 -- (* begin hide *)
