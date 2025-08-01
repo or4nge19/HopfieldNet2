@@ -103,6 +103,30 @@ def SeqLimit (seq : ℕ → K) (lim : K) : Prop :=
 -- %\begin{convention}% Let [R] be an ordered field.
 -- %\end{convention}%
 -- *)
+/--
+If `g` is a Cauchy sequence, then there exists a bound `K > 0`
+ and an index `N` such that for all `m ≥ N`, `|g m| < K`.
+-/
+lemma CS_seq_bounded :
+  ∀ (g : ℕ → K) (hg : Cauchy_prop g),
+  ∃ K : K, 0 < K ∧ ∃ N : ℕ, ∀ m ≥ N, abs (g m) < K :=  by {
+  intros g Hg
+  unfold Cauchy_prop at *
+  specialize Hg 1 (by {simp only [zero_lt_one]})
+  obtain ⟨N, hN⟩ := Hg
+  use (abs (g N) + 1)
+  constructor
+  · apply add_pos_of_nonneg_of_pos
+    · exact abs_nonneg (g N)
+    · exact zero_lt_one
+  · use N
+    intros m hm
+    calc
+      abs (g m) = abs ((g m - g N) + g N)         := by {simp only [sub_add_cancel]}
+              _ ≤ abs (g m - g N) + abs (g N)   := abs_add _ _
+              _  < 1 + abs (g N)                 := add_lt_add_right (hN m hm) _
+              _ = abs (g N) + 1                 := add_comm _ _
+  }
 
 -- Theorem CS_seq_bounded : forall g : nat -> R, Cauchy_prop g ->
 --  {K : R | [0] [<] K | {N : nat | forall m, N <= m -> AbsSmall K (g m)}}.
@@ -163,10 +187,44 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 -- %\end{convention}%
 -- *)
 
+variables (f g : ℕ → K)
+
+variable (Hf : Cauchy_prop f)
+
+variable (Hg : Cauchy_prop g)
+
 -- Variables f g : nat -> R.
 
 -- Hypothesis Hf : Cauchy_prop f.
 -- Hypothesis Hg : Cauchy_prop g.
+include Hf Hg in
+/--
+If `f` and `g` are Cauchy sequences, then so is their sum.
+-/
+lemma CS_seq_plus : Cauchy_prop (fun m => f m + g m) :=
+  fun ε hε => by
+    -- We want to find N such that for all m ≥ N, |(f m + g m) - (f N + g N)| < ε
+    -- Note: |(f m + g m) - (f N + g N)| = |(f m - f N) + (g m - g N)| ≤ |f m - f N| + |g m - g N|
+    -- So, pick ε/2 for each.
+    have hε2 : (0 : K) < ε / 2 := by
+      apply (div_pos hε zero_lt_two)
+    obtain ⟨Nf, Hf'⟩ := Hf (ε / 2) hε2
+    obtain ⟨Ng, Hg'⟩ := Hg (ε / 2) hε2
+    let N := max Nf Ng
+    use N
+    intro m hm
+    have hmf : m ≥ Nf := le_trans (le_max_left Nf Ng) hm
+    have hmg : m ≥ Ng := le_trans (le_max_right Nf Ng) hm
+    calc
+      abs ((f m + g m) - (f N + g N))
+        = abs ((f m - f N) + (g m - g N)) := by { sorry
+        }
+      _ ≤ abs (f m - f N) + abs (g m - g N) := abs_add _ _
+      _ < ε / 2 + ε / 2 := by
+        apply add_lt_add
+        · sorry--exact Hf' m hmf
+        · sorry --exact Hg' m hmg
+      _ = ε := by sorry
 
 -- Lemma CS_seq_plus : Cauchy_prop (fun m => f m[+]g m).
 -- Proof.
@@ -197,6 +255,28 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply H31; eauto with arith.
 -- Qed.
 
+/--
+If `f` and `g` are Cauchy sequences, then so is their sum.
+-/
+lemma CS_seq_plus' (f g : ℕ → K) (Hf : Cauchy_prop f) (Hg : Cauchy_prop g) :
+  Cauchy_prop (fun m => f m + g m) :=
+fun ε hε => by
+  -- We'll use ε/2 for each sequence
+  have hε2 : (0 : K) < ε / 2 := div_pos hε zero_lt_two
+  obtain ⟨N1, Hf'⟩ := Hf (ε / 2) hε2
+  obtain ⟨N2, Hg'⟩ := Hg (ε / 2) hε2
+  let N := max N1 N2
+  use N
+  intro m hm
+  have hmf : m ≥ N1 := le_trans (le_max_left N1 N2) hm
+  have hmg : m ≥ N2 := le_trans (le_max_right N1 N2) hm
+  calc
+    abs ((f m + g m) - (f N + g N))
+      = abs ((f m - f N) + (g m - g N)) := by sorry
+    _ ≤ abs (f m - f N) + abs (g m - g N) := abs_add _ _
+    _ < ε / 2 + ε / 2 := sorry--add_lt_add (Hf' m hmf) (Hg' m hmg)
+    _ = ε := sorry--add_halves ε
+
 -- Lemma CS_seq_inv : Cauchy_prop (fun n => [--] (f n)).
 -- Proof.
 --  red in |- *; intros e H.
@@ -206,6 +286,21 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  rstepr (f m[-]f N).
 --  auto.
 -- Qed.
+
+
+/--
+If `f` is a Cauchy sequence, then so is its negation.
+-/
+lemma CS_seq_inv (f : ℕ → K) (Hf : Cauchy_prop f) : Cauchy_prop (fun n => -f n) := by
+  intros ε hε
+  dsimp [Cauchy_prop] at Hf
+  obtain ⟨N, hN⟩ := Hf ε hε
+  exact
+  ⟨N, fun m hm => by
+    simp [AbsSmall, sub_neg_eq_add]
+    sorry
+    --exact hN m hm
+    ⟩
 
 -- Lemma CS_seq_mult : Cauchy_prop (fun n => f n[*]g n).
 -- Proof.
@@ -237,11 +332,74 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply HNf; auto; apply Nat.le_trans with N; auto; unfold N in |- *; eauto with arith.
 -- Qed.
 
+
+
+/--
+If `f` and `g` are Cauchy sequences, then so is their product.
+-/
+lemma CS_seq_mult (f g : ℕ → K) (Hf : Cauchy_prop f) (Hg : Cauchy_prop g) :
+  Cauchy_prop (fun n => f n * g n) := sorry
+-- fun ε hε => by
+--   -- Get bounds for f and g
+--   obtain ⟨Mf, Mf_pos, ⟨Nf, HNf⟩⟩ := CS_seq_bounded f Hf
+--   obtain ⟨Mg, Mg_pos, ⟨Ng, HNg⟩⟩ := CS_seq_bounded g Hg
+--   -- Use ε/(2 * (Mf + 1)) and ε/(2 * (Mg + 1)) for Cauchy property
+--   let δf := ε / (2 * (Mg + 1))
+--   let δg := ε / (2 * (Mf + 1))
+--   have δf_pos : 0 < δf := div_pos hε (mul_pos two_pos (add_pos_of_nonneg_of_pos (le_of_lt Mg_pos) zero_lt_one))
+--   have δg_pos : 0 < δg := div_pos hε (mul_pos two_pos (add_pos_of_nonneg_of_pos (le_of_lt Mf_pos) zero_lt_one))
+--   obtain ⟨N1, Hf'⟩ := Hf δf δf_pos
+--   obtain ⟨N2, Hg'⟩ := Hg δg δg_pos
+--   let N := max (max Nf N1) (max Ng N2)
+--   use N
+--   intro m hm
+--   -- m ≥ Nf, N1, Ng, N2
+--   have mNf : m ≥ Nf := sorry --le_trans (le_max_left Nf N1) (le_max_left (max Nf N1) (max Ng N2)) |> le_trans hm
+--   have mN1 : m ≥ N1 := sorry--le_trans (le_max_right Nf N1) (le_max_left (max Nf N1) (max Ng N2)) |> le_trans hm
+--   have mNg : m ≥ Ng := sorry --le_trans (le_max_left Ng N2) (le_max_right (max Nf N1) (max Ng N2)) |> le_trans hm
+--   have mN2 : m ≥ N2 := sorry--le_trans (le_max_right Ng N2) (le_max_right (max Nf N1) (max Ng N2)) |> le_trans hm
+--   -- Now estimate |f m * g m - f N * g N|
+--   calc
+--     abs (f m * g m - f N * g N)
+--       = abs ((f m - f N) * g m + f N * (g m - g N)) := by sorry--ring_nf
+--     _ ≤ abs ((f m - f N) * g m) + abs (f N * (g m - g N)) := abs_add _ _
+--     _ ≤ abs (f m - f N) * abs (g m) + abs (f N) * abs (g m - g N) := add_le_add (abs_mul _ _) (abs_mul _ _)
+--     _ < δf * Mg + Mf * δg := by
+--       apply add_lt_add
+--       · apply mul_lt_mul_of_pos_right (Hf' m mN1) Mg_pos
+--       · apply mul_lt_mul_of_pos_left (Hg' m mN2) (abs_nonneg (f N))
+--     _ ≤ ε / 2 + ε / 2 := by
+--       rw [←div_add_div_same, add_halves]
+--       -- δf * Mg = ε / (2 * (Mg + 1)) * Mg ≤ ε / 2 (since Mg < Mg + 1)
+--       -- Mf * δg = Mf * (ε / (2 * (Mf + 1))) ≤ ε / 2
+--       apply add_le_add
+--       · apply (mul_le_of_le_one_right (div_nonneg hε.le (mul_nonneg zero_le_two (add_nonneg (abs_nonneg (g N)) zero_le_one))) sorry--(by linarith [Mg_pos])
+--         )
+--       · apply (mul_le_of_le_one_left (abs_nonneg (f N)) (div_le_one_of_le (mul_nonneg zero_le_two (add_nonneg (abs_nonneg (f N)) zero_le_one))
+--           sorry--(by linarith [Mf_pos])
+--           )
+--           )
+--     _ = ε := add_halves ε
+
+
+
+
+
+
+
+
+
 -- (**
 -- We now assume that [f] is, from some point onwards, greater than
 -- some positive number.  The sequence of reciprocals is defined as
 -- being constantly one up to that point, and the sequence of
 -- reciprocals from then onwards.
+
+-- %\begin{convention}%
+-- Let [e] be a postive element of [R] and let [N:nat] be such that from
+-- [N] onwards, [(f n) [#] [0]]
+-- %\end{convention}%
+-- *)
 
 -- %\begin{convention}%
 -- Let [e] be a postive element of [R] and let [N:nat] be such that from

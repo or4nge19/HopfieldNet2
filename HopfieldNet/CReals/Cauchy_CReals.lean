@@ -87,6 +87,50 @@ open CauchySeq'
 --  astepr (x[-]x); astepr (x[-]y); eauto with arith.
 -- Qed.
 
+/--
+If `x = y` in `K`, then the constant Cauchy sequences `inject_Q x` and `inject_Q y` are equal.
+-/
+lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
+  -- inject_Q x and inject_Q y are both constant sequences
+  rw [h]
+
+-- Lemma ing_plus : forall x y : F, inject_Q (x[+]y) [=] inject_Q x[+]inject_Q y.
+-- Proof.
+--  intros.
+--  unfold inject_Q in |- *.
+--  simpl in |- *; intro H.
+--  elim H; intro.
+--   elim a; intros N HN.
+--   elim HN; clear H a HN; intros e He HN; simpl in HN.
+--   apply (less_irreflexive_unfolded _ e).
+--   apply leEq_less_trans with ([0]:F); auto.
+--   astepr (x[+]y[-] (x[+]y)); eauto with arith.
+--  elim b; intros N HN.
+--  elim HN; clear H b HN; intros e He HN; simpl in HN.
+--  apply (less_irreflexive_unfolded _ e).
+--  apply leEq_less_trans with ([0]:F); auto.
+--  astepr (x[+]y[-] (x[+]y)); eauto with arith.
+-- Qed.
+
+-- Lemma ing_plus : forall x y : F, inject_Q (x[+]y) [=] inject_Q x[+]inject_Q y.
+-- Proof.
+--  intros.
+--  unfold inject_Q in |- *.
+--  simpl in |- *; intro H.
+--  elim H; intro.
+--   elim a; intros N HN.
+--   elim HN; clear H a HN; intros e He HN; simpl in HN.
+--   apply (less_irreflexive_unfolded _ e).
+--   apply leEq_less_trans with ([0]:F); auto.
+--   astepr (x[+]y[-] (x[+]y)); eauto with arith.
+--  elim b; intros N HN.
+--  elim HN; clear H b HN; intros e He HN; simpl in HN.
+--  apply (less_irreflexive_unfolded _ e).
+--  apply leEq_less_trans with ([0]:F); auto.
+--  astepr (x[+]y[-] (x[+]y)); eauto with arith.
+-- Qed.
+
+
 -- Lemma ing_plus : forall x y : F, inject_Q (x[+]y) [=] inject_Q x[+]inject_Q y.
 -- Proof.
 --  intros.
@@ -453,7 +497,8 @@ If the base field `K` is archimedean, then the Cauchy completion is also archime
 for any Cauchy sequence `x`, there exists `n : Nat` such that `x ≤ nring n`.
 -/
 theorem R_is_archimedean (x : K) :
-    ∃ n : Nat, x ≤ n := by sorry
+    ∃ n : Nat, x ≤ n := by
+    sorry
 
 -- Theorem R_is_archemaedian : forall x : R_COrdField', {n : nat | x [<=] nring n}.
 -- Proof.
