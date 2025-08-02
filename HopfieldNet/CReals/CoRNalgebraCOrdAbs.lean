@@ -1,3 +1,5 @@
+import HopfieldNet.CReals.cauchy_Cord
+
 -- (* Copyright © 1998-2008
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe

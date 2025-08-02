@@ -1,5 +1,3 @@
-import Mathlib.Algebra.Order.Field.Defs
-import Mathlib.Topology.UniformSpace.Cauchy
 import HopfieldNet.CReals.cauchy_Cord
 import HopfieldNet.CReals.CoRNrealsCReals
 -- (* Copyright © 1998-2006
