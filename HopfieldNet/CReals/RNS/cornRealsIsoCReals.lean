@@ -1,3 +1,6 @@
+import HopfieldNet.CReals.RNS.CoRNrealsQdense
+import HopfieldNet.CReals.RNS.CoRNrealsRmorphism
+
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe

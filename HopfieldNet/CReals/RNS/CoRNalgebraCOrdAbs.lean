@@ -1,4 +1,4 @@
-import HopfieldNet.CReals.cauchy_Cord
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdFields2
 
 -- (* Copyright © 1998-2008
 --  * Henk Barendregt

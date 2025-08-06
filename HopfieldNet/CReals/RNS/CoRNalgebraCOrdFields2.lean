@@ -1,3 +1,4 @@
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdFields
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe

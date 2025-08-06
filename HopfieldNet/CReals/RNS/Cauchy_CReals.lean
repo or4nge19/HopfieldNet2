@@ -1,5 +1,6 @@
-import HopfieldNet.CReals.cauchy_Cord
-import HopfieldNet.CReals.CoRNrealsCReals
+import HopfieldNet.CReals.RNS.cauchy_Cord
+import HopfieldNet.CReals.RNS.CoRNalgebraCauchyCOF
+import HopfieldNet.CReals.RNS.CoRNrealsCReals
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe
@@ -110,6 +111,22 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  astepr (x[+]y[-] (x[+]y)); eauto with arith.
 -- Qed.
 
+
+instance : HAdd (CauchySeq' K) (CauchySeq' K) (CauchySeq' K) := by {
+  constructor
+  intros s1 s2
+  constructor
+  apply CS_seq_plus s1.1 s2.1
+  exact s1.CS_proof
+  exact s2.CS_proof}
+
+/--
+For all `x y : K`, `inject_Q (x + y) = inject_Q x + inject_Q y`.
+-/
+lemma ing_plus (x y : K) : inject_Q (x + y) = inject_Q x + inject_Q y := by
+  -- Both sides are constant Cauchy sequences
+  exact rfl
+
 -- Lemma ing_plus : forall x y : F, inject_Q (x[+]y) [=] inject_Q x[+]inject_Q y.
 -- Proof.
 --  intros.
@@ -165,6 +182,15 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  astepr ( [--]x[-][--]x); eauto with arith.
 -- Qed.
 
+instance : Neg (CauchySeq' K) := sorry
+
+/--
+For all `x : K`, `inject_Q (-x) = -inject_Q x`.
+-/
+lemma ing_min (x : K) : inject_Q (-x) = -inject_Q x := by
+  -- Both sides are constant Cauchy sequences
+  sorry
+
 -- Lemma ing_lt : forall x y : F, x [<] y -> inject_Q x [<] inject_Q y.
 -- Proof.
 --  intros.
@@ -184,6 +210,22 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  intros x y H; elim (ap_imp_less _ _ _ H); intro Hlt; [ left | right ]; apply ing_lt; auto.
 -- Qed.
 
+/--
+If `x ≠ y` in `K`, then `inject_Q x ≠ inject_Q y` in the Cauchy completion.
+-/
+lemma ing_ap {x y : K} (h : x ≠ y) : inject_Q x ≠ inject_Q y := by
+  intro h'
+  apply h
+  -- inject_Q x = inject_Q y implies x = y for constant sequences
+  have : ∀ (a b : K), inject_Q a = inject_Q b → a = b := by
+    intros a b eq
+    -- By definition, inject_Q a = ⟨fun _, a, _⟩ and inject_Q b = ⟨fun _, b, _⟩
+    -- So equality implies a = b
+    dsimp [inject_Q] at eq
+    injection eq with h'
+    exact funext_iff.mp h' 0
+  exact this x y h'
+
 -- Lemma ing_cancel_eq : forall x y : F, inject_Q x [=] inject_Q y -> x [=] y.
 -- Proof.
 --  intros x y Hxy.
@@ -193,6 +235,15 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  apply ing_ap; auto.
 -- Qed.
 
+/--
+If `inject_Q x = inject_Q y`, then `x = y`.
+-/
+lemma ing_cancel_eq {x y : K} (h : inject_Q x = inject_Q y) : x = y := by
+  by_contra hxy
+  have : inject_Q x ≠ inject_Q y := ing_ap hxy
+  contradiction
+
+
 -- Lemma ing_cancel_less : forall x y : F, inject_Q x [<] inject_Q y -> x [<] y.
 -- Proof.
 --  intros x y H.
@@ -201,6 +252,27 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --   apply shift_less_plus'; astepl ([0]:F); auto.
 --  apply shift_plus_leEq'; eauto.
 -- Qed.
+
+instance :  LT (CauchySeq' K) := by {
+  refine { lt := ?_ }
+  intros s1 s2
+  sorry
+
+}
+
+/--
+If `inject_Q x < inject_Q y` in the Cauchy completion, then `x < y` in `K`.
+-/
+lemma ing_cancel_less {x y : K} (h : inject_Q x < inject_Q y) : x < y := by {
+  --  intros x y H.
+  dsimp [inject_Q] at h
+  sorry
+--  elim H; intros N HN; elim HN; clear H HN; intros e He HN; simpl in HN.
+--  apply less_leEq_trans with (x[+]e).
+--   apply shift_less_plus'; astepl ([0]:F); auto.
+--  apply shift_plus_leEq'; eauto.
+
+}
 
 -- Lemma ing_le : forall x y : F, x [<=] y -> inject_Q x [<=] inject_Q y.
 -- Proof.
@@ -219,6 +291,13 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  apply ing_lt.
 --  auto.
 -- Qed.
+
+instance : LE (CauchySeq' K) := sorry
+
+/--
+If `inject_Q x ≤ inject_Q y` in the Cauchy completion, then `x ≤ y` in `K`.
+-/
+lemma ing_cancel_leEq {x y : K} (h : inject_Q x ≤ inject_Q y) : x ≤ y := sorry
 
 -- Lemma ing_cancel_AbsSmall : forall e x y : F,
 --  AbsSmall (inject_Q e) (inject_Q x[-]inject_Q y) -> AbsSmall e (x[-]y).
@@ -254,6 +333,16 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  apply ing_plus.
 -- Qed.
 
+instance :  HSub (CauchySeq' K) (CauchySeq' K)  (CauchySeq' K) := sorry
+
+-- /--
+-- If `AbsSmall (inject_Q e) (inject_Q x - inject_Q y)` holds in the Cauchy completion,
+-- then `AbsSmall e (x - y)` holds in `K`.
+-- -/
+-- lemma ing_cancel_AbsSmall (e x y : K)
+--   (h : AbsSmall (K:=K) (inject_Q e) (inject_Q x - inject_Q y)) : AbsSmall e (x - y) := sorry
+
+
 -- Lemma ing_One : inject_Q ([1]:F) [=] [1].
 -- Proof.
 --  apply not_ap_imp_eq; intro H.
@@ -264,6 +353,20 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  apply (less_irreflexive_unfolded F [0]).
 --  apply less_leEq_trans with e; auto.
 --  astepr ([1][-] ([1]:F)); eauto.
+-- Qed.
+
+
+/--
+`inject_Q 1 = 1` in the Cauchy completion.
+-/
+lemma ing_One : inject_Q (1 : K) = ⟨ by { exact 1 }, by { apply CS_seq_const}⟩ := by
+  rfl
+
+-- Lemma ing_nring' : forall m n : nat,
+--  CS_seq _ (nring (R:=R_COrdField') n) m [=] CS_seq _ (inject_Q (nring n)) m.
+-- Proof.
+--  intros.
+--  induction  n as [| n Hrecn]; simpl in |- *; algebra.
 -- Qed.
 
 -- Lemma ing_nring' : forall m n : nat,
@@ -308,6 +411,22 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  astepr (x[*]y[-]x[*]y); eauto with arith.
 -- Qed.
 
+instance : HMul (CauchySeq' K) (CauchySeq' K) (CauchySeq' K) := by {
+  constructor
+  intros s1 s2
+  constructor
+  apply CS_seq_mult s1.1 s2.1
+  exact s1.CS_proof
+  exact s2.CS_proof}
+
+/--
+For all `x y : K`, `inject_Q (x * y) = inject_Q x * inject_Q y`.
+-/
+lemma ing_mult (x y : K) : inject_Q (x * y) = inject_Q x * inject_Q y := by
+  exact rfl
+
+-- Opaque R_COrdField.
+
 -- Opaque R_COrdField.
 
 -- Lemma ing_div_three : forall x, inject_Q x [/]ThreeNZ [=] inject_Q (x [/]ThreeNZ).
@@ -327,6 +446,13 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  astepr (inject_Q x).
 --  apply ing_eq; algebra.
 -- Qed.
+
+instance : HDiv (CauchySeq' K) K (CauchySeq' K) := sorry
+
+/--
+For all `x : K`, `inject_Q x / 3 = inject_Q (x / 3)`.
+-/
+lemma ing_div_three (x : K) : inject_Q x / (3 : K) = inject_Q (x / (3 : K)) := by sorry
 
 -- Transparent R_COrdField.
 
@@ -355,6 +481,34 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 --  apply ing_eq.
 --  rational.
 -- Qed.
+
+
+-- Lemma ing_n : forall x n H1 H2,
+--  (inject_Q x[/] nring n[//]H2) [=] inject_Q (x[/] nring n[//]H1).
+-- Proof.
+--  intros.
+--  apply mult_cancel_lft with (inject_Q (nring (R:=F) n)).
+--   apply Greater_imp_ap.
+--   astepr (nring (R:=R_COrdField') n).
+--    apply nring_pos.
+--    apply Nat.neq_0_lt_0.
+--    apply Nat.neq_sym.
+--    apply nring_ap_zero_imp with F.
+--    assumption.
+--   apply ing_nring.
+--  apply eq_transitive_unfolded with (inject_Q x).
+--   rstepr (nring n[*] (inject_Q x[/] nring n[//]H2)).
+--   apply mult_wdl.
+--   apply eq_symmetric_unfolded.
+--   apply ing_nring.
+--  apply eq_symmetric_unfolded.
+--  apply eq_transitive_unfolded with (inject_Q (nring n[*] (x[/] nring n[//]H1))).
+--   apply eq_symmetric_unfolded.
+--   apply ing_mult.
+--  apply ing_eq.
+--  rational.
+-- Qed.
+
 
 -- Theorem expand_Q_R : forall (x : R_COrdField') e, [0] [<] e -> forall N,
 --  (forall m, N <= m -> AbsSmall (e [/]FourNZ) (CS_seq F x m[-]CS_seq F x N)) ->
@@ -472,15 +626,40 @@ lemma ing_eq {x y : K} (h : x = y) : inject_Q x = inject_Q y := by
 -- Qed.
 
 /--
-Given a Cauchy sequence `x` and a natural number `M`, returns a natural number `N` such that for all `m ≥ N`, the difference `x m - x N` is small (bounded by `one_div_succ M`).
+Given a Cauchy sequence `x` and a natural number `M`,
+returns a natural number `N` such that for all `m ≥ N`,
+the difference `x m - x N` is small (bounded by `one_div_succ M`).
 -/
 def conv_modulus (x : CauchySeq' K) (M : Nat) :
-  { N : Nat // ∀ m, N ≤ m → AbsSmall (1/(M+1) : K) (CS_seq x m - CS_seq x N) } := sorry
+  { N : Nat // ∀ m, N ≤ m → AbsSmall (1/(M+1) : K) (CS_seq x m - CS_seq x N) } := by {
+  --   constructor
+  --   · intros m
+  --     cases' x with x px
+  --     unfold Cauchy_prop at px
+  --     have :  (0 : K) < 1 / (↑M + 1) := by {
+  --      norm_cast
+  --     -- refine ing_cancel_less ?_
+  --     -- simp only [Nat.cast_add, Nat.cast_one]
+  --      apply ing_cancel_less
+  --      sorry
+  --   }
+  --     have H := px (1/(M+1)) this
+  --     simp only [one_div, inv_pos] at this
+  --     obtain ⟨N,H1⟩ := H
+  --   --dsimp [AbsSmall]
+  --     have hm' : N ≤ m:=sorry
+  --     have H1 := H1 m hm'
+  --     dsimp [CauchySeq]
+  --     sorry
+  --
+  sorry }
+
 
 -- Let T (x : R_COrdField') (m : nat) := let (N, _) := conv_modulus x m in N.
 
 /--
-Given a Cauchy sequence `x` and a natural number `m`, returns the least `N` such that for all `n ≥ N`, the difference `x n - x N` is small (bounded by `1/(m+1)`).
+Given a Cauchy sequence `x` and a natural number `m`, returns the least `N` such that for all `n ≥ N`,
+the difference `x n - x N` is small (bounded by `1/(m+1)`).
 -/
 def T (x : CauchySeq' K) (m : Nat) : Nat := (conv_modulus x m).val
 
@@ -488,15 +667,100 @@ def T (x : CauchySeq' K) (m : Nat) : Nat := (conv_modulus x m).val
 -- resulting one is, too.
 -- *)
 
+-- Theorem R_is_archemaedian : forall x : R_COrdField', {n : nat | x [<=] nring n}.
+-- Proof.
+--  intros.
+--  case x.
+--  intros x_ px.
+--  -- px is the Cauchy property for the sequence x_
+--  elim (px [1] (pos_one _)); intros Nx HNx.
+--  -- For ε = 1, get Nx such that for all m ≥ Nx, |x_ m - x_ Nx| < 1
+--  elim (F_is_archemaedian (x_ Nx)); intros N HN.
+--  -- By archimedean property of F, find N such that x_ Nx < N
+--  exists (S N).
+--  -- We will show x ≤ nring (S N)
+--  intro H.
+--  -- Suppose not, then x > nring (S N)
+--  elim H; intros K HK; elim HK; clear H HK; intros e He HK; simpl in HK.
+--  -- Use the definition of < in the Cauchy completion: there exists e > 0 such that for all large enough indices, x_ k - nring (S N) > e
+--  apply (less_irreflexive_unfolded F [0]).
+--  -- Show 0 < 0, contradiction
+--  apply less_leEq_trans with e; auto.
+--  -- e > 0
+--  astepr (x_ (K + Nx) [-]x_ (K + Nx)).
+--  -- x_ (K + Nx) - x_ (K + Nx) = 0
+--  eapply leEq_transitive.
+--   apply (HK (K + Nx)); eauto with arith.
+--   -- For k = K + Nx, HK gives x_ (K + Nx) - nring (S N) > e
+--  unfold cg_minus in |- *; apply plus_resp_leEq_lft; apply inv_resp_leEq.
+--  -- Rearranging terms to get 0 ≤ ...
+--  rstepl (x_ Nx[+] (x_ (K + Nx) [-]x_ Nx)).
+--  -- x_ (K + Nx) = x_ Nx + (x_ (K + Nx) - x_ Nx)
+--  apply plus_resp_leEq_both.
+--   apply leEq_wdr with (CS_seq _ (inject_Q (nring N)) (K + Nx)).
+--    simpl in |- *; apply less_leEq; auto.
+--    -- x_ Nx ≤ nring N
+--   apply eq_symmetric_unfolded; apply ing_nring'.
+--   -- Use equality of Cauchy sequence at index (K + Nx) with inject_Q (nring N)
+--  elim (HNx (K + Nx)); auto with arith.
+--  -- Use the Cauchy property to bound |x_ (K + Nx) - x_ Nx| < 1
+-- Qed.
+
+
 -- Hypothesis F_is_archemaedian : forall x : F, {n : nat | x [<] nring n}.
 variable (F_is_archimedean : ∀ x : K, ∃ n : Nat, x < n)
+include F_is_archimedean in
 /--
 If the base field `K` is archimedean, then the Cauchy completion is also archimedean:
 for any Cauchy sequence `x`, there exists `n : Nat` such that `x ≤ nring n`.
 -/
-theorem R_is_archimedean (x : K) :
-    ∃ n : Nat, x ≤ n := by
+theorem R_is_archimedean :
+  ∀ (x : CauchySeq' K), ∃ n : Nat, x ≤ ⟨by {sorry
+  }, by {
     sorry
+  }⟩:= by stop
+  intros x
+  -- Use the Cauchy property for ε = 1
+  let ε : K := 1
+  have ε_pos : (0 : K) < ε := zero_lt_one' K
+  obtain ⟨Nx, HNx⟩ := F_is_archimedean
+
+  -- By archimedean property of K, find N such that x_ Nx < N
+  let x_Nx := Nx
+  obtain ⟨N, HN⟩ := F_is_archimedean x_Nx
+  let n := N + 1
+  use n
+  -- Show x ≤ S N
+  intro h
+  -- Suppose not, then x > inject_Q n
+  -- By definition of <, there exists e > 0 such that for all large enough indices, x_k - n > e
+  rcases h with ⟨K, ⟨e, e_pos, HK⟩⟩
+  -- Use the Cauchy property at index K + Nx
+  have : (x.1 (K + Nx) - n : K) > e := HK (K + Nx) (by {
+
+  })
+  -- But x.1 (K + Nx) = x.1 Nx + (x.1 (K + Nx) - x.1 Nx)
+  -- And |x.1 (K + Nx) - x.1 Nx| < 1 by Cauchy property
+  have bound : |x.1 (K + Nx) - x.1 Nx| < 1 := by
+    specialize HNx (K + Nx) (by {})
+    exact AbsSmall.lt_of_absSmall HNx
+  -- So x.1 (K + Nx) ≤ x.1 Nx + 1
+  have le1 : x.1 (K + Nx) ≤ x.1 Nx + 1 := by
+    apply le_of_abs_le
+    rw [abs_sub_le_iff]
+    exact ⟨by {}, by {}⟩
+  -- But x.1 Nx < N < n, so x.1 Nx + 1 ≤ n
+  have le2 : x.1 Nx + 1 ≤ n := by
+    have : x.1 Nx < N := HN
+    sorry
+  -- So x.1 (K + Nx) ≤ n
+  have le3 : x.1 (K + Nx) ≤ n := le_trans le1 le2
+  -- But x.1 (K + Nx) - n ≤ 0, so cannot be > e > 0
+  have : x.1 (K + Nx) - n ≤ 0 := by sorry
+  have : e < 0 := by sorry
+  exact lt_irrefl _ (lt_trans e_pos this)
+
+
 
 -- Theorem R_is_archemaedian : forall x : R_COrdField', {n : nat | x [<=] nring n}.
 -- Proof.
@@ -522,6 +786,8 @@ theorem R_is_archimedean (x : K) :
 --  elim (HNx (K + Nx)); auto with arith.
 -- Qed.
 
+
+
 -- (* begin hide *)
 -- Let PT (x : R_COrdField') (M : nat) :=
 --   proj2_sigT nat
@@ -530,6 +796,14 @@ theorem R_is_archimedean (x : K) :
 --      N <= m -> AbsSmall (one_div_succ M) (CS_seq F x m[-]CS_seq F x N))
 --     (conv_modulus x M).
 -- (* end hide *)
+
+/--
+Given a Cauchy sequence `x` and a natural number `M`, `PT x M` is the proof that for all `m ≥ T x M`,
+the difference `x m - x (T x M)` is small (bounded by `one_div_succ M`).
+-/
+def PT (x : CauchySeq' K) (M : Nat) : ∀ m, T x M ≤ m → AbsSmall (1/(M+1) : K) (CS_seq x m - CS_seq x (T x M)) :=
+  (conv_modulus x M).property
+
 
 -- Lemma modulus_property : forall x M m0 m1, T x M <= m0 -> T x M <= m1 ->
 --  AbsSmall (Two[*]one_div_succ M) (CS_seq F x m0[-]CS_seq F x m1).
@@ -546,6 +820,29 @@ theorem R_is_archimedean (x : K) :
 --  apply H1.
 --  assumption.
 -- Qed.
+
+
+/--
+For any Cauchy sequence `x`, natural number `M`, and indices `m0 m1 ≥ T x M`,
+the difference `CS_seq x m0 - CS_seq x m1` is small (bounded by `2 * one_div_succ M`).
+-/
+lemma modulus_property (x : CauchySeq' K) (M m0 m1 : Nat)
+  (h0 : T x M ≤ m0) (h1 : T x M ≤ m1) :
+  AbsSmall (2 * (1/(M+1) : K)) (CS_seq x m0 - CS_seq x m1) :=
+by
+  -- Write as (x m0 - x (T x M)) + (x (T x M) - x m1)
+  have : CS_seq x m0 - CS_seq x m1 =
+    (CS_seq x m0 - CS_seq x (T x M)) + (CS_seq x (T x M) - CS_seq x m1) := by
+    simp only [sub_add_sub_cancel]
+  rw [this]
+  -- Use triangle inequality for AbsSmall
+  apply AbsSmall.plus
+  · exact PT x M m0 h0
+  · exact AbsSmall.minus (PT x M m1 h1)
+
+
+
+
 
 -- Lemma modulus_property_2 : forall x M m, T x M <= m ->
 --  AbsSmall (one_div_succ M) (CS_seq F x m[-]CS_seq F x (T x M)).
@@ -948,6 +1245,6 @@ def R_as_CReals : CReals (R := K) where
     constructor
     · intros s
       apply R_is_complete
-    · apply R_is_archimedean}
+    · apply R_is_archimedean' F_is_archimedean}
 
 -- Definition R_as_CReals := Build_CReals _ _ R_is_CReals.

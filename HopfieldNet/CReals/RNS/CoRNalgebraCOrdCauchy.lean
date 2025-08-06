@@ -1,6 +1,8 @@
 import Mathlib.Algebra.Order.Field.Defs
 import Mathlib.Topology.UniformSpace.Cauchy
 import Mathlib.Algebra.Order.Group.Abs
+import HopfieldNet.CReals.RNS.CRings
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdAbs
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe
@@ -592,7 +594,8 @@ for all `x' y'`, if `|x - x'| < c` and `|y - y'| < d`, then
 `|x * y - x' * y'| < e`.
 -/
 lemma mult_contin (x y e : K) (he : 0 < e) :
-  ∃ c > 0, ∃ d > 0, ∀ x' y', AbsSmall c (x - x') → AbsSmall d (y - y') → AbsSmall e (x * y - x' * y') :=
+  ∃ c > 0, ∃ d > 0, ∀ x' y', AbsSmall c (x - x') → AbsSmall d (y - y') →
+    AbsSmall e (x * y - x' * y') :=
 sorry
 
 
