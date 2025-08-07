@@ -280,12 +280,9 @@ lemma product_diff_bound
     x.is_regular kₙ kₘ h_le
   have h_yreg : |y.approx kₙ - y.approx kₘ| ≤ (1 : ℚ) / 2 ^ kₙ :=
     y.is_regular kₙ kₘ h_le
-
   -- Non-negativity of the bounding constants.
   have hBx_nonneg : (0 : ℚ) ≤ Bx := le_trans (abs_nonneg _) hxB
   have hBy_nonneg : (0 : ℚ) ≤ By := le_trans (abs_nonneg _) hyB
-
-  -- Main estimate.
   calc
     |x.approx kₙ * y.approx kₙ - x.approx kₘ * y.approx kₘ|
         = |x.approx kₙ * (y.approx kₙ - y.approx kₘ) +
@@ -298,12 +295,10 @@ lemma product_diff_bound
         |y.approx kₘ| * |x.approx kₙ - x.approx kₘ| := by
           simp [abs_mul]
     _ ≤ Bx * (1 / 2 ^ kₙ) + By * (1 / 2 ^ kₙ) := by
-      -- First product term
       have h1 : |x.approx kₙ| * |y.approx kₙ - y.approx kₘ| ≤
           Bx * (1 / 2 ^ kₙ) := by
         have := mul_le_mul hxB h_yreg (abs_nonneg _) hBx_nonneg
         simpa using this
-      -- Second product term
       have h2 : |y.approx kₘ| * |x.approx kₙ - x.approx kₘ| ≤
           By * (1 / 2 ^ kₙ) := by
         have := mul_le_mul hyB h_xreg (abs_nonneg _) hBy_nonneg
@@ -323,16 +318,11 @@ protected def Pre.mul (x y : CReal.Pre) : CReal.Pre where
     let S := x.mulShift y
     let kₙ := n + S; let kₘ := m + S
     have hknm : kₙ ≤ kₘ := add_le_add_right hnm S
-
     let Bx := x.cBound; let By := y.cBound
-
-    -- Apply the core product estimate.
+    -- we apply the core product estimate.
     have h_core := product_diff_bound x y hknm (Bx:ℚ) (By:ℚ) (x.abs_approx_le_cBound kₙ) (y.abs_approx_le_cBound kₘ)
-
-    -- Use the property of the precision shift S: Bx+By ≤ 2^S.
+    -- Uses the property of the precision shift S: Bx+By ≤ 2^S.
     have h_S := x.sum_cBound_le_pow_mulShift y
-
-    -- Final calculation: (Bx+By)/2^{n+S} ≤ 2^S/2^{n+S} = 1/2^n.
     calc
       _ ≤ (Bx + By : ℚ) * (1 / 2 ^ kₙ) := h_core
       _ ≤ (2 ^ S : ℚ) * (1 / 2 ^ kₙ) := mul_le_mul_of_nonneg_right h_S (by positivity)
@@ -348,10 +338,8 @@ lemma mul_equiv_same_index
   -- Abbreviations for the canonical bounds (as rationals).
   set Bx₁ : ℚ := (x₁.cBound : ℚ) with hBx₁
   set By₂ : ℚ := (y₂.cBound : ℚ) with hBy₂
-
   -- `K = (K-1)+1` (needed to use `h_x` / `h_y`).
   have hK_eq : K = (K - 1) + 1 := (Nat.succ_pred_eq_of_pos hK).symm
-
   -- Bounds coming from the equivalence hypotheses.
   have h_y_diff : |y₁.approx K - y₂.approx K| ≤ (1 : ℚ) / 2 ^ (K - 1) := by
     convert h_y (K - 1) using 2
@@ -359,13 +347,11 @@ lemma mul_equiv_same_index
   have h_x_diff : |x₁.approx K - x₂.approx K| ≤ (1 : ℚ) / 2 ^ (K - 1) := by
     convert h_x (K - 1) using 2
     rw [hK_eq]; rw [Nat.add_succ_sub_one]
-
   -- Bounds for the absolute values of the individual approximations.
   have h_x_bound : |x₁.approx K| ≤ Bx₁ := by
     simpa [hBx₁] using x₁.abs_approx_le_cBound K
   have h_y_bound : |y₂.approx K| ≤ By₂ := by
     simpa [hBy₂] using y₂.abs_approx_le_cBound K
-
   -- Non–negativity of the bounds.
   have hBx_nonneg : (0 : ℚ) ≤ Bx₁ := by
     have : (0 : ℚ) ≤ (x₁.cBound : ℚ) := by exact_mod_cast (Nat.zero_le _)
@@ -373,8 +359,6 @@ lemma mul_equiv_same_index
   have hBy_nonneg : (0 : ℚ) ≤ By₂ := by
     have : (0 : ℚ) ≤ (y₂.cBound : ℚ) := by exact_mod_cast (Nat.zero_le _)
     simp [hBy₂] 
-
-  -- Estimate the two products appearing after expansion.
   have h_prod₁ :
       |x₁.approx K| * |y₁.approx K - y₂.approx K| ≤
       Bx₁ * (1 / 2 ^ (K - 1)) := by
