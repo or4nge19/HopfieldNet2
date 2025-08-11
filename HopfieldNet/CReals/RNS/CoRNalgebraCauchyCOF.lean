@@ -1,4 +1,4 @@
-import HopfieldNet.CReals.RNS.cauchy_Cord
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdCauchy
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe

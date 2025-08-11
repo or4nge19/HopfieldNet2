@@ -191,7 +191,7 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 -- %\end{convention}%
 -- *)
 
-variables (f g : ℕ → K)
+variable (f g : ℕ → K)
 
 variable (Hf : Cauchy_prop f)
 

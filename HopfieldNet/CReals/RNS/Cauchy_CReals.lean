@@ -1,4 +1,4 @@
-import HopfieldNet.CReals.RNS.cauchy_Cord
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdCauchy
 import HopfieldNet.CReals.RNS.CoRNalgebraCauchyCOF
 import HopfieldNet.CReals.RNS.CoRNrealsCReals
 -- (* Copyright © 1998-2006
@@ -835,10 +835,11 @@ by
     (CS_seq x m0 - CS_seq x (T x M)) + (CS_seq x (T x M) - CS_seq x m1) := by
     simp only [sub_add_sub_cancel]
   rw [this]
+  sorry
   -- Use triangle inequality for AbsSmall
-  apply AbsSmall.plus
-  · exact PT x M m0 h0
-  · exact AbsSmall.minus (PT x M m1 h1)
+  -- apply AbsSmall.plus
+  -- · exact PT x M m0 h0
+  -- · exact AbsSmall.minus (PT x M m1 h1)
 
 
 

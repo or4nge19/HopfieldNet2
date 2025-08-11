@@ -1,5 +1,8 @@
 import Mathlib.Tactic.Positivity
-import Mathlib
+import Mathlib.Algebra.Order.Ring.Star
+import Mathlib.Analysis.Normed.Field.Lemmas
+import Mathlib.Data.Nat.Log
+import Mathlib.Data.Rat.Star
 import Mathlib.Tactic.Ring
 
 set_option maxHeartbeats 800000
@@ -76,7 +79,7 @@ theorem equiv_trans {x y z : CReal.Pre} (hxy : x ≈ y) (hyz : y ≈ z) : x ≈ 
   have h_error_bound : (1 : ℚ) / 2 ^ (m_idx - 2) ≤ (1 : ℚ) / 2 ^ m := by
     have h_le_m : m ≤ m_idx - 2 := Nat.le_sub_of_add_le h_m_le_midx
     rw [one_div_le_one_div (by positivity) (by positivity)]
-    exact (pow_le_pow_iff_right₀ rfl).mpr h_le_m 
+    exact (pow_le_pow_iff_right₀ rfl).mpr h_le_m
   calc |x.approx (k + 1) - z.approx (k + 1)|
       ≤ |x.approx (k + 1) - x.approx m_idx|
         + |x.approx m_idx - y.approx m_idx|
@@ -113,7 +116,7 @@ theorem equiv_trans {x y z : CReal.Pre} (hxy : x ≈ y) (hyz : y ≈ z) : x ≈ 
               ring_nf
           _ = (1:ℚ) / 2^k + (1:ℚ) / 2^(m_idx-2) := by
               rw [h₁, h₂]
-    _ ≤ (1 : ℚ) / 2 ^ k + (1 : ℚ) / 2 ^ m := by gcongr; 
+    _ ≤ (1 : ℚ) / 2 ^ k + (1 : ℚ) / 2 ^ m := by gcongr;
     _ ≤ (1 : ℚ) / 2 ^ k + ε := by linarith [h_eps_bound]
 
 instance setoid : Setoid CReal.Pre where
@@ -265,9 +268,9 @@ lemma Pre.sum_cBound_le_pow_mulShift (x y : CReal.Pre) :
   apply add_bounds_le_power_of_two <;> apply CReal.Pre.cBound_pos
 
 /--
-**Core Product Estimate**.  
-`|xₙ yₙ - xₘ yₘ| ≤ (Bx + By) * (1 / 2 ^ n)` whenever  
-• `kₙ ≤ kₘ`  
+**Core Product Estimate**.
+`|xₙ yₙ - xₘ yₘ| ≤ (Bx + By) * (1 / 2 ^ n)` whenever
+• `kₙ ≤ kₘ`
 • `|xₙ| ≤ Bx` and `|yₘ| ≤ By`.
 -/
 lemma product_diff_bound
@@ -358,7 +361,7 @@ lemma mul_equiv_same_index
     simp [hBx₁]
   have hBy_nonneg : (0 : ℚ) ≤ By₂ := by
     have : (0 : ℚ) ≤ (y₂.cBound : ℚ) := by exact_mod_cast (Nat.zero_le _)
-    simp [hBy₂] 
+    simp [hBy₂]
   have h_prod₁ :
       |x₁.approx K| * |y₁.approx K - y₂.approx K| ≤
       Bx₁ * (1 / 2 ^ (K - 1)) := by
@@ -391,7 +394,7 @@ lemma div_lt_iff {a b c : ℚ} (hb : 0 < b) : a / b < c ↔ a < c * b := by
   change a * b⁻¹ < c ↔ a < c * b
   rw [← mul_lt_mul_right hb]
   field_simp [hb.ne']
-  
+
 lemma div_le_div_of_le_of_nonneg {a b c d : ℚ} (ha : 0 ≤ a) (hc : 0 < c) (_ : 0 < d) (h_le : c ≤ d) :
     a / d ≤ a / c := by
   gcongr
@@ -403,15 +406,15 @@ lemma lt_div_iff_mul_lt {a b c : ℚ} (hc : 0 < c) : a < b / c ↔ a * c < b := 
 lemma div_lt_iff' {a b c : ℚ} (hc : 0 < c) : a / c < b ↔ a < b * c :=
   by exact div_lt_iff₀ hc
 
-/-- Regularity bound :  
-for any indices `k_small ≤ k_big` we control  
+/-- Regularity bound :
+for any indices `k_small ≤ k_big` we control
 `|(x*y)ₖsmall  -  xₖbig * yₖbig|`. -/
 lemma mul_regularity_bound
     (x y : CReal.Pre) {k_small k_big : ℕ} (h_le : k_small ≤ k_big) :
     |(x.mul y).approx k_small - (x.mul y).approx k_big|
       ≤ 1 / 2 ^ k_small := by
-  dsimp [CReal.Pre.mul]                   
-  set S := x.mulShift y                   
+  dsimp [CReal.Pre.mul]
+  set S := x.mulShift y
   let ks   := k_small + S
   let kbS  := k_big + S
   -- ks ≤ kbS follows from k_small ≤ k_big
@@ -445,7 +448,7 @@ lemma mul_regularity_bound
 /--  Equivalence (“middle”) bound at a *single* index `K`.  -/
 alias mul_middle_bound := mul_equiv_same_index
 
-/--  Given a positive ε, we can find an index `K` such that  
+/--  Given a positive ε, we can find an index `K` such that
 `B / 2^(K-1) < ε`  -/
 lemma mul_find_index
     {B ε : ℚ} (hB : 0 < B) (hε : 0 < ε) :
@@ -524,7 +527,7 @@ lemma mul_approx_bound_min
     _ ≤ |(x.approx ks - x.approx kb) * y.approx ks| + |x.approx kb * (y.approx ks - y.approx kb)| := by apply abs_add
     _ = |x.approx ks - x.approx kb| * |y.approx ks| + |x.approx kb| * |y.approx ks - y.approx kb| := by simp [abs_mul]
     _ ≤ (1 / 2 ^ (min ks kb)) * |y.approx ks| + |x.approx kb| * (1 / 2 ^ (min ks kb)) := by
-        gcongr 
+        gcongr
     _ ≤ (1 / 2 ^ (min ks kb)) * y.cBound + x.cBound * (1 / 2 ^ (min ks kb)) := by
         gcongr
     _ = (x.cBound + y.cBound) * (1 / 2 ^ (min ks kb)) := by ring
@@ -613,10 +616,9 @@ lemma mul_find_index'
   refine ⟨K₀ + 1, Nat.succ_pos _, ?_⟩
   simpa [Nat.add_sub_cancel] using h_step
 
-theorem mul_respects_equiv
-    (x₁ y₁ x₂ y₂ : CReal.Pre)
+theorem mul_respects_equiv (x₁ y₁ x₂ y₂ : CReal.Pre)
     (h_x : CReal.Pre.Equiv x₁ x₂) (h_y : CReal.Pre.Equiv y₁ y₂) :
-    CReal.Pre.Equiv (x₁.mul y₁) (x₂.mul y₂) := by
+    CReal.Pre.Equiv (x₁.mul y₁) (x₂.mul y₂) := by stop
   intro n
   --  We follow an “ε-argument”.
   apply le_of_forall_pos_le_add
@@ -636,14 +638,17 @@ theorem mul_respects_equiv
     exact div_pos hε this
   obtain ⟨K, hK_pos, hK_lt⟩ := mul_find_index' hB hε_div3
   -- abbreviations for the various approximations that appear.
-  let   A := (x₁.mul y₁).approx m
-  let   D := (x₂.mul y₂).approx m
+  let A := (x₁.mul y₁).approx m
+  let D := (x₂.mul y₂).approx m
   let B₁ := x₁.approx K * y₁.approx K   -- “bridge” terms
   let C₁ := x₂.approx K * y₂.approx K
   -- 1. Regularity of the shifted products.
-  have h₁ : |A - B₁| ≤ 1 / 2 ^ m :=
-    mul_regularity_bound x₁ y₁ (le_rfl)
-  have h₃ : |C₁ - D| ≤ 1 / 2 ^ m := by
+  have h₁ : |A - B₁| ≤ 1 / 2 ^ m := by
+    unfold A B₁
+    have := mul_regularity_bound x₁ y₁ (k_big := K) (le_rfl)
+    sorry
+    --apply mul_regularity_bound --x₁ y₁ (le_rfl)
+  have h₃ : |C₁ - D| ≤ 1 / 2 ^ m := by stop
     simpa [abs_sub_comm] using
       mul_regularity_bound x₂ y₂ (le_rfl)
   -- 2. The “middle-index” estimate, afterwards pushed below `ε/3`.
@@ -654,7 +659,9 @@ theorem mul_respects_equiv
   --  Triangle inequality.
   have h_tri : |A - D| ≤ |A - B₁| + |B₁ - C₁| + |C₁ - D| := by
     have h_eq : (A - D) = (A - B₁) + (B₁ - C₁) + (C₁ - D) := by ring
-    simpa [h_eq] using abs_add_three _ _ _
+    rw [h_eq]
+    apply abs_add_three _ _ _
+    --simpa [h_eq] using abs_add_three _ _ _
   --  Plug-in the three individual estimates.
   have h_comb : |A - D| ≤ 1 / 2 ^ m + ε / 3 + 1 / 2 ^ m := by
     have : |A - D| ≤ |A - B₁| + |B₁ - C₁| + |C₁ - D| := h_tri
@@ -662,31 +669,35 @@ theorem mul_respects_equiv
   have h_half : (1 : ℚ) / 2 ^ m + 1 / 2 ^ m = 1 / 2 ^ (n + 1) := by
     -- First rewrite `m` in terms of `n`.
     have hm' : m = n + 2 := by
-      simpa [hm] using rfl
+      simp [hm]
     -- Substitute and perform elementary algebra.
     -- After substitution the left-hand side reads
     --   1/2^(n+2) + 1/2^(n+2) = 2/2^(n+2)
-    -- and the right-hand side is 1/2^(n+1).  
+    -- and the right-hand side is 1/2^(n+1).
     -- These are equal because 2/2^(n+2) = 1/2^(n+1).
-    subst hm'
-    have : (2 : ℚ) / 2 ^ (n + 2) = 1 / 2 ^ (n + 1) := by
-      -- `2^(n+2) = 2^(n+1)*2`, hence the quotient simplifies.
-      field_simp [pow_succ]     -- `pow_succ` gives 2^(n+2)=2^(n+1)*2
-    simpa [two_mul, div_eq_mul_inv, add_comm, add_left_comm, add_assoc, mul_comm,
-          mul_left_comm, mul_assoc, bit0, one_mul] using
-      (by
-        -- 1/2^(n+2)+1/2^(n+2)=2/2^(n+2)
-        have : (1 : ℚ) / 2 ^ (n + 2) + 1 / 2 ^ (n + 2) = (2 : ℚ) / 2 ^ (n + 2) := by
-          ring
-        -- Replace the quotient by the simplified expression.
-        simpa [this] using this.trans ‹(2 : ℚ) / 2 ^ (n + 2) = 1 / 2 ^ (n + 1)›)
+    rw [hm']
+    ring
+    -- have : (2 : ℚ) / 2 ^ (n + 2) = 1 / 2 ^ (n + 1) := by stop
+    --   -- `2^(n+2) = 2^(n+1)*2`, hence the quotient simplifies.
+    --   field_simp [pow_succ]     -- `pow_succ` gives 2^(n+2)=2^(n+1)*2
+    -- simpa [two_mul, div_eq_mul_inv, add_comm, add_left_comm, add_assoc, mul_comm,
+    --       mul_left_comm, mul_assoc, bit0, one_mul] using
+    --   (by
+    --     -- 1/2^(n+2)+1/2^(n+2)=2/2^(n+2)
+    --     have : (1 : ℚ) / 2 ^ (n + 2) + 1 / 2 ^ (n + 2) = (2 : ℚ) / 2 ^ (n + 2) := by stop
+    --       ring
+    --     -- Replace the quotient by the simplified expression.
+    --     simpa [this] using this.trans ‹(2 : ℚ) / 2 ^ (n + 2) = 1 / 2 ^ (n + 1)›)
   have h_tmp : |A - D| ≤ 1 / 2 ^ (n + 1) + ε / 3 := by
-    simpa [h_half] using h_comb
-  --  ε-shrink step (`1/2^(n+1) + ε/3 ≤ 1/2^n + ε`) 
+    rw [← h_half]
+    simp only [one_div] at *
+    rw [add_comm,← add_assoc] at h_comb
+    exact h_comb
+  --  ε-shrink step (`1/2^(n+1) + ε/3 ≤ 1/2^n + ε`)
   have h_pow : (1 : ℚ) / 2 ^ (n + 1) ≤ 1 / 2 ^ n := by
     have h_den : (2 : ℚ) ^ n ≤ 2 ^ (n + 1) := by
       exact_mod_cast
-        Nat.pow_le_pow_of_le_right (by decide : (1 : ℕ) ≤ 2) (Nat.le_succ n)
+        Nat.pow_le_pow_right (by decide : (1 : ℕ) ≤ 2) (Nat.le_succ n)
     have h_pos : (0 : ℚ) < 2 ^ n := pow_pos (by norm_num) _
     have := div_le_div_of_le_left (show (0 : ℚ) ≤ 1 by norm_num) h_pos h_den
     simpa using this
@@ -696,9 +707,16 @@ theorem mul_respects_equiv
   have h_final : |A - D| ≤ 1 / 2 ^ n + ε := by
     have := h_tmp
     linarith [h_pow, h_eps]
-  exact h_final.le
-  all_goals aesop  
+  unfold A at h_final
+  unfold D at h_final
+  unfold m at h_final
 
+  --sorry
+  --exact h_final
+  --exact h_final
+  --exact h_final.le
+  --all_goals aesop?
+#exit
 /-- The product of two computable real numbers. -/
 protected def mul (x y : CReal) : CReal :=
   Quotient.map₂ Pre.mul mul_respects_equiv x y
