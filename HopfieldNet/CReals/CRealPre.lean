@@ -372,8 +372,6 @@ lemma mul_equiv_same_index
       By₂ * (1 / 2 ^ (K - 1)) := by
     have := mul_le_mul h_y_bound h_x_diff (abs_nonneg _) hBy_nonneg
     simpa using this
-
-  -- Combine everything.
   calc
     |x₁.approx K * y₁.approx K - x₂.approx K * y₂.approx K|
         = |x₁.approx K * (y₁.approx K - y₂.approx K) +
@@ -390,7 +388,6 @@ lemma mul_equiv_same_index
           rw [div_eq_mul_inv]; ring
 
 lemma div_lt_iff {a b c : ℚ} (hb : 0 < b) : a / b < c ↔ a < c * b := by
-  -- rewrite division as multiplication by the inverse
   change a * b⁻¹ < c ↔ a < c * b
   rw [← mul_lt_mul_right hb]
   field_simp [hb.ne']
