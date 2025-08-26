@@ -67,8 +67,7 @@ import HopfieldNet.CReals.modelstructuresPosinf
 -- Definition is_RegularFunction {X:Type} (ball : Q->X->X->Prop) (x:QposInf -> X) : Prop :=
 --  forall (e1 e2:Qpos), ball (proj1_sig e1 + proj1_sig e2) (x e1) (x e2).
 
-
-def isRegularFunction {X : Type} (ball : ℚ → X → X → Prop)
+def is_RegularFunction {X : Type} (ball : ℚ → X → X → Prop)
   (x : QposInf → X) : Prop :=
   ∀ (e1 e2 : Qpos), ball (e1.val + e2.val)
     (x (QposInf.Qpos2QposInf e1)) (x (QposInf.Qpos2QposInf e2))
@@ -82,7 +81,7 @@ def isRegularFunction {X : Type} (ball : ℚ → X → X → Prop)
 
 structure RegularFunction {X : Type} (ball : ℚ → X → X → Prop) where
   approximate : QposInf → X
-  regFun_prf : isRegularFunction ball approximate
+  regFun_prf : is_RegularFunction ball approximate
 
 -- Lemma is_RegularFunction_wd
 --   : forall (X : MetricSpace) (x y:QposInf -> X),
@@ -217,8 +216,7 @@ def regFun_is_MetricSpace {X : MetricSpace'} :
   IsMetricSpace (regFunBall X.ball) := sorry
 
 def Complete (X : MetricSpace') : MetricSpace' :=
-  {
-    carrier := RegularFunction X.ball
+  { carrier := RegularFunction X.ball
     ball := regFunBall X.ball
     ball_e_wd := fun e d x y h => @regFunBall_wd X.carrier X.ball e d x y h
     is_metric := regFun_is_MetricSpace
@@ -235,18 +233,22 @@ def CR_carrier : Type := (Complete Q_as_MetricSpace).carrier
 -- Bind Scope CR_scope with CR.
 -- #[global]
 
-def Cunit (q : ℚ) : CR_carrier := sorry
+def Cunit (q : ℚ) : CR_carrier :=
+  {
+    approximate := fun _ => q,
+    regFun_prf := fun _ _ => by {
+      simp only
+      refine ball_weak Q_as_MetricSpace ?_ ?_
+      · (expose_names; exact Qpos_nonneg x_1)
+      · refine ball_refl Q_as_MetricSpace ?_
+        (expose_names; exact Qpos_nonneg x)
+    }
+  }
 
-instance inject_Q_CR : Coe ℚ CR_carrier :=
-  ⟨Cunit⟩
+instance inject_Q_CR : Coe ℚ CR_carrier := ⟨Cunit⟩
 
 -- Instance inject_Q_CR: Cast Q (msp_car CR)
 --   := ucFun (@Cunit Q_as_MetricSpace).
-
--- Instance inject_Q_CR: Cast Q (msp_car CR)
---   := ucFun (@Cunit Q_as_MetricSpace).
-
-instance : LE CR_carrier := sorry
 
 -- (*
 -- Since (@Cunit Q_as_MetricSpace) is a bundled function with a modulus
@@ -274,7 +276,6 @@ instance : LE CR_carrier := sorry
 -- is proper with respect to equality.
 theorem inject_Q_CR_wd {x y : ℚ} (h : x = y) :
    (x : CR_carrier) = (y : CR_carrier) := by rw [h]
-
 
 -- Local Open Scope uc_scope.
 

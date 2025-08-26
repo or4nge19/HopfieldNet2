@@ -1,6 +1,4 @@
 import HopfieldNet.CReals.Cauchy_CReals
-import Mathlib.Topology.UniformSpace.Cauchy
-import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import HopfieldNet.CReals.CoRNmodelordfieldsQordfield
 
 -- (* Copyright © 1998-2006

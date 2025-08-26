@@ -1,3 +1,4 @@
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdCauchy
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe
@@ -54,13 +55,25 @@
 --   {ax_Lim  : forall s : CauchySeq R, SeqLimit s (lim s);
 --    ax_Arch : forall x : R, {n : nat | x [<=] nring n}}.
 
+structure is_CReals (R) [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+  (lim : CauchySeq' R → R) : Prop where
+  (ax_Lim  : ∀ s : CauchySeq' R, SeqLimit (s.CS_seq) (lim s))
+  (ax_Arch : ∀ x : R, ∃ n : Nat, x ≤ n)
+
 -- Record CReals : Type :=
 --   {crl_crr   :> COrdField;
 --    crl_lim   :  CauchySeq crl_crr -> crl_crr;
 --    crl_proof :  is_CReals crl_crr crl_lim}.
 
+structure CReals {R : Type}  [Field R] [LinearOrder R] [IsStrictOrderedRing R] where
+  crl_lim   : CauchySeq' R → R
+  crl_proof : is_CReals R crl_lim
+
 -- (* End_SpecReals *)
 
 -- Definition Lim : forall IR : CReals, CauchySeq IR -> IR := crl_lim.
+
+def Lim  [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+   (IR : CReals (R:=R)) (s : CauchySeq' R) : R := IR.crl_lim s
 
 -- Arguments Lim [IR].

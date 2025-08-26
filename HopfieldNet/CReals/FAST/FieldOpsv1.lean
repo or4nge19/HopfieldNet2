@@ -117,7 +117,9 @@ If (2 * e) ≤ approximate x e, then x is positive.
 
 lemma CRpos_char_proof {e : Qpos} {x : CR'}
   (h₂ : (2 : ℚ) * e.val ≤ RegularFunction.approximate x (QposInf.Qpos2QposInf e)) :
-     e.val ≤ x := by sorry
+     e.val ≤ x := by {
+      apply?
+     }
 
 -- Now use this lemma to fill in the `sorry` in CRpos_char
 def CRpos_char (e : Qpos) (x : CR')
@@ -217,7 +219,12 @@ def CRneg_char (e : Qpos) (x : CR')
 
 /-- Strict inequality for constructive reals: x < y iff y - x is positive. -/
 instance : HSub CR' CR' CR' where
-  hSub x y := sorry -- Provide the actual subtraction implementation for CR'
+  hSub x y := by {
+    dsimp [CR'] at *
+    cases' x with h1 h2
+    constructor
+    · exact h2
+  } -- Provide the actual subtraction implementation for CR'
 
 def CRltT (x y : CR') : Prop := CRpos (y - x)
 
@@ -348,7 +355,6 @@ def Qscale_modulus_elim
   P (Qscale_modulus x e) :=
 sorry
 
-
 -- Lemma Qscale_modulus_pos (a e: Qpos): exists P,
 --     Qscale_modulus (proj1_sig a) e
 --     ≡ Qpos2QposInf (exist (Qlt 0) (/ proj1_sig a * proj1_sig e)%Q P).
@@ -396,6 +402,8 @@ by
       simp_all only [Int.natCast_eq_zero, reduceCtorEq]
       subst heq
       simp_all only [one_div]
+      cases' e with e h2
+      simp_all only [mul_pos_iff_of_pos_right, inv_pos]
       sorry
     next x an_1 x_1 heq =>
       simp only [QposInf.Qpos2QposInf.injEq]

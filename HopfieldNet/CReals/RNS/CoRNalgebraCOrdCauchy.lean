@@ -1,6 +1,8 @@
 import Mathlib.Algebra.Order.Field.Defs
 import Mathlib.Topology.UniformSpace.Cauchy
 import Mathlib.Algebra.Order.Group.Abs
+import HopfieldNet.CReals.RNS.CRings
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdAbs
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe
@@ -39,6 +41,8 @@ import Mathlib.Algebra.Order.Group.Abs
 -- Require Export CoRN.algebra.COrdAbs.
 -- From Coq Require Import Lia.
 
+set_option linter.unusedVariables false
+set_option linter.unusedSectionVars false
 -- (* Begin_SpecReals *)
 
 -- Section OrdField_Cauchy.
@@ -103,6 +107,30 @@ def SeqLimit (seq : ℕ → K) (lim : K) : Prop :=
 -- %\begin{convention}% Let [R] be an ordered field.
 -- %\end{convention}%
 -- *)
+/--
+If `g` is a Cauchy sequence, then there exists a bound `K > 0`
+ and an index `N` such that for all `m ≥ N`, `|g m| < K`.
+-/
+lemma CS_seq_bounded :
+  ∀ (g : ℕ → K) (hg : Cauchy_prop g),
+  ∃ K : K, 0 < K ∧ ∃ N : ℕ, ∀ m ≥ N, abs (g m) < K :=  by {
+  intros g Hg
+  unfold Cauchy_prop at *
+  specialize Hg 1 (by {simp only [zero_lt_one]})
+  obtain ⟨N, hN⟩ := Hg
+  use (abs (g N) + 1)
+  constructor
+  · apply add_pos_of_nonneg_of_pos
+    · exact abs_nonneg (g N)
+    · exact zero_lt_one
+  · use N
+    intros m hm
+    calc
+      abs (g m) = abs ((g m - g N) + g N)         := by {simp only [sub_add_cancel]}
+              _ ≤ abs (g m - g N) + abs (g N)   := abs_add _ _
+              _  < 1 + abs (g N)                 := add_lt_add_right (hN m hm) _
+              _ = abs (g N) + 1                 := add_comm _ _
+  }
 
 -- Theorem CS_seq_bounded : forall g : nat -> R, Cauchy_prop g ->
 --  {K : R | [0] [<] K | {N : nat | forall m, N <= m -> AbsSmall K (g m)}}.
@@ -163,10 +191,44 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 -- %\end{convention}%
 -- *)
 
+variable (f g : ℕ → K)
+
+variable (Hf : Cauchy_prop f)
+
+variable (Hg : Cauchy_prop g)
+
 -- Variables f g : nat -> R.
 
 -- Hypothesis Hf : Cauchy_prop f.
 -- Hypothesis Hg : Cauchy_prop g.
+include Hf Hg in
+/--
+If `f` and `g` are Cauchy sequences, then so is their sum.
+-/
+lemma CS_seq_plus : Cauchy_prop (fun m => f m + g m) :=
+  fun ε hε => by
+    -- We want to find N such that for all m ≥ N, |(f m + g m) - (f N + g N)| < ε
+    -- Note: |(f m + g m) - (f N + g N)| = |(f m - f N) + (g m - g N)| ≤ |f m - f N| + |g m - g N|
+    -- So, pick ε/2 for each.
+    have hε2 : (0 : K) < ε / 2 := by
+      apply (div_pos hε zero_lt_two)
+    obtain ⟨Nf, Hf'⟩ := Hf (ε / 2) hε2
+    obtain ⟨Ng, Hg'⟩ := Hg (ε / 2) hε2
+    let N := max Nf Ng
+    use N
+    intro m hm
+    have hmf : m ≥ Nf := le_trans (le_max_left Nf Ng) hm
+    have hmg : m ≥ Ng := le_trans (le_max_right Nf Ng) hm
+    calc
+      abs ((f m + g m) - (f N + g N))
+        = abs ((f m - f N) + (g m - g N)) := by { sorry
+        }
+      _ ≤ abs (f m - f N) + abs (g m - g N) := abs_add _ _
+      _ < ε / 2 + ε / 2 := by
+        apply add_lt_add
+        · sorry--exact Hf' m hmf
+        · sorry --exact Hg' m hmg
+      _ = ε := by sorry
 
 -- Lemma CS_seq_plus : Cauchy_prop (fun m => f m[+]g m).
 -- Proof.
@@ -197,6 +259,28 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply H31; eauto with arith.
 -- Qed.
 
+/--
+If `f` and `g` are Cauchy sequences, then so is their sum.
+-/
+lemma CS_seq_plus' (f g : ℕ → K) (Hf : Cauchy_prop f) (Hg : Cauchy_prop g) :
+  Cauchy_prop (fun m => f m + g m) :=
+fun ε hε => by
+  -- We'll use ε/2 for each sequence
+  have hε2 : (0 : K) < ε / 2 := div_pos hε zero_lt_two
+  obtain ⟨N1, Hf'⟩ := Hf (ε / 2) hε2
+  obtain ⟨N2, Hg'⟩ := Hg (ε / 2) hε2
+  let N := max N1 N2
+  use N
+  intro m hm
+  have hmf : m ≥ N1 := le_trans (le_max_left N1 N2) hm
+  have hmg : m ≥ N2 := le_trans (le_max_right N1 N2) hm
+  calc
+    abs ((f m + g m) - (f N + g N))
+      = abs ((f m - f N) + (g m - g N)) := by sorry
+    _ ≤ abs (f m - f N) + abs (g m - g N) := abs_add _ _
+    _ < ε / 2 + ε / 2 := sorry--add_lt_add (Hf' m hmf) (Hg' m hmg)
+    _ = ε := sorry--add_halves ε
+
 -- Lemma CS_seq_inv : Cauchy_prop (fun n => [--] (f n)).
 -- Proof.
 --  red in |- *; intros e H.
@@ -206,6 +290,21 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  rstepr (f m[-]f N).
 --  auto.
 -- Qed.
+
+
+/--
+If `f` is a Cauchy sequence, then so is its negation.
+-/
+lemma CS_seq_inv (f : ℕ → K) (Hf : Cauchy_prop f) : Cauchy_prop (fun n => -f n) := by
+  intros ε hε
+  dsimp [Cauchy_prop] at Hf
+  obtain ⟨N, hN⟩ := Hf ε hε
+  exact
+  ⟨N, fun m hm => by
+    simp [AbsSmall, sub_neg_eq_add]
+    sorry
+    --exact hN m hm
+    ⟩
 
 -- Lemma CS_seq_mult : Cauchy_prop (fun n => f n[*]g n).
 -- Proof.
@@ -237,11 +336,69 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply HNf; auto; apply Nat.le_trans with N; auto; unfold N in |- *; eauto with arith.
 -- Qed.
 
+
+
+/--
+If `f` and `g` are Cauchy sequences, then so is their product.
+-/
+lemma CS_seq_mult (f g : ℕ → K) (Hf : Cauchy_prop f) (Hg : Cauchy_prop g) :
+  Cauchy_prop (fun n => f n * g n) := sorry
+-- fun ε hε => by
+--   -- Get bounds for f and g
+--   obtain ⟨Mf, Mf_pos, ⟨Nf, HNf⟩⟩ := CS_seq_bounded f Hf
+--   obtain ⟨Mg, Mg_pos, ⟨Ng, HNg⟩⟩ := CS_seq_bounded g Hg
+--   -- Use ε/(2 * (Mf + 1)) and ε/(2 * (Mg + 1)) for Cauchy property
+--   let δf := ε / (2 * (Mg + 1))
+--   let δg := ε / (2 * (Mf + 1))
+--   have δf_pos : 0 < δf := div_pos hε (mul_pos two_pos (add_pos_of_nonneg_of_pos (le_of_lt Mg_pos) zero_lt_one))
+--   have δg_pos : 0 < δg := div_pos hε (mul_pos two_pos (add_pos_of_nonneg_of_pos (le_of_lt Mf_pos) zero_lt_one))
+--   obtain ⟨N1, Hf'⟩ := Hf δf δf_pos
+--   obtain ⟨N2, Hg'⟩ := Hg δg δg_pos
+--   let N := max (max Nf N1) (max Ng N2)
+--   use N
+--   intro m hm
+--   -- m ≥ Nf, N1, Ng, N2
+--   have mNf : m ≥ Nf := sorry --le_trans (le_max_left Nf N1) (le_max_left (max Nf N1) (max Ng N2)) |> le_trans hm
+--   have mN1 : m ≥ N1 := sorry--le_trans (le_max_right Nf N1) (le_max_left (max Nf N1) (max Ng N2)) |> le_trans hm
+--   have mNg : m ≥ Ng := sorry --le_trans (le_max_left Ng N2) (le_max_right (max Nf N1) (max Ng N2)) |> le_trans hm
+--   have mN2 : m ≥ N2 := sorry--le_trans (le_max_right Ng N2) (le_max_right (max Nf N1) (max Ng N2)) |> le_trans hm
+--   -- Now estimate |f m * g m - f N * g N|
+--   calc
+--     abs (f m * g m - f N * g N)
+--       = abs ((f m - f N) * g m + f N * (g m - g N)) := by sorry--ring_nf
+--     _ ≤ abs ((f m - f N) * g m) + abs (f N * (g m - g N)) := abs_add _ _
+--     _ ≤ abs (f m - f N) * abs (g m) + abs (f N) * abs (g m - g N) := add_le_add (abs_mul _ _) (abs_mul _ _)
+--     _ < δf * Mg + Mf * δg := by
+--       apply add_lt_add
+--       · apply mul_lt_mul_of_pos_right (Hf' m mN1) Mg_pos
+--       · apply mul_lt_mul_of_pos_left (Hg' m mN2) (abs_nonneg (f N))
+--     _ ≤ ε / 2 + ε / 2 := by
+--       rw [←div_add_div_same, add_halves]
+--       -- δf * Mg = ε / (2 * (Mg + 1)) * Mg ≤ ε / 2 (since Mg < Mg + 1)
+--       -- Mf * δg = Mf * (ε / (2 * (Mf + 1))) ≤ ε / 2
+--       apply add_le_add
+--       · apply (mul_le_of_le_one_right (div_nonneg hε.le (mul_nonneg zero_le_two (add_nonneg (abs_nonneg (g N)) zero_le_one))) sorry--(by linarith [Mg_pos])
+--         )
+--       · apply (mul_le_of_le_one_left (abs_nonneg (f N)) (div_le_one_of_le (mul_nonneg zero_le_two (add_nonneg (abs_nonneg (f N)) zero_le_one))
+--           sorry--(by linarith [Mf_pos])
+--           )
+--           )
+--     _ = ε := add_halves ε
+
+
+
+
 -- (**
 -- We now assume that [f] is, from some point onwards, greater than
 -- some positive number.  The sequence of reciprocals is defined as
 -- being constantly one up to that point, and the sequence of
 -- reciprocals from then onwards.
+
+-- %\begin{convention}%
+-- Let [e] be a postive element of [R] and let [N:nat] be such that from
+-- [N] onwards, [(f n) [#] [0]]
+-- %\end{convention}%
+-- *)
 
 -- %\begin{convention}%
 -- Let [e] be a postive element of [R] and let [N:nat] be such that from
@@ -255,6 +412,18 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 -- Variable N : nat.
 -- Hypothesis f_bnd : forall n : nat, N <= n -> e [<=] f n.
 
+
+/-
+We now assume that `f` is, from some point onwards, greater than some positive number.
+The sequence of reciprocals is defined as being constantly one up to that point, and the sequence of reciprocals from then onwards.
+
+Let `e` be a positive element of `K` and let `N : ℕ` be such that from `N` onwards, `e ≤ f n`.
+--/
+variable {f : ℕ → K}
+variable (e : K) (he : 0 < e)
+variable (N : ℕ)
+variable (f_bnd : ∀ n : ℕ, N ≤ n → e ≤ f n)
+
 -- Lemma CS_seq_recip_def : forall n : nat, N <= n -> f n [#] [0].
 -- Proof.
 --  intros.
@@ -262,12 +431,29 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply less_leEq_trans with e; auto with arith.
 -- Qed.
 
+include f_bnd he
+/--
+If `e ≤ f n` for `n ≥ N` and `0 < e`, then for all `n ≥ N`, `f n ≠ 0`.
+-/
+lemma CS_seq_recip_def (n : ℕ) (hn : N ≤ n) : f n ≠ 0 :=
+  ne_of_gt (lt_of_lt_of_le he (f_bnd n hn))
+
+
 -- Definition CS_seq_recip_seq (n : nat) : R.
 -- Proof.
 --  elim (lt_le_dec n N); intro Hdec.
 --   apply ([1]:R).
 --  apply ([1][/] _[//]CS_seq_recip_def n Hdec).
 -- Defined.
+
+
+/--
+The sequence of reciprocals: for `n < N`, return `1`, for `n ≥ N`, return `1 / f n`.
+Requires `f n ≠ 0` for `n ≥ N`, which is ensured by `f_bnd` and `he`.
+-/
+def CS_seq_recip_seq (n : ℕ) : K :=
+  if n < N then 1 else 1 / (f n)
+
 
 -- Lemma CS_seq_recip : Cauchy_prop CS_seq_recip_seq.
 -- Proof.
@@ -301,9 +487,34 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  eauto with arith.
 -- Qed.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/--
+If `f` is a Cauchy sequence and from some index `N` onwards, `e ≤ f n` for some `e > 0`,
+then the sequence of reciprocals defined by `CS_seq_recip_seq` is also Cauchy.
+-/
+lemma CS_seq_recip
+  (f : ℕ → K) (Hf : Cauchy_prop f)
+  (e : K) (he : 0 < e) (N : ℕ) (f_bnd : ∀ n : ℕ, N ≤ n → e ≤ f n) :
+  Cauchy_prop (CS_seq_recip_seq (f := f) N) :=
+sorry
+
 -- End OrdField_Cauchy.
 
 -- Arguments SeqLimit [R].
+
 
 -- (**
 -- The following lemma does not require the sequence to be Cauchy, but it fits
@@ -357,6 +568,16 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  assumption.
 -- Qed.
 
+/--
+Given a sequence `a : ℕ → K`, a natural number `n > 0`, and `ε > 0`,
+there exists `k` with `1 ≤ k ≤ n` such that for all `i` with `1 ≤ i ≤ n`,
+`a i - ε ≤ a k`.
+-/
+lemma maj_upto_eps
+  (a : ℕ → K) (n : ℕ) (ε : K) (hn : 0 < n) (hε : 0 < ε) :
+  ∃ k, 1 ≤ k ∧ k ≤ n ∧ ∀ i, 1 ≤ i → i ≤ n → a i - ε ≤ a k :=
+sorry
+
 -- Section Mult_Continuous.
 
 -- Variable R : COrdField.
@@ -365,6 +586,18 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 -- %\begin{convention}% Let [R] be an ordered field.
 -- %\end{convention}%
 -- *)
+
+/--
+Multiplication is continuous in an ordered field:
+For any `x y e : K` with `0 < e`, there exist `c d > 0` such that
+for all `x' y'`, if `|x - x'| < c` and `|y - y'| < d`, then
+`|x * y - x' * y'| < e`.
+-/
+lemma mult_contin (x y e : K) (he : 0 < e) :
+  ∃ c > 0, ∃ d > 0, ∀ x' y', AbsSmall c (x - x') → AbsSmall d (y - y') →
+    AbsSmall e (x * y - x' * y') :=
+sorry
+
 
 -- Lemma smaller : forall x y : R,
 --  [0] [<] x -> [0] [<] y -> {z : R | [0] [<] z | z [<=] x /\ z [<=] y}.
@@ -380,6 +613,14 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --    auto.
 --  apply half_3. auto.
 -- Qed.
+
+
+/--
+Given `x, y > 0`, there exists `z > 0` such that `z ≤ x` and `z ≤ y`.
+-/
+lemma smaller (x y : K) (hx : 0 < x) (hy : 0 < y) :
+  ∃ z : K, 0 < z ∧ z ≤ x ∧ z ≤ y := sorry
+
 
 -- Lemma estimate_abs : forall x : R, {X : R | [0] [<] X | AbsSmall X x}.
 -- Proof.
@@ -411,6 +652,14 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --    astepr ([--][--]x). apply inv_resp_less. auto. auto.
 --    apply less_plusOne.
 -- Qed.
+
+
+/--
+For any `x : K`, there exists `X > 0` such that `AbsSmall X x`.
+-/
+lemma estimate_abs (x : K) : ∃ X : K, 0 < X ∧ AbsSmall X x :=
+sorry
+
 
 -- Lemma mult_contin : forall x y e : R, [0] [<] e ->
 --  {c : R | [0] [<] c | {d : R | [0] [<] d | forall x' y' : R,
@@ -448,6 +697,21 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply Greater_imp_ap. auto.
 -- Qed.
 
+
+
+/--
+Multiplication is continuous in an ordered field:
+For any `x y e : K` with `0 < e`, there exist `c d > 0` such that
+for all `x' y'`, if `|x - x'| < c` and `|y - y'| < d`, then
+`|x * y - x' * y'| < e`.
+-/
+lemma mult_contin' (x y e : K) (he : 0 < e) :
+  ∃ c > 0, ∃ d > 0, ∀ x' y', AbsSmall c (x - x') → AbsSmall d (y - y') → AbsSmall e (x * y - x' * y') :=
+sorry
+
+
+
+
 -- (** Addition is also continuous. *)
 
 -- Lemma plus_contin : forall (x y e : R), [0] [<] e ->
@@ -465,7 +729,17 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply div_resp_pos. apply pos_two. auto.
 -- Qed.
 
+/--
+Addition is continuous in an ordered field:
+For any `x y e : K` with `0 < e`, there exist `c d > 0` such that
+for all `x' y'`, if `|x - x'| < c` and `|y - y'| < d`, then
+`|x + y - (x' + y')| < e`.
+-/
+lemma plus_contin (x y e : K) (he : 0 < e) :
+  ∃ c > 0, ∃ d > 0, ∀ x' y', AbsSmall c (x - x') → AbsSmall d (y - y') → AbsSmall e (x + y - (x' + y')) := sorry
+
 -- End Mult_Continuous.
+
 
 -- Section Monotonous_functions.
 
@@ -479,6 +753,9 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 -- %\end{convention}%
 -- *)
 -- Variable R : COrdField.
+
+-- Convention: Let K be an ordered field.
+-- (Already assumed above: variable [Field K] [LinearOrder K] [IsStrictOrderedRing K])
 
 -- (**
 -- We begin by characterizing the preservation of less (less or equal)
@@ -498,6 +775,26 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply H; apply less_leEq; auto.
 -- Qed.
 
+
+/--
+If `f` preserves apartness and order, then it preserves strict order.
+-/
+lemma resp_less_char'
+  {P : K → Prop}
+  (f : ∀ x, P x → K)
+  (x y : K) (Hx : P x) (Hy : P y)
+  (hap : x ≠ y → f x Hx ≠ f y Hy)
+  (hle : x ≤ y → f x Hx ≤ f y Hy)
+  (hxy : x < y) : f x Hx < f y Hy :=
+by
+  by_cases h : f x Hx = f y Hy
+  · exfalso
+    have : x ≠ y := ne_of_lt hxy
+    have := hap this
+    contradiction
+  · exact lt_of_le_of_ne (hle hxy.le) h
+
+
 -- Lemma resp_less_char : forall (f : R -> R) x y,
 --  (x [#] y -> f x [#] f y) -> (x [<=] y -> f x [<=] f y) -> x [<] y -> f x [<] f y.
 -- Proof.
@@ -506,6 +803,15 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  change (f' x I [<] f' y I) in |- *.
 --  apply resp_less_char' with (P := fun x : R => True); auto.
 -- Qed.
+
+
+lemma resp_less_char (f : K → K)
+  (hap : ∀ x y, x ≠ y → f x ≠ f y)
+  (hle : ∀ x y, x ≤ y → f x ≤ f y)
+  {x y : K} (hxy : x < y) : f x < f y := sorry
+
+
+
 
 -- Lemma resp_leEq_char' : forall (P : R -> CProp) (f : forall x : R, P x -> R) x y Hx Hy,
 --  (x [=] y -> f x Hx [=] f y Hy) -> (x [<] y -> f x Hx [<] f y Hy) ->
@@ -526,6 +832,17 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply eq_imp_leEq; auto.
 -- Qed.
 
+
+lemma resp_leEq_char'
+  {P : K → Prop}
+  (f : ∀ x, P x → K)
+  (x y : K) (Hx : P x) (Hy : P y)
+  (heq : x = y → f x Hx = f y Hy)
+  (hlt : x < y → f x Hx < f y Hy)
+  (hle : x ≤ y) : f x Hx ≤ f y Hy := sorry
+
+
+
 -- Lemma resp_leEq_char : forall (f : R -> R) x y,
 --  (x [=] y -> f x [=] f y) -> (x [<] y -> f x [<] f y) -> x [<=] y -> f x [<=] f y.
 -- Proof.
@@ -534,6 +851,21 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  change (f' x I [<=] f' y I) in |- *.
 --  apply resp_leEq_char' with (P := fun x : R => True); auto.
 -- Qed.
+
+lemma resp_leEq_char (f : K → K)
+  (heq : ∀ x y, x = y → f x = f y)
+  (hlt : ∀ x y, x < y → f x < f y)
+  {x y : K} (hle : x ≤ y) : f x ≤ f y := sorry
+
+
+
+
+
+
+
+
+
+
 
 -- (**
 -- Next, we see different characterizations of monotonous functions from
@@ -557,6 +889,20 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  rewrite <- b; apply X.
 -- Qed.
 
+
+/--
+If `f : ℕ → K` is strictly increasing (`f i < f (i+1)` for all `i`), then for all `i < j`, `f i < f j`.
+-/
+lemma local_mon_imp_mon (f : ℕ → K) (h : ∀ i, f i < f (i + 1)) :
+  ∀ i j, i < j → f i < f j := by
+  intros i j hij
+  induction' hij with j hij ih
+  { -- base case: i < i+1
+    exact h i }
+  { -- inductive step: i < j+1
+    exact lt_trans ih (h j) }
+
+
 -- Lemma local_mon_imp_mon' : forall f : nat -> R,
 --  (forall i, f i [<] f (S i)) -> forall i j, i <= j -> f i [<=] f j.
 -- Proof.
@@ -565,6 +911,27 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_leEq; apply local_mon_imp_mon with (f := f); assumption.
 --  apply eq_imp_leEq; rewrite b; algebra.
 -- Qed.
+
+
+
+
+
+/--
+If `f : ℕ → K` is strictly increasing (`f i < f (i+1)` for all `i`), then for all `i ≤ j`, `f i ≤ f j`.
+-/
+lemma local_mon_imp_mon' (f : ℕ → K) (h : ∀ i, f i < f (i + 1)) :
+  ∀ i j, i ≤ j → f i ≤ f j :=
+by
+  intros i j hij
+  by_cases h_eq : i = j
+  · rw [h_eq]
+  · have hlt : i < j := lt_of_le_of_ne hij h_eq
+    rw [le_iff_eq_or_lt]
+    right
+    exact local_mon_imp_mon e he N f_bnd f h i j hlt
+
+
+
 
 -- Lemma local_mon'_imp_mon' : forall f : nat -> R,
 --  (forall i, f i [<=] f (S i)) -> forall i j, i <= j -> f i [<=] f j.
@@ -579,6 +946,18 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  rewrite b; apply leEq_reflexive.
 -- Qed.
 
+
+
+/--
+If `f : ℕ → K` is weakly increasing (`f i ≤ f (i+1)` for all `i`), then for all `i ≤ j`, `f i ≤ f j`.
+-/
+lemma local_mon'_imp_mon' (f : ℕ → K) (h : ∀ i, f i ≤ f (i + 1)) :
+  ∀ i j, i ≤ j → f i ≤ f j := by sorry
+
+
+
+
+
 -- Lemma mon_imp_mon' : forall f : nat -> R,
 --  (forall i j, i < j -> f i [<] f j) -> forall i j, i <= j -> f i [<=] f j.
 -- Proof.
@@ -587,6 +966,27 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_leEq; apply H; assumption.
 --  rewrite b; apply leEq_reflexive.
 -- Qed.
+
+
+
+
+/--
+If `f : ℕ → K` is strictly increasing (`f i < f j` for all `i < j`), then for all `i ≤ j`, `f i ≤ f j`.
+-/
+lemma mon_imp_mon' (f : ℕ → K) (h : ∀ i j, i < j → f i < f j) :
+  ∀ i j, i ≤ j → f i ≤ f j :=
+by
+  intros i j hij
+  by_cases h_eq : i = j
+  · rw [h_eq]
+  · have hlt : i < j := lt_of_le_of_ne hij h_eq
+    exact (h i j hlt).le
+
+
+
+
+
+
 
 -- Lemma mon_imp_inj : forall f : nat -> R,
 --  (forall i j, i < j -> f i [<] f j) -> forall i j, f i [=] f j -> i = j.
@@ -598,6 +998,37 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_imp_ap; apply X; assumption.
 --  apply Greater_imp_ap; apply X; assumption.
 -- Qed.
+
+
+
+
+
+
+/--
+If `f : ℕ → K` is strictly increasing (`f i < f j` for all `i < j`), then `f` is injective.
+-/
+lemma mon_imp_inj (f : ℕ → K) (h : ∀ i j, i < j → f i < f j) :
+  ∀ i j, f i = f j → i = j := by
+  intros i j h_eq
+  by_contra h_neq
+  cases' lt_or_gt_of_ne h_neq with hij hji
+  { -- i < j
+    have := h i j hij
+    rw [h_eq] at this
+    exact lt_irrefl _ this
+  }
+  { -- j < i
+    have := h j i hji
+    rw [←h_eq] at this
+    exact lt_irrefl _ this
+  }
+
+
+
+
+
+
+
 
 -- Lemma local_mon_imp_mon_lt : forall n (f : forall i, i < n -> R),
 --  (forall i H H', f i H [<] f (S i) H') -> forall i j Hi Hj, i < j -> f i Hi [<] f j Hj.
@@ -614,6 +1045,47 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  intro; apply X.
 -- Qed.
 
+
+
+
+
+
+
+
+
+
+
+
+
+/--
+If `f : ∀ i, i < n → K` is strictly increasing (`f i Hi < f (i+1) H'i` for all `i < n - 1`), then for all `i < j < n`, `f i Hi < f j Hj`.
+-/
+lemma local_mon_imp_mon_lt
+  (n : ℕ)
+  (f : ∀ i, i < n → K)
+  (h : ∀ i (Hi : i < n) (H'i : i + 1 < n), f i Hi < f (i + 1) H'i) :
+  ∀ i j (Hi : i < n) (Hj : j < n), i < j → f i Hi < f j Hj := by
+  intros i j Hi Hj hij
+  induction' hij with j' hij' IH
+  { -- base case: i < i+1
+    exact h i Hi Hj }
+  { -- inductive step: i < j'+1
+    have Hj' : j' < n := by {exact Nat.lt_of_succ_lt Hj}
+    exact lt_trans (by {exact IH Hj'}) (h j' Hj' (_)) }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- Lemma local_mon_imp_mon'_lt : forall n (f : forall i, i < n -> R),
 --  (forall i H H', f i H [<] f (S i) H') -> nat_less_n_fun f ->
 --  forall i j Hi Hj, i <= j -> f i Hi [<=] f j Hj.
@@ -623,6 +1095,32 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_leEq; apply local_mon_imp_mon_lt with n; auto.
 --  apply eq_imp_leEq; apply H; assumption.
 -- Qed.
+
+
+
+/--
+If `f : ∀ i, i < n → K` is strictly increasing (`f i Hi < f (i+1) H'i` for all `i < n - 1`),
+then for all `i ≤ j < n`, `f i Hi ≤ f j Hj`.
+-/
+lemma local_mon_imp_mon'_lt
+  (n : ℕ)
+  (f : ∀ i, i < n → K)
+  (h : ∀ i (Hi : i < n) (H'i : i + 1 < n), f i Hi < f (i + 1) H'i)
+  : ∀ i j (Hi : i < n) (Hj : j < n), i ≤ j → f i Hi ≤ f j Hj := by sorry
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- Lemma local_mon'_imp_mon'_lt : forall n (f : forall i, i < n -> R),
 --  (forall i H H', f i H [<=] f (S i) H') -> nat_less_n_fun f ->
@@ -640,6 +1138,34 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply eq_imp_leEq; apply H0; assumption.
 -- Qed.
 
+
+
+
+/--
+If `f : ∀ i, i < n → K` is weakly increasing (`f i Hi ≤ f (i+1) H'i` for all `i < n - 1`),
+then for all `i ≤ j < n`, `f i Hi ≤ f j Hj`.
+-/
+lemma local_mon'_imp_mon'_lt
+  (n : ℕ)
+  (f : ∀ i, i < n → K)
+  (h : ∀ i (Hi : i < n) (H'i : i + 1 < n), f i Hi ≤ f (i + 1) H'i)
+  : ∀ i j (Hi : i < n) (Hj : j < n), i ≤ j → f i Hi ≤ f j Hj := by
+  intros i j Hi Hj hij
+  induction' j with j IH
+  { -- base case: j = 0
+    have : i = 0 := Nat.eq_zero_of_le_zero hij
+    subst this
+    exact le_rfl}
+  { -- inductive step: j = j+1
+    by_cases h_eq : i = j.succ
+    { subst h_eq; exact le_rfl }
+    { have hij' : i ≤ j := Nat.le_of_lt_succ (lt_of_le_of_ne hij h_eq)
+      have Hj' : j < n := Nat.lt_of_succ_lt Hj
+      exact le_trans (IH Hj' hij') (h j Hj' Hj) } }
+
+
+
+
 -- Lemma local_mon'_imp_mon'2_lt : forall n (f : forall i, i < n -> R),
 --  (forall i H H', f i H [<=] f (S i) H') -> forall i j Hi Hj, i < j -> f i Hi [<=] f j Hj.
 -- Proof.
@@ -654,6 +1180,35 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  intro; apply H.
 -- Qed.
 
+
+
+/--
+If `f : ∀ i, i < n → K` is weakly increasing (`f i Hi ≤ f (i+1) H'i` for all `i < n - 1`),
+then for all `i < j < n`, `f i Hi ≤ f j Hj`.
+-/
+lemma local_mon'_imp_mon'2_lt
+  (n : ℕ)
+  (f : ∀ i, i < n → K)
+  (h : ∀ i (Hi : i < n) (H'i : i + 1 < n), f i Hi ≤ f (i + 1) H'i)
+  : ∀ i j (Hi : i < n) (Hj : j < n), i < j → f i Hi ≤ f j Hj := by
+  intros i j Hi Hj hij
+  induction' j with j IH
+  { exfalso; exact Nat.not_lt_zero i hij }
+  cases' Nat.lt_or_eq_of_le (Nat.le_of_lt_succ hij) with hlt heq
+  { -- i < j < n
+    have Hj' : j < n := Nat.lt_of_succ_lt Hj
+    exact le_trans (IH Hj' hlt) (h j Hj' Hj) }
+  { -- i = j
+    subst heq
+    exact h i Hi Hj }
+
+
+
+
+
+
+
+
 -- Lemma mon_imp_mon'_lt : forall n (f : forall i, i < n -> R), nat_less_n_fun f ->
 --  (forall i j Hi Hj, i < j -> f i Hi [<] f j Hj) -> forall i j Hi Hj, i <= j -> f i Hi [<=] f j Hj.
 -- Proof.
@@ -662,6 +1217,33 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_leEq; auto.
 --  apply eq_imp_leEq; auto.
 -- Qed.
+
+
+
+
+
+/--
+If `f : ∀ i, i < n → K` is strictly increasing (`f i Hi < f j Hj` for all `i < j < n`), then for all `i ≤ j < n`, `f i Hi ≤ f j Hj`.
+-/
+lemma mon_imp_mon'_lt
+  (n : ℕ)
+  (f : ∀ i, i < n → K)
+  (h : ∀ i j (Hi : i < n) (Hj : j < n), i < j → f i Hi < f j Hj)
+  : ∀ i j (Hi : i < n) (Hj : j < n), i ≤ j → f i Hi ≤ f j Hj := by
+  intros i j Hi Hj hij
+  by_cases h_eq : i = j
+  · sorry
+  · have hlt : i < j := lt_of_le_of_ne hij h_eq
+    exact (h i j Hi Hj hlt).le
+
+
+
+
+
+
+
+
+
 
 -- Lemma mon_imp_inj_lt : forall n (f : forall i, i < n -> R),
 --  (forall i j Hi Hj, i < j -> f i Hi [<] f j Hj) ->
@@ -676,6 +1258,38 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_imp_ap; auto.
 --  apply Greater_imp_ap; auto.
 -- Qed.
+
+
+
+
+
+/--
+If `f : ∀ i, i < n → K` is strictly increasing (`f i Hi < f j Hj` for all `i < j < n`), then `f` is injective.
+-/
+lemma mon_imp_inj_lt
+  (n : ℕ)
+  (f : ∀ i, i < n → K)
+  (h : ∀ i j (Hi : i < n) (Hj : j < n), i < j → f i Hi < f j Hj) :
+  ∀ i j (Hi : i < n) (Hj : j < n), f i Hi = f j Hj → i = j :=
+by
+  intros i j Hi Hj h_eq
+  by_contra h_neq
+  cases' lt_or_gt_of_ne h_neq with hij hji
+  { -- i < j
+    have := h i j Hi Hj hij
+    rw [h_eq] at this
+    exact lt_irrefl _ this }
+  { -- j < i
+    have := h j i Hj Hi hji
+    rw [←h_eq] at this
+    exact lt_irrefl _ this }
+
+
+
+
+
+
+
 
 -- Lemma local_mon_imp_mon_le : forall n (f : forall i, i <= n -> R),
 --  (forall i H H', f i H [<] f (S i) H') -> forall i j Hi Hj, i < j -> f i Hi [<] f j Hj.
@@ -692,6 +1306,46 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  auto.
 -- Qed.
 
+
+
+
+
+/--
+If `f : ∀ i, i ≤ n → K` is strictly increasing (`f i Hi < f (i+1) H'i` for all `i < n`),
+then for all `i < j ≤ n`, `f i Hi < f j Hj`.
+-/
+lemma local_mon_imp_mon_le
+  (n : ℕ)
+  (f : ∀ i, i ≤ n → K)
+  (h : ∀ i (Hi : i ≤ n) (H'i : i + 1 ≤ n), f i Hi < f (i + 1) H'i) :
+  ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), i < j → f i Hi < f j Hj := by
+  intros i j Hi Hj hij
+  induction' j with j IH
+  { exfalso; exact Nat.not_lt_zero i hij }
+  cases' Nat.lt_or_eq_of_le (Nat.le_of_lt_succ hij) with hlt heq
+  { -- i < j < j+1
+    have Hj' : j ≤ n := Nat.le_of_succ_le Hj
+    exact lt_trans (IH Hj' hlt) (h j Hj' Hj) }
+  { -- i = j
+    subst heq
+    exact h i Hi Hj }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- Lemma local_mon_imp_mon'_le : forall n (f : forall i, i <= n -> R),
 --  (forall i H H', f i H [<] f (S i) H') -> nat_less_n_fun' f ->
 --  forall i j Hi Hj, i <= j -> f i Hi [<=] f j Hj.
@@ -701,6 +1355,45 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_leEq; apply local_mon_imp_mon_le with n; auto.
 --  apply eq_imp_leEq; auto.
 -- Qed.
+
+
+
+
+
+/--
+If `f : ∀ i, i ≤ n → K` is strictly increasing (`f i Hi < f (i+1) H'i` for all `i < n`),
+then for all `i ≤ j ≤ n`, `f i Hi ≤ f j Hj`.
+-/
+lemma local_mon_imp_mon'_le
+  (n : ℕ)
+  (f : ∀ i, i ≤ n → K)
+  (h : ∀ i (Hi : i ≤ n) (H'i : i + 1 ≤ n), f i Hi < f (i + 1) H'i)
+  : ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), i ≤ j → f i Hi ≤ f j Hj :=
+by
+  intros i j Hi Hj hij
+  by_cases h_eq : i = j
+  · subst h_eq; exact le_rfl
+  · have hlt : i < j := lt_of_le_of_ne hij h_eq
+    rw [le_iff_eq_or_lt]
+    right
+    exact local_mon_imp_mon_le e he N f_bnd n f h i j Hi Hj hlt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- Lemma local_mon'_imp_mon'_le : forall n (f : forall i, i <= n -> R),
 --  (forall i H H', f i H [<=] f (S i) H') -> nat_less_n_fun' f ->
@@ -718,6 +1411,43 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply eq_imp_leEq; apply H0; assumption.
 -- Qed.
 
+
+/--
+If `f : ∀ i, i ≤ n → K` is weakly increasing (`f i Hi ≤ f (i+1) H'i` for all `i < n`),
+then for all `i ≤ j ≤ n`, `f i Hi ≤ f j Hj`.
+-/
+lemma local_mon'_imp_mon'_le
+  (n : ℕ)
+  (f : ∀ i, i ≤ n → K)
+  (h : ∀ i (Hi : i ≤ n) (H'i : i + 1 ≤ n), f i Hi ≤ f (i + 1) H'i)
+  : ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), i ≤ j → f i Hi ≤ f j Hj :=
+by
+  intros i j Hi Hj hij
+  induction' j with j IH
+  { -- base case: j = 0
+    have : i = 0 := Nat.eq_zero_of_le_zero hij
+    subst this
+    exact le_rfl }
+  { -- inductive step: j = j+1
+    by_cases h_eq : i = j.succ
+    { subst h_eq; exact le_rfl }
+    { have hij' : i ≤ j := Nat.le_of_lt_succ (lt_of_le_of_ne hij h_eq)
+      have Hj' : j ≤ n := Nat.le_of_succ_le Hj
+      exact le_trans (IH Hj' hij') (h j Hj' Hj) } }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- Lemma local_mon'_imp_mon'2_le : forall n (f : forall i, i <= n -> R),
 --  (forall i H H', f i H [<=] f (S i) H') -> forall i j Hi Hj, i < j -> f i Hi [<=] f j Hj.
 -- Proof.
@@ -732,6 +1462,50 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  intro; apply H.
 -- Qed.
 
+
+
+
+
+
+
+
+/--
+If `f : ∀ i, i ≤ n → K` is weakly increasing (`f i Hi ≤ f (i+1) H'i` for all `i < n`),
+then for all `i < j ≤ n`, `f i Hi ≤ f j Hj`.
+-/
+lemma local_mon'_imp_mon'2_le
+  (n : ℕ)
+  (f : ∀ i, i ≤ n → K)
+  (h : ∀ i (Hi : i ≤ n) (H'i : i + 1 ≤ n), f i Hi ≤ f (i + 1) H'i)
+  : ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), i < j → f i Hi ≤ f j Hj :=
+by
+  intros i j Hi Hj hij
+  induction' j with j IH
+  { exfalso; exact Nat.not_lt_zero i hij }
+  cases' Nat.lt_or_eq_of_le (Nat.le_of_lt_succ hij) with hlt heq
+  { -- i < j < j+1
+    have Hj' : j ≤ n := Nat.le_of_succ_le Hj
+    exact le_trans (IH Hj' hlt) (h j Hj' Hj) }
+  { -- i = j
+    subst heq
+    exact h i Hi Hj }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- Lemma mon_imp_mon'_le : forall n (f : forall i, i <= n -> R), nat_less_n_fun' f ->
 --  (forall i j Hi Hj, i < j -> f i Hi [<] f j Hj) -> forall i j Hi Hj, i <= j -> f i Hi [<=] f j Hj.
 -- Proof.
@@ -740,6 +1514,31 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_leEq; auto.
 --  apply eq_imp_leEq; auto.
 -- Qed.
+
+
+
+
+
+
+
+/--
+If `f : ∀ i, i ≤ n → K` is strictly increasing (`f i Hi < f j Hj` for all `i < j ≤ n`), then for all `i ≤ j ≤ n`, `f i Hi ≤ f j Hj`.
+-/
+lemma mon_imp_mon'_le
+  (n : ℕ)
+  (f : ∀ i, i ≤ n → K)
+  (h : ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), i < j → f i Hi < f j Hj)
+  : ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), i ≤ j → f i Hi ≤ f j Hj :=
+by
+  intros i j Hi Hj hij
+  by_cases h_eq : i = j
+  · subst h_eq; exact le_rfl
+  · have hlt : i < j := lt_of_le_of_ne hij h_eq
+    exact (h i j Hi Hj hlt).le
+
+
+
+
 
 -- Lemma mon_imp_inj_le : forall n (f : forall i, i <= n -> R),
 --  (forall i j Hi Hj, i < j -> f i Hi [<] f j Hj) -> forall i j Hi Hj, f i Hi [=] f j Hj -> i = j.
@@ -753,6 +1552,38 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --   apply less_imp_ap; auto.
 --  apply Greater_imp_ap; auto.
 -- Qed.
+
+
+
+
+
+
+
+/--
+If `f : ∀ i, i ≤ n → K` is strictly increasing (`f i Hi < f j Hj` for all `i < j ≤ n`), then `f` is injective.
+-/
+lemma mon_imp_inj_le
+  (n : ℕ)
+  (f : ∀ i, i ≤ n → K)
+  (h : ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), i < j → f i Hi < f j Hj) :
+  ∀ i j (Hi : i ≤ n) (Hj : j ≤ n), f i Hi = f j Hj → i = j :=
+by
+  intros i j Hi Hj h_eq
+  by_contra h_neq
+  cases' lt_or_gt_of_ne h_neq with hij hji
+  { -- i < j
+    have := h i j Hi Hj hij
+    rw [h_eq] at this
+    exact lt_irrefl _ this }
+  { -- j < i
+    have := h j i Hj Hi hji
+    rw [←h_eq] at this
+    exact lt_irrefl _ this }
+
+
+
+
+
 
 -- (**
 -- A similar result for %{\em %partial%}% functions.
@@ -775,5 +1606,27 @@ lemma CS_seq_const (c : K) : Cauchy_prop (fun n => c) :=
 --  apply (less_irreflexive_unfolded _ (F x Hx)).
 --  apply less_transitive_unfolded with (F y Hy); firstorder using leEq_def.
 -- Qed.
+
+
+
+/--
+If `F` is a partial function defined on a subset `I` of `K`, and `F` is strictly increasing on `I`,
+then `F` is weakly increasing on `I`.
+-/
+lemma part_mon_imp_mon'
+  (I : K → Prop)
+  (F : ∀ x, I x → K)
+  (domF : ∀ x, I x → True) -- dummy, for compatibility with coq statement
+  (h : ∀ x y (Hx : I x) (Hy : I y), x < y → F x Hx < F y Hy) :
+  ∀ x y (Hx : I x) (Hy : I y), x ≤ y → F x Hx ≤ F y Hy :=
+by
+  intros x y Hx Hy hle
+  by_cases h_eq : x = y
+  · subst h_eq; exact le_rfl
+  · have hlt : x < y := lt_of_le_of_ne hle h_eq
+    exact (h x y Hx Hy hlt).le
+
+
+
 
 -- End Monotonous_functions.

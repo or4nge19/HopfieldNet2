@@ -68,40 +68,18 @@ open RegularFunction QposInf
 --   := approximate x (Qpos2QposInf (1 # P_of_succ_nat n)).
 
 --do this for 0 = n maybe too.
-def CRasCauchy_IR_raw (x : CR_carrier) (n : Nat) ( hn : 0 < n) : ℚ :=
+def CRasCauchy_IR_raw (x : CR_carrier) (n : Nat) :=
   approximate x (Qpos2QposInf (⟨1/n+1, by {
     refine Right.add_pos_of_pos_of_nonneg ?_ rfl
     simp only [one_div, inv_pos, Nat.cast_pos]
-    exact hn
+    sorry
   }⟩))
 
--- Lemma CRasCauchy_IR_raw_is_Cauchy : forall (x:CR),
--- Cauchy_prop (R:=Q_as_COrdField) (CRasCauchy_IR_raw x).
--- Proof.
---  intros x e He.
---  destruct e as [en ed].
---  destruct en as [|en|en]. inversion He. 2: inversion He.
---  unfold CRasCauchy_IR_raw.
---  exists (pred (nat_of_P (2*ed))).
---  rewrite <- anti_convert_pred_convert.
---  intros m Hm.
---  change (ball (en#ed) (approximate x (Qpos2QposInf (1 # P_of_succ_nat m)))
---               (approximate x (Qpos2QposInf (1#(2*ed))))).
---  eapply ball_weak_le ;[|apply regFun_prf].
---  simpl.
---  apply Qle_trans with (((1 # P_of_succ_nat (pred (nat_of_P (2*ed)))) + (1 # 2 * ed)))%Q.
---   eapply plus_resp_leEq.
---   change (P_of_succ_nat (pred (nat_of_P (2*ed))) <= P_of_succ_nat m)%Z.
---   rewrite <-!POS_anti_convert. apply inj_le. lia.
---  rewrite <- anti_convert_pred_convert.
---  stepl ((2#1)*(1#(2*ed)))%Q; [|simpl; ring].
---  change ((2#1)*((1/2)*(1/ed)) <= en#ed)%Q.
---  ring_simplify.
---  change ((2#2)*(1/ed)<=en#ed)%Q.
---  setoid_replace (2#2)%Q  with 1%Q by constructor.
---  ring_simplify.
---  auto with *.
--- Qed.
+#check Cauchy_prop
+
+-- Show that CRasCauchy_IR_raw is a Cauchy sequence
+theorem CRasCauchy_IR_raw_is_Cauchy (x : CR_carrier) :
+  Cauchy_prop (K := ℚ) (CRasCauchy_IR_raw x) := sorry
 
 -- Lemma CRasCauchy_IR_raw_is_Cauchy : forall (x:CR),
 -- Cauchy_prop (R:=Q_as_COrdField) (CRasCauchy_IR_raw x).
@@ -130,9 +108,20 @@ def CRasCauchy_IR_raw (x : CR_carrier) (n : Nat) ( hn : 0 < n) : ℚ :=
 --  ring_simplify.
 --  auto with *.
 -- Qed.
+
 
 -- Definition CRasCauchy_IR (x:CR) : Cauchy_IR :=
 -- Build_CauchySeq _ _ (CRasCauchy_IR_raw_is_Cauchy x).
+
+#check Cauchy_IR
+def CRasCauchy_IR (x : CR_carrier) : CauchySeq' ℚ := by {
+   constructor
+   · apply CRasCauchy_IR_raw_is_Cauchy x
+}
+
+-- Show that CRasCauchy_IR respects equality
+theorem CRasCauchy_IR_wd (x y : CR_carrier) (h : x = y) :
+  CRasCauchy_IR x = CRasCauchy_IR y := sorry
 
 -- Lemma CRasCauchy_IR_wd : forall (x y:CR), (x==y)%CR -> CRasCauchy_IR x[=]CRasCauchy_IR y.
 -- Proof.
@@ -177,6 +166,14 @@ def CRasCauchy_IR_raw (x : CR_carrier) (n : Nat) ( hn : 0 < n) : ℚ :=
 --  exact (f n).
 -- Defined.
 
+def Cauchy_IRasCR_raw (x : CauchySeq' ℚ) (e : QposInf) : ℚ := sorry
+
+#check is_RegularFunction
+-- Show that Cauchy_IRasCR_raw is a regular function
+
+theorem Cauchy_IRasCR_is_Regular (x : CauchySeq' ℚ) :
+  is_RegularFunction Qball (Cauchy_IRasCR_raw x) := sorry
+
 -- Lemma Cauchy_IRasCR_is_Regular : forall (x:Cauchy_IR),
 --     is_RegularFunction Qball (Cauchy_IRasCR_raw x).
 -- Proof.
@@ -206,6 +203,11 @@ def CRasCauchy_IR_raw (x : CR_carrier) (n : Nat) ( hn : 0 < n) : ℚ :=
 
 -- Definition Cauchy_IRasCR (x:Cauchy_IR) : CR :=
 -- Build_RegularFunction (Cauchy_IRasCR_is_Regular x).
+
+def Cauchy_IRasCR (x : CauchySeq' ℚ) : CR_carrier := by {
+  apply RegularFunction.mk
+  exact (Cauchy_IRasCR_is_Regular x)
+}
 
 -- Lemma Cauchy_IRasCR_wd
 --   : forall (x y:Cauchy_IR), x[=]y -> (Cauchy_IRasCR x==Cauchy_IRasCR y)%CR.

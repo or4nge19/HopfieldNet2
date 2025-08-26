@@ -3,10 +3,19 @@ Copyright (c) 2025 Michail Karatarakis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michail Karatarakis
 -/
+
+import Mathlib.Algebra.Order.Ring.Star
+import Mathlib.Analysis.Normed.Field.Lemmas
+import Mathlib.Data.Nat.Log
+import Mathlib.Data.Rat.Star
 import Mathlib.Analysis.RCLike.Basic
+
+set_option maxHeartbeats 800000
+
 
 /- This code is a Lean 4 port of "Few Digits", a Haskell implementation of computable
 reals by Russell O'Connor. Original source: https://r6.ca/FewDigits/ -/
+
 
 /-- A Gauge is a strictly positive rational number. -/
 structure Gauge where
@@ -43,6 +52,7 @@ def completeComplete {a : Type} (f : Complete (Complete a)) : Complete a :=
 -- data UniformCts a b = UniformCts
 -- {modulus :: (Gauge -> Gauge),
 -- forgetUniformCts :: (a -> b)}
+
 /--
 A uniformly continuous function from `a` to `b`,
  equipped with a modulus of uniform continuity.
@@ -158,6 +168,17 @@ A small positive rational used as a default radius.
 -/
 def radius : Base := (2 : ℚ) ^ (-51 : ℤ)
 
+-- Helper for transitivity: existence of powers.
+theorem exists_pow_gt {x : ℚ} (_ : 0 < x) : ∃ n : ℕ, x < (2 : ℚ) ^ n :=
+  pow_unbounded_of_one_lt x rfl
+
+lemma abs_add_four (a b c d : ℚ) : |a + b + c + d| ≤ |a| + |b| + |c| + |d| := by
+  calc |a + b + c + d|
+      = |(a + b) + (c + d)| := by simp [add_assoc]
+  _ ≤ |a + b| + |c + d| := abs_add _ _
+  _ ≤ (|a| + |b|) + (|c| + |d|) := add_le_add (abs_add _ _) (abs_add _ _)
+  _ = |a| + |b| + |c| + |d| := by simp [add_assoc]
+
 /--
 A constructive real number, represented by an approximation function
 and an integer approximation.
@@ -167,17 +188,175 @@ structure CReal_repr where
   intApprox : ℤ
 deriving Nonempty
 
-def CReal_eq : CReal_repr → CReal_repr → Prop := sorry
+namespace CReal
+/-! ### Equivalence Relation -/
 
-def CReal : Type := sorry -- CReal_repr modulo CReal_eq
+instance : HAdd ℕ ℕ Gauge := by {
+  constructor
+  intros x y
+  constructor
+  exact x + y}
 
---Start working with quotients
+/--
+Two pre-reals `x` and `y` are equivalent if |x.approx (n + 1) - y.approx (n + 1)| ≤ 1 / 2 ^ n.
+-/
+protected def Equiv (x y : CReal_repr) : Prop :=
+  ∀ n : ℕ, |CReal_repr.approx x (n + 1) - CReal_repr.approx y (n + 1)| ≤ (1 : ℚ) / 2 ^ n
+
+infix:50 " ≈ " => CReal.Equiv
+
+theorem equiv_refl (x : CReal_repr) : x ≈ x := by
+  intro n; simp
+
+theorem equiv_symm {x y : CReal_repr} (h : x ≈ y) : y ≈ x := by
+  intro n; rw [abs_sub_comm]; exact h n
+
+instance : HPow Base Gauge ℚ := by {
+  constructor
+  intros b g
+  exact b}
+
+instance : LE ℚ := by {exact Rat.instLE}
+
+instance : LE Gauge := by {
+  constructor
+  intros g1 g2
+  sorry
+}
+
+lemma CReal_Repr.is_regular (x: CReal_repr) :  ∀ n m, n ≤ m → |x.approx n - x.approx m| ≤ (1 : ℚ) / (2 ^ n) := by {
+  intros n m hnm
+  apply le_of_forall_pos_le_add
+  intro ε hε
+  dsimp [Base] at ε
+  sorry
+
+}
+
+/--
+Transitivity of the equivalence relation.
+Uses the epsilon-delta approach (le_of_forall_pos_le_add).
+-/
+theorem equiv_trans {x y z : CReal_repr} (hxy : x ≈ y) (hyz : y ≈ z) : x ≈ z := by
+  intro k
+  apply le_of_forall_pos_le_add
+  intro ε hε
+  dsimp [Base] at ε
+  -- we find m such that 1/2^m < ε.
+  obtain ⟨m, hm⟩ : ∃ m : ℕ, 1 / ε < (2 : ℚ) ^ m := exists_pow_gt (one_div_pos.mpr hε)
+  have h_eps_bound : (1:ℚ) / 2^m < ε := (one_div_lt (pow_pos (by norm_num) m) hε).mpr hm
+  -- we choose m_idx ≥ k+1 and ≥ m+2.
+  let m_idx := max (k + 1) (m + 2)
+  have h_k_le_midx : k + 1 ≤ m_idx := le_max_left _ _
+  have h_m_le_midx : m + 2 ≤ m_idx := le_max_right _ _
+  have h_midx_ge_one : 1 ≤ m_idx := le_trans (by norm_num) h_k_le_midx
+  -- we bound individual terms.
+  have h₁: |x.approx (k + 1) - x.approx (by {
+   constructor
+   exact (m_idx : ℚ)})| ≤ 1 / 2 ^ (k + 1) := sorry
+  have h₄ : |z.approx (by { constructor; exact (m_idx : ℚ)}) - z.approx (k + 1)| ≤ (1 : ℚ) / 2 ^ (k + 1) := by
+    rw [abs_sub_comm]; sorry--exact z.is_regular (k+1) m_idx h_k_le_midx
+  have h₂ : |x.approx (by { constructor; exact (m_idx : ℚ)}) - y.approx
+   (by { constructor; exact (m_idx : ℚ)})| ≤ (1 : ℚ) / 2 ^ (m_idx - 1) := by sorry
+    --simpa [Nat.sub_add_cancel h_midx_ge_one] using hxy (m_idx - 1)
+  have h₃ : |y.approx (by { constructor; exact (m_idx : ℚ)}) - z.approx
+     (by { constructor; exact (m_idx : ℚ)})| ≤ (1 : ℚ) / 2 ^ (m_idx - 1) := by sorry
+    --simpa [Nat.sub_add_cancel h_midx_ge_one] using hyz (m_idx - 1)
+  -- we bound the error term 1/2^(m_idx-2) by ε.
+  have h_error_bound : (1 : ℚ) / 2 ^ (m_idx - 2) ≤ (1 : ℚ) / 2 ^ m := by
+    have h_le_m : m ≤ m_idx - 2 := Nat.le_sub_of_add_le h_m_le_midx
+    rw [one_div_le_one_div (by positivity) (by positivity)]
+    exact (pow_le_pow_iff_right₀ rfl).mpr h_le_m
+  calc |x.approx (k + 1) - z.approx (k + 1)|
+      ≤ |x.approx (k + 1) - x.approx (by { constructor; exact (m_idx : ℚ)})|
+        + |x.approx (by { constructor; exact (m_idx : ℚ)}) - y.approx (by { constructor; exact (m_idx : ℚ)})|
+        + |y.approx (by { constructor; exact (m_idx : ℚ)}) - z.approx (by { constructor; exact (m_idx : ℚ)})|
+        + |z.approx (by { constructor; exact (m_idx : ℚ)}) - z.approx (k + 1)| := by
+          rw [show x.approx (k+1) - z.approx (k+1) = (x.approx (k+1) - x.approx
+          (by { constructor; exact (m_idx : ℚ)})) +
+            (x.approx (by { constructor; exact (m_idx : ℚ)}) - y.approx (by { constructor; exact (m_idx : ℚ)}))
+            + (y.approx (by { constructor; exact (m_idx : ℚ)}) - z.approx (by { constructor; exact (m_idx : ℚ)})) +
+             (z.approx (by { constructor; exact (m_idx : ℚ)}) - z.approx (k+1)) by ring]
+          exact abs_add_four _ _ _ _
+    _ ≤ (1:ℚ) / 2^(k+1) + (1:ℚ) / 2^(m_idx-1) + (1:ℚ) / 2^(m_idx-1) + (1:ℚ) / 2^(k+1) := by
+        gcongr
+    _ = (1:ℚ) / 2^k + (1:ℚ) / 2^(m_idx-2) := by
+        -- We need to show that
+        -- (1/2^(k+1) + 1/2^(k+1)) + (1/2^(m_idx-1) + 1/2^(m_idx-1))
+        -- = 1/2^k + 1/2^(m_idx-2)
+        -- 1. First pair: 1/2^(k+1) + 1/2^(k+1) = 1/2^k
+        have h₁ : (1:ℚ) / 2^(k+1) + (1:ℚ) / 2^(k+1) = (1:ℚ) / 2^k := by
+          field_simp [pow_succ]
+          ring
+        -- 2. Second pair: 1/2^(m_idx-1) + 1/2^(m_idx-1) = 1/2^(m_idx-2)
+        have h₂ : (1:ℚ) / 2^(m_idx-1) + (1:ℚ) / 2^(m_idx-1) = (1:ℚ) / 2^(m_idx-2) := by
+          -- we combine fractions with same denominator
+          have h : (1:ℚ) / 2^(m_idx-1) + (1:ℚ) / 2^(m_idx-1) = (2:ℚ) / 2^(m_idx-1) := by
+            rw [← add_div]; rw [@one_add_one_eq_two]
+          -- we simplify 2/2^(m_idx-1) to 1/2^(m_idx-2)
+          rw [h]
+          have h_midx_ge_two : 2 ≤ m_idx := le_trans (by norm_num) h_m_le_midx
+          -- we relate the exponents: (m_idx-2)+1 = m_idx-1
+          have h_exp : m_idx - 1 = (m_idx - 2) + 1 := by omega
+          rw [h_exp, pow_succ]
+          field_simp
+          ring
+        calc
+          (1:ℚ) / 2^(k+1) + (1:ℚ) / 2^(m_idx-1) + (1:ℚ) / 2^(m_idx-1) + (1:ℚ) / 2^(k+1)
+          = ((1:ℚ) / 2^(k+1) + (1:ℚ) / 2^(k+1)) + ((1:ℚ) / 2^(m_idx-1) + (1:ℚ) / 2^(m_idx-1)) := by
+              ring_nf
+          _ = (1:ℚ) / 2^k + (1:ℚ) / 2^(m_idx-2) := by
+              rw [h₁, h₂]
+    _ ≤ (1 : ℚ) / 2 ^ k + (1 : ℚ) / 2 ^ m := by gcongr;
+    _ ≤ (1 : ℚ) / 2 ^ k + ε := by linarith [h_eps_bound]
+
+instance setoid : Setoid CReal_repr where
+  r := CReal.Equiv
+  iseqv := {
+    refl  := equiv_refl
+    symm  := equiv_symm
+    trans := equiv_trans}
+
+/-- If two representatives are equivalent, then their quotients are equal. -/
+lemma quotient_sound {x y : CReal_repr} (h : CReal.Equiv x y) : Quotient.mk CReal.setoid x = Quotient.mk CReal.setoid y :=
+  Quotient.sound h
+
+/--
+The type of constructive real numbers, defined as the quotient of `CReal_repr` by the equivalence relation.
+-/
+abbrev CReal : Type := Quotient CReal.setoid
+
+/--
+Equality of constructive real number representatives.
+Two representatives are equal if their approximations agree at every gauge.
+-/
+def CReal_eq (x y : CReal_repr) : Prop :=
+  ∀ (g : Gauge), x.approx g = y.approx g ∧ x.intApprox = y.intApprox
+
+/--
+Extract the `approx` and `intApprox` from a `CReal` (quotient type).
+This is only possible by choosing a representative.
+-/
+def approx (x : CReal) : Complete Base :=
+  Quotient.lift (fun r => r.approx) (by
+    intros a b hab
+    sorry
+  ) x
+
+def intApprox (x : CReal) : ℤ :=
+  Quotient.lift (fun r => r.intApprox) (by
+    intros a b hab
+    -- If a ≈ b, their intApprox may differ, but the quotient is well-defined.
+    sorry
+  ) x
 
 /--
 Compute a bound for a constructive real number.
 This is `1 + |intApprox x|` as a rational.
 -/
-def bound (x : CReal) : ℚ := (1 : ℚ) + (Int.natAbs x.intApprox : ℚ)
+def bound (x : CReal) : ℚ := (1 : ℚ) + (Int.natAbs (by {
+  sorry
+}) : ℚ)
 
 /--
 Construct a `CReal` from a `Complete Base` approximation function.
@@ -435,9 +614,9 @@ instance : AddCommMonoid CReal where
   zero := realZero
   zero_add := real_zero_add
   add_zero := real_add_zero
-  nsmul := _
-  nsmul_zero := _
-  nsmul_succ := _
+  nsmul := sorry
+  nsmul_zero := sorry
+  nsmul_succ := sorry
   add_comm := real_add_comm
 
 /--

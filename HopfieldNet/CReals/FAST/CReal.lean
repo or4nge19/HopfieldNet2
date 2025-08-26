@@ -1,4 +1,4 @@
-import  HopfieldNet.CReals.CRcorrect
+import  HopfieldNet.CReals.FAST.CRcorrect
 -- (*
 -- Copyright © 2006-2008 Russell O’Connor
 

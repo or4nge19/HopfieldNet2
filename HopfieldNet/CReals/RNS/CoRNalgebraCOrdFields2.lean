@@ -1,3 +1,8 @@
+import HopfieldNet.CReals.RNS.CoRNalgebraCOrdFields
+import Mathlib.Algebra.EuclideanDomain.Field
+import Mathlib.Algebra.Lie.OfAssociative
+import Mathlib.Algebra.Order.Field.Basic
+
 -- (* Copyright © 1998-2006
 --  * Henk Barendregt
 --  * Luís Cruz-Filipe
@@ -48,8 +53,11 @@
 -- %\begin{convention}% Let [R] be an ordered field.
 -- %\end{convention}%
 -- *)
+set_option linter.unusedVariables false
+set_option linter.unusedSectionVars false
 
 -- Variable R : COrdField.
+variable [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 -- Section addition.
 -- (**
@@ -65,6 +73,9 @@
 --  apply (plus_cancel_less _ _ _ _ X).
 -- Qed.
 
+lemma plus_resp_leEq (x y z : R) (h : x ≤ y) : x + z ≤ y + z :=
+  add_le_add_right h z
+
 -- Lemma plus_resp_leEq_lft : forall x y z : R, x [<=] y -> z[+]x [<=] z[+]y.
 -- Proof.
 --  intros.
@@ -73,6 +84,9 @@
 --  apply plus_resp_leEq; auto.
 -- Qed.
 
+lemma plus_resp_leEq_lft (x y z : R) (h : x ≤ y) : z + x ≤ z + y :=
+  add_le_add_left h z
+
 -- Lemma minus_resp_leEq : forall x y z : R, x [<=] y -> x[-]z [<=] y[-]z.
 -- Proof.
 --  intros.
@@ -80,6 +94,9 @@
 --  astepr (y[+][--]z).
 --  apply plus_resp_leEq; auto.
 -- Qed.
+
+lemma minus_resp_leEq (x y z : R) (h : x ≤ y) : x - z ≤ y - z :=
+  tsub_le_tsub_right h z
 
 -- Lemma inv_resp_leEq : forall x y : R, x [<=] y -> [--]y [<=] [--]x.
 -- Proof.
@@ -91,6 +108,9 @@
 --  assumption.
 -- Qed.
 
+lemma inv_resp_leEq (x y : R) (h : x ≤ y) : -y ≤ -x :=
+  neg_le_neg h
+
 -- Lemma minus_resp_leEq_rht : forall x y z : R, y [<=] x -> z[-]x [<=] z[-]y.
 -- Proof.
 --  intros.
@@ -100,6 +120,10 @@
 --  apply inv_resp_leEq.
 --  assumption.
 -- Qed.
+
+lemma minus_resp_leEq_rht (x y z : R) (h : y ≤ x) : z - x ≤ z - y := by {
+  exact tsub_le_tsub_left h z
+}
 
 -- Lemma plus_resp_leEq_both : forall x y a b : R, x [<=] y -> a [<=] b -> x[+]a [<=] y[+]b.
 -- Proof.
@@ -113,6 +137,11 @@
 --  assumption.
 -- Qed.
 
+lemma plus_resp_leEq_both (x y a b : R) (h₁ : x ≤ y) (h₂ : a ≤ b) : x + a ≤ y + b := by
+  calc
+    x + a ≤ x + b := by {exact plus_resp_leEq_lft a b x h₂}
+        _ ≤ y + b := add_le_add_right h₁ b
+
 -- Lemma plus_resp_less_leEq : forall a b c d : R, a [<] b -> c [<=] d -> a[+]c [<] b[+]d.
 -- Proof.
 --  intros.
@@ -120,6 +149,11 @@
 --   apply plus_resp_leEq_lft. auto.
 --   apply plus_resp_less_rht. auto.
 -- Qed.
+
+
+lemma plus_resp_less_leEq (a b c d : R) (h₁ : a < b) (h₂ : c ≤ d) : a + c < b + d :=
+  lt_of_le_of_lt (plus_resp_leEq_lft c d a h₂) (add_lt_add_right h₁ d)
+
 
 -- Lemma plus_resp_leEq_less : forall a b c d : R, a [<=] b -> c [<] d -> a[+]c [<] b[+]d.
 -- Proof.
@@ -129,12 +163,18 @@
 --  apply plus_resp_less_leEq; auto.
 -- Qed.
 
+lemma plus_resp_leEq_less (a b c d : R) (h₁ : a ≤ b) (h₂ : c < d) : a + c < b + d :=
+  lt_of_lt_of_le (add_lt_add_left h₂ a) (plus_resp_leEq a b d h₁)
+
 -- Lemma plus_resp_nonneg : forall x y : R, [0] [<=] x -> [0] [<=] y -> [0] [<=] x[+]y.
 -- Proof.
 --  intros.
 --  astepl ([0][+][0]:R).
 --  apply plus_resp_leEq_both; auto.
 -- Qed.
+
+lemma plus_resp_nonneg (x y : R) (hx : 0 ≤ x) (hy : 0 ≤ y) : 0 ≤ x + y :=
+  Left.add_nonneg hx hy
 
 -- Lemma minus_resp_less_leEq : forall x y x' y' : R, x [<=] y -> y' [<] x' -> x[-]x' [<] y[-]y'.
 -- Proof.
@@ -146,6 +186,10 @@
 --  apply inv_resp_less. auto.
 -- Qed.
 
+lemma minus_resp_less_leEq (x y x' y' : R) (h₁ : x ≤ y) (h₂ : y' < x') : x - x' < y - y' := by
+  rw [sub_eq_add_neg, sub_eq_add_neg]
+  exact plus_resp_leEq_less x y (-x') (-y') h₁ (neg_lt_neg h₂)
+
 -- Lemma minus_resp_leEq_both : forall x y x' y' : R, x [<=] y -> y' [<=] x' -> x[-]x' [<=] y[-]y'.
 -- Proof.
 --  intros.
@@ -154,6 +198,10 @@
 --  apply plus_resp_leEq_both. auto.
 --   apply inv_resp_leEq. auto.
 -- Qed.
+
+lemma minus_resp_leEq_both (x y x' y' : R) (h₁ : x ≤ y) (h₂ : y' ≤ x') : x - x' ≤ y - y' := by {
+  rw [sub_eq_add_neg, sub_eq_add_neg]
+  exact plus_resp_leEq_both x y (-x') (-y') h₁ (inv_resp_leEq y' x' h₂)}
 
 -- (** Cancellation properties
 -- *)
@@ -167,6 +215,10 @@
 --  assumption.
 -- Qed.
 
+lemma plus_cancel_leEq_rht (x y z : R) (h : x + z ≤ y + z) : x ≤ y := by {
+  simp_all only [add_le_add_iff_right]
+}
+
 -- Lemma inv_cancel_leEq : forall x y : R, [--]y [<=] [--]x -> x [<=] y.
 -- Proof.
 --  intros.
@@ -175,6 +227,9 @@
 --  apply inv_resp_leEq.
 --  assumption.
 -- Qed.
+
+lemma inv_cancel_leEq (x y : R) (h : -y ≤ -x) : x ≤ y :=
+  neg_le_neg_iff.mp h
 
 -- (** Laws for shifting
 -- *)
@@ -187,6 +242,11 @@
 --  assumption.
 -- Qed.
 
+lemma shift_plus_leEq (a b c : R) (h : a ≤ c - b) : a + b ≤ c := by
+  rw [add_comm a b, ←sub_add_cancel c b]
+  simp only [sub_add_cancel]
+  exact le_sub_iff_add_le'.mp h
+
 -- Lemma shift_leEq_plus : forall a b c : R, a[-]b [<=] c -> a [<=] c[+]b.
 -- Proof.
 --  intros.
@@ -194,6 +254,10 @@
 --  apply plus_resp_leEq.
 --  assumption.
 -- Qed.
+
+lemma shift_leEq_plus (a b c : R) (h : a - b ≤ c) : a ≤ c + b := by
+  rw [←sub_add_cancel a b]
+  exact add_le_add_right h b
 
 -- Lemma shift_plus_leEq' : forall a b c : R, b [<=] c[-]a -> a[+]b [<=] c.
 -- Proof.
@@ -203,12 +267,20 @@
 --  assumption.
 -- Qed.
 
+lemma shift_plus_leEq' (a b c : R) (h : b ≤ c - a) : a + b ≤ c := by
+  rw [add_comm a b, ←sub_add_cancel c a]
+  exact plus_resp_leEq b (c - a) a h
+
 -- Lemma shift_leEq_plus' : forall a b c : R, a[-]b [<=] c -> a [<=] b[+]c.
 -- Proof.
 --  intros.
 --  rstepl (b[+] (a[-]b)).
 --  apply plus_resp_leEq_lft. auto.
 -- Qed.
+
+lemma shift_leEq_plus' (a b c : R) (h : a - b ≤ c) : a ≤ b + c := by
+  rw [←sub_add_cancel a b, add_comm b c]
+  exact add_le_add_right h b
 
 -- Lemma shift_leEq_rht : forall a b : R, [0] [<=] b[-]a -> a [<=] b.
 -- Proof.
@@ -218,12 +290,20 @@
 --  apply plus_resp_leEq. auto.
 -- Qed.
 
+lemma shift_leEq_rht (a b : R) (h : 0 ≤ b - a) : a ≤ b := by
+  rw [←sub_add_cancel b a]
+  exact le_add_of_nonneg_left h
+
 -- Lemma shift_leEq_lft : forall a b : R, a [<=] b -> [0] [<=] b[-]a.
 -- Proof.
 --  intros.
 --  astepl (a[-]a).
 --  apply minus_resp_leEq. auto.
 -- Qed.
+
+lemma shift_leEq_lft (a b : R) (h : a ≤ b) : 0 ≤ b - a := by {
+  exact sub_nonneg_of_le h
+}
 
 -- Lemma shift_minus_leEq : forall a b c : R, a [<=] c[+]b -> a[-]b [<=] c.
 -- Proof.
@@ -233,6 +313,10 @@
 --  assumption.
 -- Qed.
 
+lemma shift_minus_leEq (a b c : R) (h : a ≤ c + b) : a - b ≤ c := by
+  rw [sub_eq_add_neg, ←sub_add_cancel c b]
+  simp_all only [sub_add_cancel, add_neg_le_iff_le_add]
+
 -- Lemma shift_leEq_minus : forall a b c : R, a[+]c [<=] b -> a [<=] b[-]c.
 -- Proof.
 --  intros.
@@ -240,6 +324,9 @@
 --  apply minus_resp_leEq.
 --  assumption.
 -- Qed.
+
+lemma shift_leEq_minus (a b c : R) (h : a + c ≤ b) : a ≤ b - c :=
+  le_tsub_of_add_le_right h
 
 -- Lemma shift_leEq_minus' : forall a b c : R, c[+]a [<=] b -> a [<=] b[-]c.
 -- Proof.
@@ -249,6 +336,10 @@
 --  assumption.
 -- Qed.
 
+lemma shift_leEq_minus' (a b c : R) (h : c + a ≤ b) : a ≤ b - c :=
+  le_tsub_of_add_le_left h
+
+
 -- Lemma shift_zero_leEq_minus : forall x y : R, x [<=] y -> [0] [<=] y[-]x.
 -- Proof.
 --  intros.
@@ -257,6 +348,9 @@
 --  assumption.
 -- Qed.
 
+lemma shift_zero_leEq_minus (x y : R) (h : x ≤ y) : 0 ≤ y - x :=
+  sub_nonneg_of_le h
+
 -- Lemma shift_zero_leEq_minus' : forall x y : R, [0] [<=] y[-]x -> x [<=] y.
 -- Proof.
 --  intros.
@@ -264,6 +358,9 @@
 --  rstepl ([0]:R).
 --  assumption.
 -- Qed.
+
+lemma shift_zero_leEq_minus' (x y : R) (h : 0 ≤ y - x) : x ≤ y :=
+  shift_leEq_rht x y h
 
 -- End addition.
 
@@ -339,6 +436,9 @@
 --  assumption.
 -- Qed.
 
+lemma mult_resp_leEq_rht (x y z : R) (hxy : x ≤ y) (hz : 0 ≤ z) : x * z ≤ y * z :=
+  mul_le_mul_of_nonneg_right hxy hz
+
 -- Lemma mult_resp_leEq_lft : forall x y z : R, x [<=] y -> [0] [<=] z -> z[*]x [<=] z[*]y.
 -- Proof.
 --  intros.
@@ -349,6 +449,9 @@
 --  assumption.
 -- Qed.
 
+lemma mult_resp_leEq_lft (x y z : R) (hxy : x ≤ y) (hz : 0 ≤ z) : z * x ≤ z * y :=
+  mul_le_mul_of_nonneg_left hxy hz
+
 -- Lemma mult_resp_leEq_both : forall x x' y y' : R,
 --  [0] [<=] x -> [0] [<=] y -> x [<=] x' -> y [<=] y' -> x[*]y [<=] x'[*]y'.
 -- Proof.
@@ -358,6 +461,31 @@
 --  apply mult_resp_leEq_rht.
 --   assumption.
 --  apply leEq_transitive with y; assumption.
+-- Qed.
+
+lemma mult_resp_leEq_both (x x' y y' : R)
+  (hx : 0 ≤ x) (hy : 0 ≤ y) (hxx' : x ≤ x') (hyy' : y ≤ y') : x * y ≤ x' * y' :=
+  calc
+    x * y ≤ x * y'   := by {exact mult_resp_leEq_lft y y' x hyy' hx}
+    _     ≤ x' * y'  := by {
+      refine mult_resp_leEq_rht x x' y' hxx' ?_
+      exact Preorder.le_trans 0 y y' hy hyy'
+    }
+
+-- Lemma recip_resp_leEq : forall (x y : R) x_ y_, [0] [<] y -> y [<=] x -> ([1][/] x[//]x_) [<=] ([1][/] y[//]y_).
+-- Proof.
+--  intros x y x_ y_ H.
+--  do 2 rewrite -> leEq_def.
+--  intros H0 H1. apply H0.
+--  cut (([1][/] x[//]x_) [#] [0]). intro x'_.
+--   cut (([1][/] y[//]y_) [#] [0]). intro y'_.
+--    rstepl ([1][/] [1][/] x[//]x_[//]x'_).
+--    rstepr ([1][/] [1][/] y[//]y_[//]y'_).
+--    apply recip_resp_less.
+--     apply recip_resp_pos; auto.
+--    auto.
+--   apply div_resp_ap_zero_rev. apply ring_non_triv.
+--   apply div_resp_ap_zero_rev. apply ring_non_triv.
 -- Qed.
 
 -- Lemma recip_resp_leEq : forall (x y : R) x_ y_, [0] [<] y -> y [<=] x -> ([1][/] x[//]x_) [<=] ([1][/] y[//]y_).
@@ -376,6 +504,11 @@
 --   apply div_resp_ap_zero_rev. apply ring_non_triv.
 -- Qed.
 
+lemma recip_resp_leEq (x y : R) (hy : 0 < y) (hxy : y ≤ x) : 1 / x ≤ 1 / y := by {
+  simp only [one_div]
+  exact inv_anti₀ hy hxy
+}
+
 -- Lemma div_resp_leEq : forall (x y z : R) z_, [0] [<] z -> x [<=] y -> (x[/] z[//]z_) [<=] (y[/] z[//]z_).
 -- Proof.
 --  intros.
@@ -387,6 +520,9 @@
 --  apply recip_resp_pos.
 --  auto.
 -- Qed.
+
+lemma div_resp_leEq (x y z : R) (hz : 0 < z) (hxy : x ≤ y) : x / z ≤ y / z :=
+  (div_le_div_iff_of_pos_right hz).mpr hxy
 
 -- Hint Resolve recip_resp_leEq: algebra.
 
@@ -404,6 +540,9 @@
 --  assumption.
 -- Qed.
 
+lemma mult_cancel_leEq (x y z : R) (hz : 0 < z) (h : x * z ≤ y * z) : x ≤ y :=
+  (mul_le_mul_right hz).mp h
+
 -- (** Laws for shifting
 -- *)
 
@@ -414,6 +553,10 @@
 --  apply mult_resp_leEq_rht; [ assumption | apply less_leEq; assumption ].
 -- Qed.
 
+lemma shift_mult_leEq (x y z : R) (hz : 0 < z) (h : x ≤ y / z) : x * z ≤ y := by
+  rw [mul_comm x z]
+  exact (le_div_iff₀' hz).mp h
+
 -- Lemma shift_mult_leEq' : forall (x y z : R) z_, [0] [<] z -> x [<=] (y[/] z[//]z_) -> z[*]x [<=] y.
 -- Proof.
 --  intros.
@@ -421,12 +564,19 @@
 --  apply mult_resp_leEq_lft; [ assumption | apply less_leEq; assumption ].
 -- Qed.
 
+lemma shift_mult_leEq' (x y z : R) (hz : 0 < z) (h : x ≤ y / z) : z * x ≤ y := by
+  rw [mul_comm z x]
+  exact shift_mult_leEq x y z hz h
+
 -- Lemma shift_leEq_mult' : forall (x y z : R) y_, [0] [<] y -> (x[/] y[//]y_) [<=] z -> x [<=] y[*]z.
 -- Proof.
 --  intros x y z H H0. repeat rewrite -> leEq_def. intros H1 H2. apply H1.
 --  apply shift_less_div. auto.
 --   astepl (y[*]z). auto.
 -- Qed.
+
+lemma shift_leEq_mult' (x y z : R) (hy : 0 < y) (h : x / y ≤ z) : x ≤ y * z :=
+ (div_le_iff₀' hy).mp h
 
 -- Lemma shift_div_leEq : forall x y z : R, [0] [<] z -> forall z_ : z [#] [0], x [<=] y[*]z -> (x[/] z[//]z_) [<=] y.
 -- Proof.
@@ -437,6 +587,9 @@
 --  assumption.
 -- Qed.
 
+lemma shift_div_leEq (x y z : R) (hz : 0 < z) (h : x ≤ y * z) : x / z ≤ y :=
+  (div_le_iff₀ hz).mpr h
+
 -- Lemma shift_div_leEq' : forall (x y z : R) z_, [0] [<] z -> x [<=] z[*]y -> (x[/] z[//]z_) [<=] y.
 -- Proof.
 --  intros.
@@ -446,12 +599,19 @@
 --  assumption.
 -- Qed.
 
+lemma shift_div_leEq' (x y z : R) (hz : 0 < z) (h : x ≤ z * y) : x / z ≤ y :=
+  (div_le_iff₀' hz).mpr h
+
+
 -- Lemma shift_leEq_div : forall (x y z : R) y_, [0] [<] y -> x[*]y [<=] z -> x [<=] (z[/] y[//]y_).
 -- Proof.
 --  intros x y z H X. repeat rewrite -> leEq_def. intros H0 H1. apply H0.
 --  astepr (y[*]x).
 --  apply shift_less_mult' with H; auto.
 -- Qed.
+
+lemma shift_leEq_div (x y z : R) (hy : 0 < y) (h : x * y ≤ z) : x ≤ z / y :=
+  (le_div_iff₀ hy).mpr h
 
 -- Hint Resolve shift_leEq_div: algebra.
 
@@ -468,6 +628,11 @@
 --  assumption.
 -- Qed.
 
+lemma eps_div_leEq_eps (eps d : R) (h₀ : 0 ≤ eps) (h₁ : 1 ≤ d) : eps / d ≤ eps := by
+  apply shift_div_leEq'
+  apply lt_of_lt_of_le (by exact zero_lt_one) h₁
+  exact le_mul_of_one_le_left h₀ h₁
+
 -- Lemma nonneg_div_two : forall eps : R, [0] [<=] eps -> [0] [<=] eps [/]TwoNZ.
 -- Proof.
 --  intros.
@@ -476,6 +641,9 @@
 --  astepl ([0]:R).
 --  assumption.
 -- Qed.
+
+lemma nonneg_div_two (eps : R) (h : 0 ≤ eps) : 0 ≤ eps / 2 :=
+  shift_leEq_div 0 2 eps (by exact zero_lt_two) (by simp [h])
 
 -- Lemma nonneg_div_two' : forall eps : R, [0] [<=] eps -> eps [/]TwoNZ [<=] eps.
 -- Proof.
@@ -486,6 +654,13 @@
 --  apply plus_resp_leEq_lft; auto.
 -- Qed.
 
+lemma nonneg_div_two' (eps : R) (h : 0 ≤ eps) : eps / 2 ≤ eps := by
+  apply shift_div_leEq
+  exact zero_lt_two
+  rw [mul_comm]
+  rw [two_mul]
+  exact le_add_of_nonneg_left h
+
 -- Lemma nonneg_div_three : forall eps : R, [0] [<=] eps -> [0] [<=] eps [/]ThreeNZ.
 -- Proof.
 --  intros.
@@ -494,6 +669,13 @@
 --  astepl ([0]:R); rstepr eps.
 --  assumption.
 -- Qed.
+
+lemma nonneg_div_three (eps : R) (h : 0 ≤ eps) : 0 ≤ eps / 3 := by {
+  apply mult_cancel_leEq
+  exact zero_lt_three
+  simp_all only [zero_mul, isUnit_iff_ne_zero, ne_eq, OfNat.ofNat_ne_zero,
+    not_false_eq_true, IsUnit.div_mul_cancel]
+}
 
 -- Lemma nonneg_div_three' : forall eps : R, [0] [<=] eps -> eps [/]ThreeNZ [<=] eps.
 -- Proof.
@@ -505,12 +687,35 @@
 --  apply leEq_reflexive.
 -- Qed.
 
+lemma nonneg_div_three' (eps : R) (h : 0 ≤ eps) : eps / 3 ≤ eps := by
+  apply shift_div_leEq
+  exact zero_lt_three
+  calc eps = _ := by {
+      refine Eq.symm (mul_div_cancel₀ eps ?_)
+      exact three_ne_zero}
+      3 * (eps / 3) = eps := by {
+         refine mul_div_cancel₀ eps ?_
+         exact three_ne_zero
+         }
+      _ ≤ eps + eps + eps := by
+        rw [add_assoc, ←add_assoc eps eps eps]
+        apply le_add_of_nonneg_left
+        simp_all only [nonneg_add_self_iff]
+      _  ≤ eps * 3 := by {
+        linarith
+      }
+  -- Actually, eps = eps + 0 + 0 ≤ eps + eps + eps, and the rest follows
+  -- But since 3 * (eps / 3) = eps, and eps ≤ eps + eps + eps, done.
+
 -- Lemma nonneg_div_four : forall eps : R, [0] [<=] eps -> [0] [<=] eps [/]FourNZ.
 -- Proof.
 --  intros.
 --  rstepr ((eps [/]TwoNZ) [/]TwoNZ).
 --  apply nonneg_div_two; apply nonneg_div_two; assumption.
 -- Qed.
+
+lemma nonneg_div_four (eps : R) (h : 0 ≤ eps) : 0 ≤ eps / 4 := by
+  linarith
 
 -- Lemma nonneg_div_four' : forall eps : R, [0] [<=] eps -> eps [/]FourNZ [<=] eps.
 -- Proof.
@@ -522,6 +727,15 @@
 --  apply nonneg_div_two.
 --  assumption.
 -- Qed.
+
+lemma nonneg_div_four' (eps : R) (h : 0 ≤ eps) : eps / 4 ≤ eps := by
+  have h2 : 0 ≤ eps / 2 := nonneg_div_two eps h
+  have h2' : (eps / 2) / 2 ≤ eps / 2 := nonneg_div_two' (eps / 2) h2
+  have h4 : eps / 4 = (eps / 2) / 2 := by {
+    linarith
+  }
+  rw [h4]
+  exact le_trans h2' (nonneg_div_two' eps h)
 
 -- End multiplication.
 
@@ -548,6 +762,9 @@
 --  apply less_imp_ap. auto.
 -- Qed.
 
+lemma sqr_nonneg (x : R) : 0 ≤ x ^ 2 :=
+  pow_two_nonneg x
+
 -- Lemma nring_nonneg : forall n : nat, [0] [<=] nring (R:=R) n.
 -- Proof.
 --  intro; induction  n as [| n Hrecn].
@@ -555,7 +772,6 @@
 --  apply leEq_transitive with (nring (R:=R) n);
 --    [ assumption | apply less_leEq; simpl in |- *; apply less_plusOne ].
 -- Qed.
-
 
 -- Lemma suc_leEq_dub : forall n, nring (R:=R) (S (S n)) [<=] Two[*]nring (S n).
 -- Proof.
@@ -619,6 +835,9 @@
 --  apply plus_resp_leEq_both; apply sqr_nonneg.
 -- Qed.
 
+lemma cc_abs_aid (x y : R) : 0 ≤ x ^ 2 + y ^ 2 :=
+  add_nonneg (sqr_nonneg x) (sqr_nonneg y)
+
 -- Load "Transparent_algebra".
 
 -- Lemma nexp_resp_pos : forall (x : R) k, [0] [<] x -> [0] [<] x[^]k.
@@ -633,6 +852,13 @@
 --   assumption.
 --  assumption.
 -- Qed.
+
+lemma nexp_resp_pos (x : R) (k : ℕ) (hx : 0 < x) : 0 < x ^ k :=
+  match k with
+  | 0     => by simp [zero_lt_one]
+  | k + 1 => by
+      simp only [pow_succ]
+      exact mul_pos (nexp_resp_pos x k hx) hx
 
 -- Load "Opaque_algebra".
 
@@ -650,6 +876,10 @@
 --   apply less_imp_ap. auto.
 -- Qed.
 
+lemma mult_resp_nonneg (x y : R) (hx : 0 ≤ x) (hy : 0 ≤ y) : 0 ≤ x * y :=
+  mul_nonneg hx hy
+
+
 -- Load "Transparent_algebra".
 
 -- Lemma nexp_resp_nonneg : forall (x : R) (k : nat), [0] [<=] x -> [0] [<=] x[^]k.
@@ -659,6 +889,13 @@
 --   astepr (x[^]k[*]x).
 --  apply mult_resp_nonneg; auto.
 -- Qed.
+
+lemma nexp_resp_nonneg (x : R) (k : ℕ) (hx : 0 ≤ x) : 0 ≤ x ^ k :=
+  match k with
+  | 0     => by simp [zero_le_one]
+  | k + 1 => by
+      simp only [pow_succ]
+      exact mul_nonneg (nexp_resp_nonneg x k hx) hx
 
 -- Lemma power_resp_leEq : forall (x y : R) k, [0] [<=] x -> x [<=] y -> x[^]k [<=] y[^]k.
 -- Proof.
@@ -674,6 +911,24 @@
 --  apply mult_resp_leEq_rht. auto.
 --   apply leEq_transitive with x; auto.
 -- Qed.
+
+
+
+lemma power_resp_leEq (x y : R) (k : ℕ) (hx : 0 ≤ x) (hxy : x ≤ y) : x ^ k ≤ y ^ k :=
+  match k with
+  | 0     => by simp
+  | k + 1 =>
+      calc
+        x ^ (k + 1) = x ^ k * x := by rw [pow_succ]
+        _ ≤ x ^ k * y := mul_le_mul_of_nonneg_left hxy (nexp_resp_nonneg x k hx)
+        _ ≤ y ^ k * y := by
+          apply mul_le_mul_of_nonneg_right
+          apply power_resp_leEq x y k hx hxy
+          exact le_trans hx hxy
+        _ = y ^ (k + 1) := by rw [pow_succ]
+
+
+
 
 -- Lemma nexp_resp_less : forall (x y : R) n, 1 <= n -> [0] [<=] x -> x [<] y -> x[^]n [<] y[^]n.
 -- Proof.
@@ -696,11 +951,38 @@
 --  assumption.
 -- Qed.
 
+lemma nexp_resp_less (x y : R) (n : ℕ) (hn : 1 ≤ n) (hx : 0 ≤ x) (hxy : x < y) : x ^ n < y ^ n :=
+  match n, hn with
+  | 0, h => by cases h -- contradiction: 1 ≤ 0 is false
+  | 1, _ => by simp [hxy]
+  | k+2, _ =>
+    have : 0 ≤ x ^ (k + 1) := nexp_resp_nonneg x (k + 1) hx
+    have : x ^ (k + 1) < y ^ (k + 1) := by {
+        apply nexp_resp_less x y (k + 1) (Nat.le_of_succ_le_succ (Nat.AtLeastTwo.prop)
+        ) hx hxy}
+    calc
+      x ^ (k + 2) = x ^ (k + 1) * x := by rw [pow_succ]
+      _ < y ^ (k + 1) * y := by {
+        (expose_names; exact Right.mul_lt_mul_of_nonneg this hxy this_1 hx)
+      }
+      _ = y ^ (k + 2) := Eq.symm (pow_succ y (k + 1))
+
+
 -- Lemma power_cancel_leEq : forall (x y : R) k, 0 < k -> [0] [<=] y -> x[^]k [<=] y[^]k -> x [<=] y.
 -- Proof.
 --  intros x y k H. repeat rewrite -> leEq_def. intros H0 H1 H2. apply H1.
 --  apply nexp_resp_less; try rewrite -> leEq_def; auto.
 -- Qed.
+
+
+lemma power_cancel_leEq (x y : R) (k : ℕ) (hk : 0 < k) (hy : 0 ≤ y) (h : x ^ k ≤ y ^ k) : x ≤ y :=
+  by stop
+    by_contra hxy
+    push_neg at hxy
+    have : x < y := hxy
+    have : x ^ k < y ^ k := nexp_resp_less x y k (Nat.succ_le_of_lt hk) hy this
+    exact not_lt_of_le h this
+
 
 -- Lemma power_cancel_less : forall (x y : R) k, [0] [<=] y -> x[^]k [<] y[^]k -> x [<] y.
 -- Proof.
@@ -718,6 +1000,7 @@
 --   apply ap_imp_less. apply un_op_strext_unfolded with (nexp_op (R:=R) k).
 --  apply less_imp_ap. auto.
 -- Qed.
+
 
 -- Lemma nat_less_bin_nexp : forall p : nat, Snring R p [<] Two[^]S p.
 -- Proof.
@@ -777,6 +1060,43 @@
 --  apply leEq_reflexive.
 -- Qed.
 
+/--
+If `a ≤ b + 1` and for all `i` with `a ≤ i ≤ b`, `f i ≤ g i`, then
+`Sum a b f ≤ Sum a b g`.
+Assumes `Sum a b f = ∑ i in a..b, f i`.
+-/
+lemma Sum_resp_leEq (f g : ℕ → R) (a b : ℕ) (hab : a ≤ b + 1)
+  (hfg : ∀ i, a ≤ i → i ≤ b → f i ≤ g i) :
+  (Finset.sum (Finset.Icc a b) f) ≤ (Finset.sum (Finset.Icc a b) g) := by stop
+  induction b generalizing a with
+  | zero =>
+    by_cases h : a ≤ 0
+    · have : a = 0 := by {exact Nat.eq_zero_of_le_zero h}
+      subst this
+      simp only [Finset.Icc_self, Finset.sum_singleton]
+      exact hfg 0 (by rfl) (by rfl)
+    · have : Finset.Icc a 0 = ∅ := by
+        rw [Finset.Icc_eq_empty]
+        exact h
+      simp [this]
+  | succ b ih =>
+    by_cases h : a ≤ b
+    · -- a ≤ b < b+1
+      have : Finset.Icc a (b + 1) = Finset.Icc a b ∪ {b + 1} := by
+        rw [Finset.Icc_succ_right_eq]
+      rw [this, Finset.sum_union, Finset.sum_singleton]
+      · apply add_le_add
+        · exact ih a (by linarith [hab]) (λ i ha hb => hfg i ha (by linarith [hb]))
+        · exact hfg (b + 1) (by linarith [h]) (by rfl)
+      · apply Finset.disjoint_singleton_right.mpr
+        intro x hx
+        simp at hx
+    · -- a > b, so Icc a (b+1) = {b+1} or ∅
+      have : a = b + 1 := by linarith [hab, Nat.lt_of_not_ge h]
+      subst this
+      simp only [Finset.Icc_self, Finset.sum_singleton]
+      exact hfg (b + 1) (by rfl) (by rfl)
+
 -- Lemma Sumx_resp_leEq : forall n (f g : forall i, i < n -> R),
 --  (forall i H, f i H [<=] g i H) -> Sumx f [<=] Sumx g.
 -- Proof.
@@ -787,6 +1107,24 @@
 --   apply H; intros; apply H0.
 --  apply H0.
 -- Qed.
+
+
+/--
+If `∀ i h, f i h ≤ g i h` then `Sumx f ≤ Sumx g`.
+Assumes `Sumx f = ∑ i : Fin n, f i (Fin.is_lt i)`.
+-/
+lemma Sumx_resp_leEq {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+  (n : ℕ) (f g : ∀ i, i < n → R)
+  (h : ∀ i h, f i h ≤ g i h) :
+  (Finset.univ.sum (fun (i : Fin n) => f i i.is_lt)) ≤ (Finset.univ.sum (fun (i : Fin n) => g i i.is_lt)) := by
+  induction' n with n ih
+  { simp }
+  { -- n = n+1
+    let f' : ∀ i, i < n → R := fun i hi => f i (Nat.lt.step hi)
+    let g' : ∀ i, i < n → R := fun i hi => g i (Nat.lt.step hi)
+    have h' : ∀ i hi, f' i hi ≤ g' i hi := λ i hi => h i (Nat.lt.step hi)
+    exact Finset.sum_le_sum fun i a ↦ h (↑i) (Fin.is_lt i)
+  }
 
 -- Lemma Sum2_resp_leEq : forall m n, m <= S n -> forall f g : forall i, m <= i -> i <= n -> R,
 --  (forall i Hm Hn, f i Hm Hn [<=] g i Hm Hn) -> Sum2 f [<=] Sum2 g.
@@ -821,6 +1159,19 @@
 --  assumption.
 -- Qed.
 
+/--
+If for all ε > 0, `x < ε`, then `x ≤ 0`.
+-/
+lemma approach_zero (x : R) (h : ∀ ε, 0 < ε → x < ε) : x ≤ 0 := by
+  by_contra hx
+  push_neg at hx
+  -- So x > 0
+  specialize h (x / 2) (by linarith)
+  have : x / 2 < x := by
+    apply div_lt_self hx
+    simp only [Nat.one_lt_ofNat]
+  linarith
+
 -- Lemma approach_zero_weak : forall x : R, (forall e, [0] [<] e -> x [<=] e) -> x [<=] [0].
 -- Proof.
 --  intros.
@@ -840,6 +1191,27 @@
 --  apply pos_div_two.
 --  assumption.
 -- Qed.
+
+-- Lemma approach_zero_weak : forall x : R, (forall e, [0] [<] e -> x [<=] e) -> x [<=] [0].
+-- Proof.
+--  intros.
+--  rewrite -> leEq_def; intro.
+--  cut (x [<=] x [/]TwoNZ).
+--   rewrite -> leEq_def.
+--   change (~ Not (x [/]TwoNZ [<] x)) in |- *.
+--   intro H1.
+--   apply H1.
+--   apply plus_cancel_less with (z := [--](x [/]TwoNZ)).
+--   apply mult_cancel_less with (z := Two:R).
+--    apply pos_two.
+--   rstepl ([0]:R).
+--   rstepr x.
+--   assumption.
+--  apply H.
+--  apply pos_div_two.
+--  assumption.
+-- Qed.
+
 -- End misc.
 
 -- Lemma equal_less_leEq : forall a b x y : R,
@@ -857,6 +1229,38 @@
 --   auto.
 --  rewrite -> leEq_def.
 --  intro; auto.
+-- Qed.
+/--
+If `a < b → x ≤ y` and `a = b → x ≤ y`, then `a ≤ b → x ≤ y`.
+-/
+lemma equal_less_leEq (a b x y : R)
+  (h₁ : a < b → x ≤ y) (h₂ : a = b → x ≤ y) (h : a ≤ b) : x ≤ y :=
+  match lt_or_eq_of_le h with
+  | Or.inl hab => h₁ hab
+  | Or.inr hab => h₂ hab
+
+-- Lemma power_plus_leEq : forall n (x y:R), (0 < n) -> ([0][<=]x) -> ([0][<=]y) ->
+-- (x[^]n [+] y[^]n)[<=](x[+]y)[^]n.
+-- Proof.
+--  intros [|n] x y Hn Hx Hy.
+--   exfalso; auto with *.
+--  induction n.
+--   simpl.
+--   rstepl ([1][*](x[+]y)).
+--   apply leEq_reflexive.
+--  rename n into m.
+--  set (n:=(S m)) in *.
+--  apply leEq_transitive with ((x[^]n[+]y[^]n)[*](x[+]y)).
+--   apply shift_zero_leEq_minus'.
+--   change (x[^]S n) with (x[^]n[*]x).
+--   change (y[^]S n) with (y[^]n[*]y).
+--   rstepr (y[*]x[^]n[+]x[*]y[^]n).
+--   apply plus_resp_nonneg; apply mult_resp_nonneg; try apply nexp_resp_nonneg; try assumption.
+--  change ((x[+]y)[^]S n) with ((x[+]y)[^]n[*](x[+]y)).
+--  apply mult_resp_leEq_rht.
+--   apply IHn.
+--   unfold n; auto with *.
+--  apply plus_resp_nonneg; assumption.
 -- Qed.
 
 -- Lemma power_plus_leEq : forall n (x y:R), (0 < n) -> ([0][<=]x) -> ([0][<=]y) ->
@@ -962,12 +1366,18 @@
 --  apply plus_resp_leEq_lft. auto.
 -- Qed.
 
+lemma plus_resp_pos_nonneg (x y : R) (hx : 0 < x) (hy : 0 ≤ y) : 0 < x + y :=
+  Right.add_pos_of_pos_of_nonneg hx hy
+
 -- Lemma plus_resp_nonneg_pos : forall x y : R, [0] [<=] x -> [0] [<] y -> [0] [<] x[+]y.
 -- Proof.
 --  intros.
 --  astepr (y[+]x).
 --  apply plus_resp_pos_nonneg; auto.
 -- Qed.
+
+lemma plus_resp_nonneg_pos (x y : R) (hx : 0 ≤ x) (hy : 0 < y) : 0 < x + y :=
+  add_pos_of_nonneg_of_pos hx hy
 
 -- Lemma pos_square : forall x : R, x [#] [0] -> [0] [<] x[^]2.
 -- Proof.
@@ -982,6 +1392,23 @@
 --  apply mult_resp_pos; auto.
 -- Qed.
 
+/--
+If `x ≠ 0` then `0 < x ^ 2`.
+-/
+lemma pos_square (x : R) (hx : x ≠ 0) : 0 < x ^ 2 :=
+  match lt_or_gt_of_ne hx with
+  | Or.inl hlt =>
+      -- x < 0
+      have : 0 < -x := neg_pos.mpr hlt
+      calc
+        0 < (-x) * (-x) := mul_pos this this
+        _ = x ^ 2 := by rw [neg_mul_neg, pow_two]
+  | Or.inr hgt => by {
+    exact nexp_resp_pos x 2 hgt
+  }
+      -- x > 0
+      --pow_two_pos_of_ne_zero x hx
+
 -- Lemma mult_cancel_pos_rht : forall x y : R, [0] [<] x[*]y -> [0] [<=] x -> [0] [<] y.
 -- Proof.
 --  intros x y H.
@@ -993,6 +1420,21 @@
 --  contradiction.
 -- Qed.
 
+/--
+If `0 < x * y` and `0 ≤ x`, then `0 < y`.
+-/
+lemma mult_cancel_pos_rht (x y : R) (hxy : 0 < x * y) (hx : 0 ≤ x) : 0 < y :=
+  match (lt_trichotomy x 0) with
+  | Or.inl hlt =>
+      -- x < 0, but 0 ≤ x, contradiction
+      absurd hlt hx.not_lt
+  | Or.inr (Or.inl heq) =>
+      -- x = 0, so x * y = 0, contradiction with hxy
+      by simp [heq] at hxy;
+  | Or.inr (Or.inr hgt) =>
+      -- x > 0
+      (mul_pos_iff_of_pos_left hgt).mp hxy
+
 -- Lemma mult_cancel_pos_lft : forall x y : R, [0] [<] x[*]y -> [0] [<=] y -> [0] [<] x.
 -- Proof.
 --  intros.
@@ -1001,12 +1443,24 @@
 --   auto. auto.
 -- Qed.
 
+/--
+If `0 < x * y` and `0 ≤ y`, then `0 < x`.
+-/
+lemma mult_cancel_pos_lft (x y : R) (hxy : 0 < x * y) (hy : 0 ≤ y) : 0 < x :=
+  pos_of_mul_pos_left hxy hy
+
 -- Lemma pos_wd : forall x y : R, x [=] y -> [0] [<] y -> [0] [<] x.
 -- Proof.
 --  intros.
 --  astepr y.
 --  auto.
 -- Qed.
+
+/--
+If `x = y` and `0 < y`, then `0 < x`.
+-/
+lemma pos_wd (x y : R) (hxy : x = y) (hy : 0 < y) : 0 < x :=
+  hxy.symm ▸ hy
 
 -- Lemma even_power_pos : forall n, Nat.Even n -> forall x : R, x [#] [0] -> [0] [<] x[^]n.
 -- Proof.
@@ -1020,6 +1474,16 @@
 --    exists k; lia.
 -- Qed.
 
+/--
+If `n` is even and `x ≠ 0`, then `0 < x ^ n`.
+-/
+lemma even_power_pos (n : ℕ) (hn : ∃ k, n = 2 * k) (x : R) (hx : x ≠ 0) : 0 < x ^ n := by
+  obtain ⟨k, rfl⟩ := hn
+  -- n = 2 * k
+  have : 0 < x ^ 2 := pos_square x hx
+  rw [pow_mul]
+  exact nexp_resp_pos (x ^ 2) k this
+
 -- Lemma odd_power_cancel_pos : forall n, Nat.Odd n -> forall x : R, [0] [<] x[^]n -> [0] [<] x.
 -- Proof.
 --  intros n [m Hm]%to_Codd x. simpl. intros H.
@@ -1031,6 +1495,12 @@
 --    exact H2.
 -- Qed.
 
+/--
+If `n` is odd and `0 < x ^ n`, then `0 < x`.
+-/
+lemma odd_power_cancel_pos (n : ℕ) (hn : ∃ m, n = 2 * m + 1) (x : R) (h : 0 < x ^ n) : 0 < x :=
+  (Odd.pow_pos_iff hn).mp h
+
 -- Lemma plus_resp_pos : forall x y : R, [0] [<] x -> [0] [<] y -> [0] [<] x[+]y.
 -- Proof.
 --  intros.
@@ -1038,6 +1508,12 @@
 --   auto.
 --  apply less_leEq. auto.
 -- Qed.
+
+/--
+If `0 < x` and `0 < y`, then `0 < x + y`.
+-/
+lemma plus_resp_pos (x y : R) (hx : 0 < x) (hy : 0 < y) : 0 < x + y :=
+  plus_resp_pos_nonneg x y hx (le_of_lt hy)
 
 -- Lemma pos_nring_S : forall n, ZeroR [<] nring (S n).
 -- Proof.
@@ -1065,6 +1541,20 @@
 --  apply Greater_imp_ap; auto.
 -- Qed.
 
+/--
+If `0 < a`, `0 < x`, and `x ^ 2 = a ^ 2`, then `x = a`.
+-/
+lemma square_eq_pos (x a : R) (ha : 0 < a) (hx : 0 < x) (h : x ^ 2 = a ^ 2) : x = a :=
+  match eq_or_eq_neg_of_sq_eq_sq x a h with
+  | Or.inl hxa => hxa
+  | Or.inr hxa =>
+      -- x = -a, but x > 0 and a > 0, so -a < 0 < x, contradiction
+      have : -a < 0 := neg_neg_of_pos ha
+      have : x = -a := hxa
+      have : x < 0 := by rw [this]; (expose_names; exact this_1)
+      -- But x > 0, contradiction
+      absurd this hx.not_lt
+
 -- Lemma square_eq_neg : forall x a : R, [0] [<] a -> x [<] [0] -> x[^]2 [=] a[^]2 -> x [=] [--]a.
 -- Proof.
 --  intros.
@@ -1076,6 +1566,17 @@
 --   auto.
 --  apply Greater_imp_ap; auto.
 -- Qed.
+
+/--
+If `0 < a`, `x < 0`, and `x ^ 2 = a ^ 2`, then `x = -a`.
+-/
+lemma square_eq_neg (x a : R) (ha : 0 < a) (hx : x < 0) (h : x ^ 2 = a ^ 2) : x = -a :=
+  match eq_or_eq_neg_of_sq_eq_sq x a h with
+  | Or.inl hxa =>
+      -- x = a, but x < 0 < a, contradiction
+      have : a < 0 := by rw [←hxa]; exact hx
+      absurd this (not_lt_of_gt ha)
+  | Or.inr hxa => hxa
 
 -- End PosP_properties.
 
@@ -1133,6 +1634,11 @@
 
 -- Definition Half (R : COrdField) := ([1]:R) [/]TwoNZ.
 
+/--
+`Half` is defined as `1 / 2` in `R`.
+-/
+def Half (R : Type*) [Field R] : R := 1 / 2
+
 -- Arguments Half {R}.
 
 -- Section Half_properties.
@@ -1152,6 +1658,12 @@
 -- Qed.
 -- Hint Resolve half_1: algebra.
 
+/--
+`Half * 2 = 1` in `R`.
+-/
+lemma half_1 : (Half R) * 2 = 1 := by
+  simp [Half]
+
 -- Lemma pos_half : ([0]:R) [<] Half.
 -- Proof.
 --  apply mult_cancel_pos_lft with (Two:R).
@@ -1161,6 +1673,19 @@
 --  apply less_leEq; apply pos_two.
 -- Qed.
 
+/--
+`0 < Half` in `R`.
+-/
+lemma pos_half : (0 : R) < Half R :=
+  mult_cancel_pos_lft (Half R) 2 (by
+    -- 0 < Half * 2
+    rw [half_1]
+    exact zero_lt_one
+  ) (by
+    -- 0 ≤ 2
+    exact zero_le_two
+  )
+
 -- Lemma half_1' : forall x : R, x[*]Half[*]Two [=] x.
 -- Proof.
 --  intros.
@@ -1168,11 +1693,24 @@
 --  rational.
 -- Qed.
 
+/--
+For all `x : R`, `x * Half * 2 = x`.
+-/
+lemma half_1' (x : R) : x * Half R * 2 = x := by
+  simp [Half]
+
 -- Lemma half_2 : (Half:R) [+]Half [=] [1].
 -- Proof.
 --  unfold Half in |- *.
 --  rational.
 -- Qed.
+
+/--
+`Half + Half = 1` in `R`.
+-/
+lemma half_2 : (Half R) + (Half R) = 1 := by
+  simp [Half]
+  ring
 
 -- Lemma half_lt1 : (Half:R) [<] [1].
 -- Proof.
@@ -1183,6 +1721,15 @@
 --  exact half_2.
 -- Qed.
 
+/--
+`Half < 1` in `R`.
+-/
+lemma half_lt1 : (Half R) < 1 :=
+  calc
+    Half R = Half R + 0 := by rw [add_zero]
+    _ < Half R + Half R := add_lt_add_left pos_half (Half R)
+    _ = 1 := half_2
+
 -- Lemma half_3 : forall x : R, [0] [<] x -> Half[*]x [<] x.
 -- Proof.
 --  intros.
@@ -1191,6 +1738,16 @@
 --  exact half_lt1.
 -- Qed.
 
+/--
+If `0 < x`, then `Half * x < x`.
+-/
+lemma half_3 (x : R) (hx : 0 < x) : Half R * x < x :=
+  calc
+    Half R * x < 1 * x := mul_lt_mul_of_pos_right half_lt1 hx
+    _ = x := one_mul x
+
 -- End Half_properties.
 -- #[global]
 -- Hint Resolve half_1 half_1' half_2: algebra.
+
+#min_imports
