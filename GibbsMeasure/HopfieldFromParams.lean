@@ -131,12 +131,12 @@ instance (p : Params (HopfieldNetwork ℝ U)) :
             (Δ.attach.sum fun j =>
               if j.1 ≠ i.1 then
                 (p.w i.1 j.1) *
-                  (τ ⟨i.1, by simpa [Δset] using i.2⟩ : ℝ) *
-                  (τ ⟨j.1, by simpa [Δset] using j.2⟩ : ℝ)
+                  (τ ⟨i.1, by simp [Δset]⟩ : ℝ) *
+                  (τ ⟨j.1, by simp [Δset]⟩ : ℝ)
               else 0))
       else if h1 : Δ.card = 1 then
         Δ.attach.sum fun i =>
-          (θu (p := p) i.1) * (τ ⟨i.1, by simpa [Δset] using i.2⟩ : ℝ)
+          (θu (p := p) i.1) * (τ ⟨i.1, by simp [Δset]⟩ : ℝ)
       else
         0
     have hg : Measurable g := by
@@ -154,7 +154,7 @@ instance (p : Params (HopfieldNetwork ℝ U)) :
       by_cases h2 : Δ.card = 2
       · simp [hopfieldPotentialFromParams, g, h2, Δset, Finset.attach]
       · by_cases h1 : Δ.card = 1
-        · simp [hopfieldPotentialFromParams, g, h2, h1, Δset, Finset.attach]
+        · simp [hopfieldPotentialFromParams, g, h1, Δset, Finset.attach]
         · simp [hopfieldPotentialFromParams, g, h2, h1, Δset]
     simpa [hfac] using (hg.comp hres)
 

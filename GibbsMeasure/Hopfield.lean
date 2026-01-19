@@ -88,7 +88,7 @@ instance (ξ : Patterns V m) : Potential.IsFinitary (hopfieldPotential (V := V) 
         exact hΔ hzero
       -- Hence `Δ` is some `{i,j}`.
       rcases Finset.card_eq_two.1 hcard with ⟨i, j, hij, rfl⟩
-      simp [s, hij]
+      simp [s]
 
 instance (ξ : Patterns V m) : Potential.IsPotential (hopfieldPotential (V := V) (m := m) ξ) where
   measurable Δ := by
@@ -104,8 +104,8 @@ instance (ξ : Patterns V m) : Potential.IsPotential (hopfieldPotential (V := V)
             (Δ.attach.sum fun j =>
               if j.1 ≠ i.1 then
                 hopfieldJ (V := V) (m := m) ξ i.1 j.1 *
-                  (τ ⟨i.1, by simpa [Δset] using i.2⟩ : ℝ) *
-                  (τ ⟨j.1, by simpa [Δset] using j.2⟩ : ℝ)
+                  (τ ⟨i.1, by simp [Δset]⟩ : ℝ) *
+                  (τ ⟨j.1, by simp [Δset]⟩ : ℝ)
               else
                 0))
       else 0

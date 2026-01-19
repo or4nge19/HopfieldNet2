@@ -47,13 +47,13 @@ lemma hopfieldPotentialFromParams_singleton
       -- hence `x = si`
       have : x = si := by
         apply Subtype.ext
-        simpa [si] using hxval
-      simpa [this]
+        simp [si, hxval]
+      simp [this]
     · intro hx
       -- reverse direction: membership in `{si}` is trivial
       -- `x ∈ ({i}.attach)` is always true (it is the finset of all elements of the subtype).
-      simpa using (Finset.mem_attach ({i} : Finset U) x)
-  simp [hopfieldPotentialFromParams, hcard2, hcard1, hatt, θu, si]
+      simp
+  simp [hopfieldPotentialFromParams, hcard1, hatt, θu, si]
 
 /-! ### Pair support -/
 
@@ -93,12 +93,12 @@ lemma hopfieldPotentialFromParams_pair
           have : x = si := by
             apply Subtype.ext
             simpa [si] using hxi
-          simpa [this]
+          simp [this]
       | inr hxj =>
           have : x = sj := by
             apply Subtype.ext
             simpa [sj] using hxj
-          simpa [this]
+          simp [this]
     · intro hx
       -- membership in the attach is automatic once we are in `{si,sj}`
       simpa using (Finset.mem_attach ({i, j} : Finset U) x)
@@ -129,7 +129,7 @@ lemma hopfieldPotentialFromParams_pair
         (p.w i j) * (η i : ℝ) * (η j : ℝ) + (p.w j i) * (η j : ℝ) * (η i : ℝ) := by
     -- outer `sum_pair` over `a = si,sj`, then use the inner evaluations.
     -- the remaining `if i=j then ...` branches are killed by `hij` / `hij.symm`.
-    simp [Finset.sum_pair hsij, h_inner_si, h_inner_sj, si, sj, hij, hij.symm]
+    simp [Finset.sum_pair hsij, si, sj, hij, hij.symm, hij', hji', h_inner_si, h_inner_sj]
   -- Transport `h_outer` back to the actual `Δ.attach.sum` appearing in the potential.
   have h_outer' :
       (({i, j} : Finset U).attach.sum fun a =>
@@ -138,7 +138,9 @@ lemma hopfieldPotentialFromParams_pair
         =
         (p.w i j) * (η i : ℝ) * (η j : ℝ) + (p.w j i) * (η j : ℝ) * (η i : ℝ) := by
     simpa [hatt] using h_outer
-  -- Now `hopfieldPotentialFromParams` is just `(-1/2) *` that oriented double sum in the `card=2` case.
-  simp [hopfieldPotentialFromParams, hcard, hcard1, h_outer']; aesop
+  simp [hopfieldPotentialFromParams, hcard, hcard1, h_outer']; simp_all only [ne_eq, Finset.mem_singleton,
+    not_false_eq_true, Finset.card_insert_of_notMem, Finset.card_singleton, Nat.reduceAdd, OfNat.ofNat_ne_one,
+    Subtype.mk.injEq, Finset.attach_insert, ite_not, Finset.sum_insert, ↓reduceIte, Finset.sum_singleton, zero_add,
+    add_zero, SetLike.coe_eq_coe, si, sj]
 
 end GibbsMeasure.Examples.HopfieldEnergyBridge
