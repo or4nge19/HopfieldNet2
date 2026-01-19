@@ -92,7 +92,7 @@ lemma sum_split (P Q : α → Prop) [DecidablePred P] [AddCommMonoid β]
     [DecidablePred Q] (f : α → β) :
   ∑ u ∈ filter (fun u => P u) s, f u = ∑ u ∈ filter (fun u => P u ∧ Q u) s, f u  +
       ∑ u ∈ filter (fun u => P u ∧ ¬ Q u) s, f u := by
-  simp only [sum_filter, ← sum_add_distrib, ite_and, ite_add, ite_not, zero_add, add_zero, zero_add]
+  simp only [sum_filter, ← sum_add_distrib, ite_and, ite_add, ite_not, zero_add, zero_add]
   simp_all only [↓reduceIte, add_zero, ite_self]
 
 lemma sum_over_subset (f : α → β) (s : Finset α) [Fintype α] [AddCommMonoid β]
@@ -123,10 +123,10 @@ lemma filter_sum_pos_exists {α β : Type} [Fintype α] [DecidableEq β] {p : α
         exact h a ha
       · simp_all only [gt_iff_lt, mem_filter, mem_univ, true_and, not_exists, not_and, not_lt, nonpos_iff_eq_zero,
         le_refl]
-    simp_all only [Finset.sum_eq_zero all_zero, sum_const_zero, gt_iff_lt, lt_self_iff_false]
+    simp_all only [sum_const_zero, gt_iff_lt, lt_self_iff_false]
   rcases exists_pos with ⟨x, h_mem, h_p_pos⟩
   -- Membership in filter means f x = y
-  simp only [filter_subset, mem_filter, mem_univ, true_and] at h_mem
+  simp only [mem_filter, mem_univ, true_and] at h_mem
   subst h_mem
   simp_all only [gt_iff_lt]
   apply Exists.intro
@@ -216,11 +216,12 @@ lemma filter_sum_pos_iff_exists_pos {α β : Type} [Fintype α]
           exact h a ha
         · exact zero_le (p a)
       have sum_zero := Finset.sum_eq_zero all_zero
-      exact not_lt_of_le (by exact nonpos_iff_eq_zero.mpr sum_zero) h_pos
+      aesop
+      --exact not_lt_of_le (by exact nonpos_iff_eq_zero.mpr sum_zero) h_pos
     rcases exists_pos with ⟨x, hx_mem, hx_pos⟩
     exact ⟨x, filter_mem_iff.mp hx_mem, hx_pos⟩
   · rintro ⟨x, hx_mem, hx_pos⟩
-    simp_all only [mem_filter, mem_univ, true_and, gt_iff_lt]
+    simp_all only [gt_iff_lt]
     subst hx_mem
     have x_in_filter : x ∈ filter (fun a ↦ f a = f x) univ := by
       simp only [filter_mem_iff]
