@@ -186,6 +186,7 @@ lemma gibbsUpdate_apply_updPos
     simp [pPosNN]; exact ENNReal.ofReal_eq_coe_nnreal h_nonneg
   simp [pPos, pPosNN, hcoe,
     PMF.bernoulli_bind_pure_apply_left_of_ne (α := NN.State) (p := pPosNN) h_leNN hne]
+  aesop
 
 /-- Pointwise evaluation of `gibbsUpdate` at `updNeg`. -/
 lemma gibbsUpdate_apply_updNeg
@@ -215,6 +216,7 @@ lemma gibbsUpdate_apply_updNeg
       exact (ENNReal.ofReal_eq_coe_nnreal h_nonneg).symm
     simpa [this] using (ENNReal.ofReal_sub 1 h_nonneg)
   simp [pPos, pPosNN, h_eval, hsub]
+  aesop
 
 lemma Kbm_apply_updPos (f : R →+* ℝ) (u : U) (s : NN.State) :
     Kbm (NN := NN) (p := p) (T := T) f u s (TwoState.updPos (NN := NN) s u)
@@ -247,6 +249,7 @@ lemma Kbm_apply_other (f : R →+* ℝ) (u : U) (s s' : NN.State)
   have h_K := PMF.bernoulli_bind_pure_apply_other (α := NN.State)
       (p := pPosNN) h_leNN h_pos h_neg
   simp [h_K, pPos, pPosNN]
+  aesop
 
 end KbmEval
 

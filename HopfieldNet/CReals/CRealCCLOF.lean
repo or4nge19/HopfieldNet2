@@ -393,7 +393,8 @@ noncomputable instance : ConditionallyCompleteLattice CReal := by
     have hℝ : sInf (toReal '' s) ≤ toReal a :=
       ConditionallyCompleteLattice.csInf_le (s := toReal '' s) (a := toReal a) hs' ⟨a, ha, rfl⟩
     have : toReal (sInf s) ≤ toReal a := by
-      simpa [InfSet.sInf, toReal_ofReal] using hℝ
+      simp only [InfSet.sInf, toReal_ofReal]
+      exact hℝ
     exact (toReal_le_iff).1 this
   · -- le_csInf
     intro s a hs ha
@@ -405,7 +406,8 @@ noncomputable instance : ConditionallyCompleteLattice CReal := by
     have hℝ : toReal a ≤ sInf (toReal '' s) :=
       ConditionallyCompleteLattice.le_csInf (s := toReal '' s) (a := toReal a) hs' hlb
     have : toReal a ≤ toReal (sInf s) := by
-      simpa [InfSet.sInf, toReal_ofReal] using hℝ
+      simp only [InfSet.sInf, toReal_ofReal]
+      exact hℝ
     exact (toReal_le_iff).1 this
 
 noncomputable instance : ConditionallyCompleteLinearOrder CReal := by
@@ -429,8 +431,8 @@ noncomputable instance : ConditionallyCompleteLinearOrder CReal := by
     have hs' : ¬ BddBelow (toReal '' s) := by
       intro h
       exact hs ((bddBelow_image_toReal_iff s).1 h)
-    simpa [InfSet.sInf, toReal_ofReal] using
-      (csInf_of_not_bddBelow (α := ℝ) (s := toReal '' s) hs')
+    simp only [InfSet.sInf, toReal_ofReal]
+    aesop
 
 noncomputable instance : IsOrderedAddMonoid CReal :=
   IsOrderedAddMonoid.mk
