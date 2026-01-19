@@ -57,15 +57,16 @@ noncomputable def hopfieldJ (ξ : Patterns V m) (i j : V) : ℝ :=
 /-- Pairwise Hopfield potential on `{±1}^V` with couplings from patterns `ξ`. -/
 noncomputable def hopfieldPotential (ξ : Patterns V m) : Potential V Int :=
   fun Δ σ ↦
-    if h : ∃ i j, i ≠ j ∧ Δ = {i, j} then
-      by
-        classical
-        -- We use classical choice to extract a witness from the Prop `∃ i j, ...`.
-        let i : V := Classical.choose h
-        let hj : ∃ j : V, i ≠ j ∧ Δ = {i, j} := Classical.choose_spec h
-        let j : V := Classical.choose hj
-        -- Standard pair interaction (note the SK sign convention).
-        exact - hopfieldJ (V := V) (m := m) ξ i j * (σ i : ℝ) * (σ j : ℝ)
+    -- Choice-free definition: use `Δ.card = 2` and a symmetric
+    -- double sum over the support `Δ`, divided by 2 to avoid orientation dependence.
+    if Δ.card = 2 then
+      (- (1 / 2 : ℝ)) *
+        (Δ.attach.sum fun i =>
+          (Δ.attach.sum fun j =>
+            if j.1 ≠ i.1 then
+              hopfieldJ (V := V) (m := m) ξ i.1 j.1 * (σ i.1 : ℝ) * (σ j.1 : ℝ)
+            else
+              0))
     else
       0
 
@@ -78,56 +79,54 @@ instance (ξ : Patterns V m) : Potential.IsFinitary (hopfieldPotential (V := V) 
     apply Set.Finite.subset (s := (s : Set (Finset V)))
     · exact Finset.finite_toSet s
     · intro Δ hΔ
-      -- If `hopfieldPotential ξ Δ ≠ 0`, then the pair-support condition must hold.
-      by_cases h : ∃ i j, i ≠ j ∧ Δ = {i, j}
-      · obtain ⟨i, j, hij, rfl⟩ := h
-        simp [s]
-      · -- Otherwise the potential is definitionally 0, contradiction.
+      -- If `hopfieldPotential ξ Δ ≠ 0`, then necessarily `Δ.card = 2`.
+      have hcard : Δ.card = 2 := by
+        by_contra hcard
         have hzero : hopfieldPotential (V := V) (m := m) ξ Δ = 0 := by
           funext σ
-          simp [hopfieldPotential, h]
-        exact (hΔ hzero).elim
+          simp [hopfieldPotential, hcard]
+        exact hΔ hzero
+      -- Hence `Δ` is some `{i,j}`.
+      rcases Finset.card_eq_two.1 hcard with ⟨i, j, hij, rfl⟩
+      simp [s, hij]
 
 instance (ξ : Patterns V m) : Potential.IsPotential (hopfieldPotential (V := V) (m := m) ξ) where
   measurable Δ := by
     classical
-    by_cases h : ∃ i j, i ≠ j ∧ Δ = {i, j}
-    · -- In this branch `Φ Δ` is a product of two cylinder-coordinate functions.
-      -- Use the chosen witnesses `i,j` for the (fixed) support `Δ`.
-      let i : V := Classical.choose h
-      let hj : ∃ j : V, i ≠ j ∧ Δ = {i, j} := Classical.choose_spec h
-      let j : V := Classical.choose hj
-      have hΔ : Δ = ({i, j} : Finset V) := (Classical.choose_spec hj).2
-      have hi : i ∈ (Δ : Set V) := by simp [hΔ]
-      have hj' : j ∈ (Δ : Set V) := by
-        have : j ∈ ({i, j} : Finset V) := by simp
-        simpa [hΔ] using this
-      -- Now build measurability.
-      -- (With the trivial measurable space on `Int`, these projections are `measurable_from_top`.)
-      have mi : Measurable[cylinderEvents (X := fun _ : V ↦ Int) (Δ : Set V)]
-          (fun σ : V → Int => (σ i : ℝ)) :=
-        (measurable_from_top.comp
-          (measurable_cylinderEvent_apply (i := i) (X := fun _ : V ↦ Int) (by simpa using hi)))
-      have mj : Measurable[cylinderEvents (X := fun _ : V ↦ Int) (Δ : Set V)]
-          (fun σ : V → Int => (σ j : ℝ)) :=
-        (measurable_from_top.comp
-          (measurable_cylinderEvent_apply (i := j) (X := fun _ : V ↦ Int) (by simpa using hj')))
-      -- Rewrite `hopfieldPotential` at `Δ` under `h` to expose the product form.
-      have hform :
-          (hopfieldPotential (V := V) (m := m) ξ) Δ =
-            fun σ : V → Int => - hopfieldJ (V := V) (m := m) ξ i j * (σ i : ℝ) * (σ j : ℝ) := by
-        funext σ
-        simp [hopfieldPotential, h, i, j]
-      -- Combine.
-      simpa [hform, mul_assoc] using (measurable_const.mul (mi.mul mj))
-    · -- Otherwise constant 0.
-      -- In this branch `hopfieldPotential ξ Δ` is the constant-0 function.
-      have h0 : (hopfieldPotential (V := V) (m := m) ξ) Δ = (fun _ : V → Int => (0 : ℝ)) := by
-        funext σ
-        simp [hopfieldPotential, h]
-      simpa [h0] using
-        (measurable_const :
-          Measurable[cylinderEvents (X := fun _ : V ↦ Int) (Δ : Set V)] (fun _ : V → Int => (0 : ℝ)))
+    -- Prove cylinder-measurability by factoring through the restriction map.
+    -- This avoids any choice and aligns with the Georgii / cylinder-events semantics.
+    let Δset : Set V := (Δ : Set V)
+    -- Define the potential term as a function of the restricted configuration `τ : Δ → Int`.
+    let g : (Δset → Int) → ℝ := fun τ =>
+      if Δ.card = 2 then
+        (- (1 / 2 : ℝ)) *
+          (Δ.attach.sum fun i =>
+            (Δ.attach.sum fun j =>
+              if j.1 ≠ i.1 then
+                hopfieldJ (V := V) (m := m) ξ i.1 j.1 *
+                  (τ ⟨i.1, by simpa [Δset] using i.2⟩ : ℝ) *
+                  (τ ⟨j.1, by simpa [Δset] using j.2⟩ : ℝ)
+              else
+                0))
+      else 0
+    have hg : Measurable g := by
+      -- `MeasurableSpace Int = ⊤` ⇒ `MeasurableSpace (Δ → Int) = ⊤` ⇒ every `g` is measurable.
+      simp [g]; exact Measurable.of_discrete
+    have hres :
+        Measurable[cylinderEvents (X := fun _ : V ↦ Int) Δset]
+          (Set.restrict (π := fun _ : V ↦ Int) Δset) :=
+      MeasureTheory.measurable_restrict_cylinderEvents (X := fun _ : V ↦ Int) Δset
+    have hfac :
+        hopfieldPotential (V := V) (m := m) ξ Δ =
+          fun σ : V → Int => g (Set.restrict (π := fun _ : V ↦ Int) Δset σ) := by
+      funext σ
+      -- Unfold both sides and use the definition of `Set.restrict`.
+      by_cases hcard : Δ.card = 2
+      · simp [hopfieldPotential, g, hcard, Δset]
+      · simp [hopfieldPotential, g, hcard, Δset]
+    -- Conclude by composing `g` with the measurable restriction map.
+    simpa [hfac] using (hg.comp hres)
+
 
 /-- The Gibbs specification for the Hopfield model (Georgii API). -/
 noncomputable def hopfieldSpecification
