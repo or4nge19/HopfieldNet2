@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michail Karatarakis
 -/
 import HopfieldNet.NN
+import HopfieldNet.HN.Core
 import Mathlib.Analysis.Normed.Field.Lemmas
 
 set_option linter.unusedVariables false
@@ -82,3 +83,58 @@ lemma test.onlyUi : test.extu.onlyUi := by {
 
 /-The workphase for the asynchronous update of the sequence of neurons u3 , u2 , u1 , u3 , u2 , u1 , u3. -/
 #eval NeuralNetwork.State.workPhase wθ test.extu test.onlyUi [2,1,0,2,1,0,2]
+
+/-!
+### Non-orthogonal Hebbian learning
+
+This section exercises the **non-orthogonal** Hebbian decomposition in `HopfieldNet/HN/Core.lean`:
+for patterns `pᵢ ∈ {±1}^U`, the Hebbian field on pattern `pⱼ` splits as
+
+- **signal**: \((|U| - m) pⱼ\)
+- **interference**: `disturbance ps j`
+
+No orthogonality assumption is used.
+-/
+
+section HopfieldNonOrthogonal
+
+open Matrix Fintype
+
+-- Two genuinely non-orthogonal patterns in `{±1}^(Fin 4)` over `ℚ`.
+def pat0 : (HopfieldNetwork ℚ (Fin 4)).State :=
+  { act := fun _ => (1 : ℚ)
+    hp := by
+      intro u
+      unfold HopfieldNetwork
+      simp }
+
+def pat1 : (HopfieldNetwork ℚ (Fin 4)).State :=
+  { act := fun i =>
+      if (i : Fin 4) = 0 then (-1 : ℚ) else (1 : ℚ)
+    hp := by
+      intro u
+      unfold HopfieldNetwork
+      by_cases h : (u : Fin 4) = 0
+      · -- at `u = 0`, activation is `-1`
+        right
+        simp [h]
+      · -- otherwise, activation is `1`
+        left
+        simp [h] }
+
+-- Package patterns as a `Fin 2 → State` family.
+def ps_nonorth : Fin 2 → (HopfieldNetwork ℚ (Fin 4)).State := ![pat0, pat1]
+
+-- The overlap is non-zero (here it is `2`).
+#eval dotProduct pat0.act pat1.act
+
+-- A concrete interference value (non-zero).
+#eval disturbance (ps := ps_nonorth) (j := (1 : Fin 2)) (0 : Fin 4)
+
+-- The exact non-orthogonal decomposition lemma.
+example :
+    ((Hebbian (ps := ps_nonorth)).w).mulVec (ps_nonorth (1 : Fin 2)).act =
+      (card (Fin 4) - (2 : ℕ) : ℚ) • (ps_nonorth (1 : Fin 2)).act + disturbance ps_nonorth (1 : Fin 2) := by
+  simpa using (patterns_general (ps := ps_nonorth) (j := (1 : Fin 2)))
+
+end HopfieldNonOrthogonal

@@ -73,7 +73,7 @@ structure State (NN : NeuralNetwork R U σ) where
   act : U → σ
   hp : ∀ u : U, NN.pact (act u)
 
-@[ext] lemma ext {R U σ : Type} [Zero R] {NN : NeuralNetwork R U σ}
+@[ext] lemma ext {R : Type uR} {U : Type uU} {σ : Type uσ} [Zero R] {NN : NeuralNetwork R U σ}
     {s₁ s₂ : NN.State} :
     (∀ u, s₁.act u = s₂.act u) → s₁ = s₂ := by
   intro h; cases s₁; cases s₂; simp [State.mk.injEq]

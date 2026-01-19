@@ -223,7 +223,7 @@ class TwoStateNeuralNetwork {R U σ}
   m_order : NN.m σ_neg < NN.m σ_pos
 
 namespace TwoState
-variable {R U σ : Type}
+variable {R : Type uR} {U : Type uU} {σ : Type uσ}
 variable [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 
 /-! Concrete network families (three encodings). -/
@@ -509,8 +509,8 @@ noncomputable def gibbsUpdate
     change (pPosNN : ℝ) ≤ 1
     simpa using h_le
   exact
-    PMF.bernoulli pPosNN h_le' >>= fun b =>
-      if b then PMF.pure (updPos (s:=s) (u:=u)) else PMF.pure (updNeg (s:=s) (u:=u))
+    PMF.bind (PMF.bernoulli pPosNN h_le') (fun b : Bool =>
+      cond b (PMF.pure (updPos (s:=s) (u:=u))) (PMF.pure (updNeg (s:=s) (u:=u))))
 
 /-- Zero–temperature deterministic (threshold) update at site u. -/
 def zeroTempDet

@@ -957,13 +957,95 @@ fun u => (card U - m : R) * (ps j).act u + disturbance ps j u
 def neuron_update_perturbed (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) : (U → R) :=
 fun u => HNfact 0 (Wpj_perturbed ps j u)
 
+set_option maxHeartbeats 2000000 in
 lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) :
   ((Hebbian ps).w).mulVec (ps j).act =
     (card U - m : R) • (ps j).act + disturbance ps j := by
-  unfold Hebbian
-  simp only
+  classical
   ext t
-  rw [mulVec, dotProduct]
-  unfold disturbance
-  simp only [sub_apply, smul_apply, smul_eq_mul, ne_eq, ite_not, Pi.add_apply, Pi.smul_apply]
-  sorry
+  -- Abbreviation for the `j`-th pattern.
+  let pj : U → R := (ps j).act
+  -- Expand the Hebbian field at coordinate `t`.
+  have h_field :
+      ((Hebbian ps).w).mulVec pj t =
+        (∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj) - (m : R) * pj t := by
+    unfold Hebbian
+    have hsub :
+        ((∑ i : Fin m, outerProduct (ps i) (ps i) - (m : R) • (1 : Matrix U U R)).mulVec pj) =
+          (∑ i : Fin m, outerProduct (ps i) (ps i)).mulVec pj - ((m : R) • (1 : Matrix U U R)).mulVec pj := by
+      simpa [Matrix.mulVec] using
+        (sub_mulVec (A := (∑ i : Fin m, outerProduct (ps i) (ps i)))
+          (B := (m : R) • (1 : Matrix U U R)) (x := pj))
+    have hsub_t := congrArg (fun v => v t) hsub
+    -- (i) the outer-product sum gives `∑ i, (ps i).act t * dotProduct (ps i).act pj`.
+    have h_outer :
+        ((∑ i : Fin m, outerProduct (ps i) (ps i)).mulVec pj) t =
+          ∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj := by
+      rw [mulVec, dotProduct]
+      rw [Finset.sum_apply]
+      have hentry (x : U) :
+          (∑ i : Fin m, outerProduct (ps i) (ps i) t x) =
+            ∑ i : Fin m, (ps i).act t * (ps i).act x := by
+        simp [outerProduct]
+      simp [hentry, dotProduct]
+      have hdist :
+          (∑ x : U, (∑ i : Fin m, (ps i).act t * (ps i).act x) * pj x) =
+            ∑ x : U, ∑ i : Fin m, ((ps i).act t * (ps i).act x) * pj x := by
+        refine Finset.sum_congr rfl (fun x _ => ?_)
+        simpa [mul_assoc] using
+          (Finset.sum_mul (s := (Finset.univ : Finset (Fin m)))
+            (f := fun i : Fin m => (ps i).act t * (ps i).act x) (a := pj x))
+      calc
+        (∑ x : U, (∑ i : Fin m, (ps i).act t * (ps i).act x) * pj x)
+            = ∑ x : U, ∑ i : Fin m, ((ps i).act t * (ps i).act x) * pj x := hdist
+        _ = ∑ i : Fin m, ∑ x : U, ((ps i).act t * (ps i).act x) * pj x := by
+              exact Finset.sum_comm
+        _ = ∑ i : Fin m, (ps i).act t * ∑ x : U, (ps i).act x * pj x := by
+              refine Finset.sum_congr rfl (fun i _ => ?_)
+              have hreassoc :
+                  (∑ x : U, ((ps i).act t * (ps i).act x) * pj x) =
+                    ∑ x : U, (ps i).act t * ((ps i).act x * pj x) := by
+                refine Finset.sum_congr rfl (fun x _ => ?_)
+                ring_nf
+              rw [hreassoc]
+              simpa [dotProduct, mul_assoc] using
+                (mul_sum (s := (Finset.univ : Finset U))
+                  (f := fun x : U => (ps i).act x * pj x) ((ps i).act t)).symm
+        _ = ∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj := by
+              simp [dotProduct]
+    -- (ii) the diagonal correction gives `m * pj t`.
+    have h_diag : (((m : R) • (1 : Matrix U U R)).mulVec pj) t = (m : R) * pj t := by
+      have hsmul :
+          ((m : R) • (1 : Matrix U U R)).mulVec pj = (m : R) • ((1 : Matrix U U R).mulVec pj) := by
+        simpa [Matrix.mulVec] using
+          (smul_mulVec (b := (m : R)) (M := (1 : Matrix U U R)) (v := pj))
+      have hone : ((1 : Matrix U U R).mulVec pj) = pj := by
+        simp [Matrix.mulVec]
+      simp [hsmul, hone, Pi.smul_apply, smul_eq_mul, mul_assoc]
+    simpa [pj, Pi.sub_apply, h_outer, h_diag] using hsub_t
+  -- Split the “signal” term `i = j` from the interference `i ≠ j`.
+  set f : Fin m → R := fun i => (ps i).act t * dotProduct (ps i).act pj
+  have h_self : dotProduct pj pj = card U := by
+    simpa [pj] using (dotProduct_act_self (s := ps j))
+  have h_split :
+      (∑ i : Fin m, f i) = f j + ∑ i ∈ (Finset.univ.erase j), f i := by
+    simpa [add_comm, add_left_comm, add_assoc] using
+      (Finset.sum_erase_add (s := (Finset.univ : Finset (Fin m))) (a := j) (f := f)).symm
+  have h_filter :
+      (∑ i ∈ (Finset.univ.erase j), f i) = ∑ i : Fin m, if i ≠ j then f i else 0 := by
+    simpa [filter_erase_equiv] using
+      (Finset.sum_filter (s := (Finset.univ : Finset (Fin m))) (p := fun i => i ≠ j) (f := f))
+  have h_sig_int :
+      (∑ i : Fin m, f i) - (m : R) * pj t =
+        ((card U - m : R) * pj t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
+    calc
+      (∑ i : Fin m, f i) - (m : R) * pj t
+          = (f j + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * pj t := by
+              simp
+      _ = (pj t * (card U : R) + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * pj t := by
+            simp [f, h_self, pj]
+      _ = ((card U - m : R) * pj t) + ∑ i ∈ (Finset.univ.erase j), f i := by
+            ring_nf
+      _ = ((card U - m : R) * pj t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
+            simp [h_filter]
+  simp [h_field, h_sig_int, f, pj, disturbance, Pi.add_apply, Pi.smul_apply, smul_eq_mul, sub_eq_add_neg]

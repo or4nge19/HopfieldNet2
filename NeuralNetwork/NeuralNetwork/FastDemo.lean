@@ -98,6 +98,14 @@ def sPos : (NN).State := TwoState.updPos (NN := NN) s (0 : U)
 -- Shannon entropy (kB = 1): S = -∑ p log p
 #eval (NeuralNetwork.FastThermodynamics.shannonEntropy? (U := U) β p) 10
 
+-- Mean energy U and entropy via identity S = βU + log Z (much more robust than log p).
+#eval (NeuralNetwork.FastThermodynamics.meanEnergy? (U := U) β p) 10
+#eval (NeuralNetwork.FastThermodynamics.entropyViaMeanEnergy? (U := U) β p) 10
+
+-- Variance / heat capacity (kB = 1): Var(E) and C = β^2 Var(E).
+#eval (NeuralNetwork.FastThermodynamics.energyVariance? (U := U) β p) 10
+#eval (NeuralNetwork.FastThermodynamics.heatCapacityBeta? (U := U) β p) 10
+
 -- Row-sum sanity check: each row sum should enclose 1.
 #eval (do
   let M ← (NeuralNetwork.FastMarkovMatrix.randomScanMatrix? (U := U) β p 10)

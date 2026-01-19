@@ -975,10 +975,39 @@ fun u => HNfact 0 (Wpj_perturbed ps j u)
 lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) :
   ((Hebbian ps).w).mulVec (ps j).act =
     (card U - m : R) • (ps j).act + disturbance ps j := by
-  unfold Hebbian
-  simp only
+  classical
   ext t
-  rw [mulVec, dotProduct]
-  unfold disturbance
-  simp only [sub_apply, smul_apply, smul_eq_mul, ne_eq, ite_not, Pi.add_apply, Pi.smul_apply]
-  sorry
+  unfold Hebbian
+  simp [Matrix.mulVec, Matrix.dotProduct, outerProduct, disturbance, sub_eq_add_neg, add_comm, add_left_comm,
+    add_assoc, mul_add, add_mul, mul_assoc, mul_left_comm, mul_comm, Finset.sum_add_distrib,
+    Finset.sum_mul, Finset.mul_sum, Finset.sum_sub_distrib, Finset.sum_apply]
+  set f : Fin m → R := fun i => (ps i).act t * dotProduct (ps i).act (ps j).act
+  have h_if :
+      (∑ i : Fin m, if i ≠ j then f i else 0) =
+        ∑ i ∈ (Finset.univ.erase j), f i := by
+    simpa [Fintype.sum, Finset.sum_filter, filter_erase_equiv] using
+      (by
+        exact (Finset.sum_filter (s := (Finset.univ : Finset (Fin m))) (p := fun i => i ≠ j) (f := f)).symm)
+  have h_split :
+      (∑ i : Fin m, f i) =
+        f j + ∑ i ∈ (Finset.univ.erase j), f i := by
+    simpa [Fintype.sum, add_comm, add_left_comm, add_assoc] using
+      (Finset.sum_erase_add (s := (Finset.univ : Finset (Fin m))) (a := j) (f := f)).symm
+  have h_self : dotProduct (ps j).act (ps j).act = card U := dotProduct_act_self (s := ps j)
+  have :
+      (∑ i : Fin m, f i) - (m : R) * (ps j).act t =
+        ((card U - m : R) * (ps j).act t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
+    calc
+      (∑ i : Fin m, f i) - (m : R) * (ps j).act t
+          = (f j + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * (ps j).act t := by
+              simpa [h_split]
+      _ = ((ps j).act t * (card U : R) + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * (ps j).act t := by
+            simp [f, h_self, mul_assoc]
+      _ = ((card U : R) * (ps j).act t - (m : R) * (ps j).act t) + ∑ i ∈ (Finset.univ.erase j), f i := by
+            ring_nf
+      _ = ((card U - m : R) * (ps j).act t) + ∑ i ∈ (Finset.univ.erase j), f i := by
+            ring_nf
+      _ = ((card U - m : R) * (ps j).act t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
+            simp [h_if]
+  simpa [f, disturbance, Pi.add_apply, Pi.smul_apply, smul_eq_mul, sub_eq_add_neg, add_assoc, add_comm,
+    add_left_comm, this]

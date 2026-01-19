@@ -16,7 +16,7 @@ energies at a site `u` (all other coordinates fixed), and we derive:
 - `gibbsEntry?` giving the interval enclosure for the one-step transition probability
   from `s` to a candidate `s'` under the single-site Gibbs update at `u`.
 
-This is the SOTA pattern:
+This is the optimal pattern:
 - proofs in `ℝ`/`CReal` via `toReal`,
 - computation in `FastReal` with certified enclosures.
 -/
