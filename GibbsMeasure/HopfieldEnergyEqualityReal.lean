@@ -32,6 +32,8 @@ namespace GibbsMeasure.Examples.HopfieldEnergyEqualityReal
 open Potential
 open GibbsMeasure.Examples.HopfieldFromParamsReal
 open GibbsMeasure.Examples.HopfieldEnergyBridgeReal
+open scoped BigOperators
+open ENNReal MeasureTheory
 
 variable {U : Type} [DecidableEq U] [Fintype U] [Nonempty U]
 
@@ -273,5 +275,23 @@ theorem interactingHamiltonian_univ_eq_energy
     _ = E (U := U) p η := by simp [E]
 
 end
+
+end GibbsMeasure.Examples.HopfieldEnergyEqualityReal
+
+namespace GibbsMeasure.Examples.HopfieldEnergyEqualityReal
+
+open Potential
+open ENNReal MeasureTheory
+open scoped BigOperators
+
+variable {U : Type} [DecidableEq U] [Fintype U] [Nonempty U]
+
+lemma boltzmannWeight_univ_eq_exp_energy
+    (p : Params (HopfieldNetwork ℝ U)) (β : ℝ) (η : U → ℝ) :
+    Potential.boltzmannWeight (Φ := Φ (U := U) p) β (Finset.univ : Finset U) η
+      =
+      ENNReal.ofReal (Real.exp (-β * E (U := U) p η)) := by
+  -- By definition, `boltzmannWeight = ofReal (exp (-β * H))`, and `H = E` by the bridge theorem.
+  simp [Potential.boltzmannWeight, interactingHamiltonian_univ_eq_energy (U := U) (p := p) (η := η), Φ, E]
 
 end GibbsMeasure.Examples.HopfieldEnergyEqualityReal

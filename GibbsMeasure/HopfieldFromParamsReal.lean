@@ -1,4 +1,7 @@
 import GibbsMeasure.Potential
+import GibbsMeasure.Specification
+import GibbsMeasure.Prereqs.Filtration.Consistent
+
 import NeuralNetwork.NeuralNetwork.Core
 
 /-!
@@ -84,5 +87,143 @@ instance (p : Params (HopfieldNetwork ℝ U)) :
             simpa [s2] using himg
           have : ({i, j} : Finset U) ∈ s := by simp [s, this]
           simpa using this
+
+end GibbsMeasure.Examples.HopfieldFromParamsReal
+
+namespace GibbsMeasure.Examples.HopfieldFromParamsReal
+
+open scoped BigOperators
+open MeasureTheory
+
+variable {U : Type} [DecidableEq U] [Fintype U] [Nonempty U]
+
+private lemma measurable_finset_sum {α β : Type*} [MeasurableSpace β] {s : Finset α}
+    {f : α → β → ℝ} (hf : ∀ a ∈ s, Measurable (f a)) :
+    Measurable (fun x : β => s.sum (fun a => f a x)) := by
+  classical
+  revert hf
+  refine Finset.induction_on s ?_ ?_
+  · intro _hf
+    simp
+  · intro a s ha ih hf
+    have hfa : Measurable (f a) := hf a (by simp [ha])
+    have hfs : ∀ b ∈ s, Measurable (f b) := by
+      intro b hb
+      exact hf b (by simp [hb])
+    have ih' : Measurable (fun x : β => s.sum (fun b => f b x)) := ih hfs
+    simpa [Finset.sum_insert, ha] using hfa.add ih'
+
+/-- The params-induced real-spin potential is an admissible (Georgii) potential. -/
+instance (p : Params (HopfieldNetwork ℝ U)) :
+    Potential.IsPotential (hopfieldPotentialFromParamsR (U := U) p) where
+  measurable Δ := by
+    classical
+    -- Factor through the restriction map `U → ℝ → Δ → ℝ`.
+    let Δset : Set U := (Δ : Set U)
+    -- Define `g : (Δ → ℝ) → ℝ` so that `Φ Δ = g ∘ restrict Δ`.
+    let g : (Δ → ℝ) → ℝ := fun τ =>
+      if h2 : Δ.card = 2 then
+        (- (1 / 2 : ℝ)) *
+          (Δ.attach.sum fun i =>
+            Δ.attach.sum fun j =>
+              if j.1 ≠ i.1 then
+                (p.w i.1 j.1) *
+                  (τ ⟨i.1, i.2⟩) *
+                  (τ ⟨j.1, j.2⟩)
+              else 0)
+      else if h1 : Δ.card = 1 then
+        Δ.attach.sum fun i =>
+          (θu (U := U) p i.1) * (τ ⟨i.1, i.2⟩)
+      else
+        0
+    have hg : Measurable g := by
+      -- Measurability is by finite sums/products of coordinate projections on the finite product space `Δ → ℝ`.
+      classical
+      by_cases h2 : Δ.card = 2
+      · -- pair term
+        have hinner :
+            ∀ i : {x // x ∈ Δ}, Measurable (fun τ : (Δ → ℝ) =>
+              (Δ.attach.sum fun j =>
+                if (j.1 : U) ≠ (i.1 : U) then
+                  (p.w (i.1 : U) (j.1 : U)) *
+                    (τ ⟨i.1, i.2⟩) *
+                    (τ ⟨j.1, j.2⟩)
+                else 0)) := by
+          intro i
+          refine measurable_finset_sum (s := Δ.attach) (β := (Δ → ℝ))
+              (f := fun j τ =>
+                if (j.1 : U) ≠ (i.1 : U) then
+                  (p.w (i.1 : U) (j.1 : U)) *
+                    (τ ⟨i.1, i.2⟩) *
+                    (τ ⟨j.1, j.2⟩)
+                else 0) ?_
+          intro j hj
+          by_cases hji : (j.1 : U) ≠ (i.1 : U)
+          · have hi : Measurable (fun τ : (Δ → ℝ) => τ ⟨i.1, i.2⟩) := by
+              simpa using (measurable_pi_apply (⟨i.1, i.2⟩ : Δ))
+            have hj' : Measurable (fun τ : (Δ → ℝ) => τ ⟨j.1, j.2⟩) := by
+              simpa using (measurable_pi_apply (⟨j.1, j.2⟩ : Δ))
+            simpa [hji, mul_assoc] using (measurable_const.mul (hi.mul hj'))
+          · simp [hji]
+        have houter : Measurable (fun τ : (Δ → ℝ) =>
+            Δ.attach.sum fun i =>
+              (Δ.attach.sum fun j =>
+                if j.1 ≠ i.1 then
+                  (p.w i.1 j.1) *
+                    (τ ⟨i.1, i.2⟩) *
+                    (τ ⟨j.1, j.2⟩)
+                else 0)) := by
+          refine measurable_finset_sum (s := Δ.attach) (β := (Δ → ℝ))
+              (f := fun i τ =>
+                (Δ.attach.sum fun j =>
+                  if j.1 ≠ i.1 then
+                    (p.w i.1 j.1) *
+                      (τ ⟨i.1, i.2⟩) *
+                      (τ ⟨j.1, j.2⟩)
+                  else 0)) ?_
+          intro i hi
+          -- `hinner` already proves measurability of the inner sum
+          simpa using hinner i
+        -- assemble
+        simpa [g, h2] using (measurable_const.mul houter)
+      · by_cases h1 : Δ.card = 1
+        · -- singleton term
+          have hsum : Measurable (fun τ : (Δ → ℝ) =>
+              Δ.attach.sum fun i =>
+                (θu (U := U) p i.1) * (τ ⟨i.1, i.2⟩)) := by
+            refine measurable_finset_sum (s := Δ.attach) (β := (Δ → ℝ))
+                (f := fun i τ =>
+                  (θu (U := U) p i.1) * (τ ⟨i.1, i.2⟩)) ?_
+            intro i hi
+            have hi' : Measurable (fun τ : (Δ → ℝ) => τ ⟨i.1, i.2⟩) := by
+              simpa using (measurable_pi_apply (⟨i.1, i.2⟩ : Δ))
+            simpa [mul_assoc] using (measurable_const.mul hi')
+          simpa [g, h2, h1] using hsum
+        · -- zero term
+          simp [g, h2, h1]
+    have hres :
+        Measurable[cylinderEvents (X := fun _ : U ↦ ℝ) Δset]
+          (Set.restrict (π := fun _ : U ↦ ℝ) Δset) :=
+      MeasureTheory.measurable_restrict_cylinderEvents (X := fun _ : U ↦ ℝ) Δset
+    have hfac :
+        hopfieldPotentialFromParamsR (U := U) p Δ =
+          fun η : U → ℝ => g (Set.restrict (π := fun _ : U ↦ ℝ) Δset η) := by
+      funext η
+      by_cases h2 : Δ.card = 2
+      · simp [hopfieldPotentialFromParamsR, g, h2, Δset, Finset.attach]
+      · by_cases h1 : Δ.card = 1
+        · simp [hopfieldPotentialFromParamsR, g, h1, Δset, Finset.attach]
+        · simp [hopfieldPotentialFromParamsR, g, h2, h1, Δset]
+    simpa [hfac] using (hg.comp hres)
+
+/-- Georgii Gibbs specification induced by Hopfield parameters `(w, θ)` on real spins, at inverse temperature `β`. -/
+noncomputable def hopfieldSpecificationFromParamsR
+    (p : Params (HopfieldNetwork ℝ U)) (β : ℝ) (ν : Measure ℝ)
+    [IsProbabilityMeasure ν]
+    (hZ : ∀ (Λ : Finset U) (η : U → ℝ),
+      Specification.premodifierZ ν
+        (Potential.boltzmannWeight (Φ := hopfieldPotentialFromParamsR (U := U) p) β) Λ η ≠ ⊤) :
+    Specification U ℝ :=
+  Potential.gibbsSpecification (hopfieldPotentialFromParamsR (U := U) p) β ν hZ
 
 end GibbsMeasure.Examples.HopfieldFromParamsReal
