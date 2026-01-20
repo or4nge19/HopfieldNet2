@@ -39,12 +39,18 @@ instance : IsProbabilityMeasure twoPointMeasureReal := by
     twoPointMeasureReal ({(1 : ℝ)} : Set ℝ) = (2⁻¹ : ℝ≥0∞) := by
   classical
   -- direct computation from the definition
-  simp [twoPointMeasureReal]
+  by_cases h : (1 : ℝ) = -1
+  · have : (2 : ℝ) = 0 := by linarith
+    exact (two_ne_zero this).elim
+  · simp [twoPointMeasureReal, h]
 
 @[simp] lemma twoPointMeasureReal_apply_singleton_negOne :
     twoPointMeasureReal ({(-1 : ℝ)} : Set ℝ) = (2⁻¹ : ℝ≥0∞) := by
   classical
-  simp [twoPointMeasureReal]
+  by_cases h : (-1 : ℝ) = 1
+  · have : (2 : ℝ) = 0 := by linarith
+    exact (two_ne_zero this).elim
+  · simp [twoPointMeasureReal, h]
 
 end
 
