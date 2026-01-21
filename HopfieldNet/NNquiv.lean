@@ -25,7 +25,12 @@ structure NeuralNetwork (R U : Type u) [Zero R] extends Quiver.{u+1} U where
   (fout : ∀ _ : U, R → R)
   (pact : R → Prop)
   (pw : ∀ (u v : U), (u ⟶ v) → Prop)
-  (hpact : (∀ u v (f : Hom u v), pw u v f) →
+  /-- The adjacency matrix induced by `pw`: entry `(u,v)` holds iff there exists an arrow `u ⟶ v`
+  satisfying `pw`. -/
+  (pwMat : Matrix U U Prop := fun u v => ∃ f : (u ⟶ v), pw u v f)
+  /-- NEW: Predicate on Matrix: Defines valid weights (e.g., "weights must be between -1 and 1"). -/
+  (pm : Matrix U U R → Prop)
+  (hpact : (∀ u v (f : Hom u v), pw u v f) → ∀ {w : Matrix U U R}, pm w →
    ∀ (σ : (u : U) → Vector R (κ1 u)) (θ : (u : U) → Vector R (κ2 u)) (current_neuron_activations : U → R),
   (∀ u_idx : U, pact (current_neuron_activations u_idx)) → -- Precondition on all current activations
   (∀ u_target : U, pact (fact u_target (current_neuron_activations u_target) -- Pass current_act of target neuron
@@ -48,7 +53,12 @@ structure Params (NN : NeuralNetwork R U) where
   (σ : ∀ u : U, Vector R (NN.κ1 u))
   /-- External parameters for the `fact` function (e.g., activation function parameters). -/
   (θ : ∀ u : U, Vector R (NN.κ2 u))
-  --(hw' : NN.pw w)
+  /-- The equivalent of `hw`: If there is no valid arrow between u and v, the weight must be 0. -/
+  (hw : ∀ u v, ¬ NN.pwMat u v → w u v = 0)
+  /-- 4. Matrix Validity (hw'):
+      The matrix `w` must satisfy the global parameter predicate `pm`. -/
+  (hw' : NN.pm w)
+
 
 namespace NeuralNetwork
 
@@ -72,9 +82,7 @@ namespace State
 variable {NN : NeuralNetwork R U} (wσθ : Params NN) (s : NN.State)
 
 def out (u : U) : R := NN.fout u (s.act u)
-
-def net (u : U) : R := NN.fnet u (fun v => s.out v) s.act (wσθ.σ u)
-
+def net (u : U) : R := NN.fnet u (wσθ.w u) (fun v => s.out v) (wσθ.σ u)
 def onlyUi : Prop := ∀ u : U, ¬ u ∈ NN.Ui → s.act u = 0
 
 variable [DecidableEq U]
@@ -90,7 +98,7 @@ def Up {NN_local : NeuralNetwork R U} (s : NN_local.State) (wσθ : Params NN_lo
       intro v_target
       rw [ite_eq_dite]
       split_ifs with h_eq_upd_neuron
-      · exact NN_local.hpact wσθ.h_arrows wσθ.σ wσθ.θ s.act s.hp u_upd
+      · exact NN_local.hpact wσθ.h_arrows wσθ.hw' wσθ.σ wσθ.θ s.act s.hp u_upd
       · exact s.hp v_target
   }
 

@@ -2,17 +2,16 @@ import HopfieldNet.NNquiv
 import Mathlib.Analysis.Normed.Field.Lemmas
 import Mathlib.LinearAlgebra.Matrix.Defs
 
-
 set_option linter.unusedVariables false
 set_option maxHeartbeats 500000
 
 open Mathlib Finset BigOperators
 
-/-- 1. DEFINE THE DATA SOURCE
+/--
     We keep the Matrix as the source of truth for both weights and topology. -/
 def test.M : Matrix (Fin 3) (Fin 3) ℚ := Matrix.of ![![0,0,4], ![1,0,0], ![-2,3,0]]
 
-/-- 2. DEFINE THE NETWORK
+/--
     We construct the NeuralNetwork instance. Note that we define 'Hom' here
     to satisfy the Quiver extension. -/
 def test : NeuralNetwork ℚ (Fin 3) := {
@@ -48,27 +47,31 @@ def test : NeuralNetwork ℚ (Fin 3) := {
 
   fact := fun u input θ => if input ≥ θ then 1 else 0
   fout := fun u act => act
-
   -- F. Constraints / Predicates
   pact := fun _ => True
   pw := fun _ _ _ => True -- We accept any arrow defined by our Hom
-  hpact := fun _ _ _ _ _ _ => True.intro
+  hpact := fun _ _ _ _ _ _ _ _ => True.intro
+  pwMat := by {
+    intro u v
+    exact (test.M u v ≠ 0)
+  }
+  pm W := True
 }
 
-/-- 3. DEFINE PARAMETERS
-    In NNquiv, 'Params' holds external parameters (σ, θ) and a proof that
-    the arrows satisfy 'pw'. -/
+
 def wθ : Params test where
   h_arrows := fun _ _ _ => True.intro
-
-  -- Thresholds (Theta)
+  w := test.M
   θ u := ⟨#[1], by
     simp only [List.size_toArray, List.length_cons, List.length_nil, zero_add]
     unfold test
     simp only⟩
-
-  -- External inputs (Sigma) - empty here
   σ := fun _ => Vector.emptyWithCapacity 0
+  hw := fun u v h_no_arrow => by
+    unfold test at h_no_arrow
+    simp only [ne_eq, Decidable.not_not] at h_no_arrow
+    exact h_no_arrow
+  hw' := by simp only [test]
 
 /-- 4. INITIAL STATE & HELPERS -/
 

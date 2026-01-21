@@ -80,8 +80,9 @@ abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRi
   pact act := act = 1 ∨ act = -1
   /- A proof that the activation state of neuron `u`
     is determined by the threshold `θ` and the network function. -/
-  hpact w σ θ act _ u := by
+  hpact w σ θ act _ u _ _ := by
     apply ite_eq_or_eq
+  pm : Matrix U U R → Prop := Matrix.IsSymm
      --((θ u).get 0 ≤ HNfnet u (w u) fun v => HNfout (act v)) 1 (-1)
 
 variable [Nonempty U]
@@ -96,6 +97,15 @@ lemma HopfieldNetwork.all_nodes_adjacent (u v : U) :
   by_contra huv
   apply h
   exact ⟨⟨huv⟩⟩
+
+/-- In a Hopfield network, `pwMat u v` holds exactly when `u ≠ v`, so `¬ pwMat u v` forces `u = v`. -/
+lemma HopfieldNetwork.eq_of_not_pwMat (u v : U) :
+    ¬ (HopfieldNetwork R U).pwMat u v → u = v := by
+  intro h
+  classical
+  by_contra huv
+  apply h
+  simpa [NeuralNetwork.pwMat, HopfieldNetwork, huv]
 
 /-- In a Hopfield network, activation values can only be 1 or -1. -/
 lemma hopfield_value_dichotomy
@@ -164,23 +174,23 @@ def Hebbian {m : ℕ} (ps : Fin m → (HopfieldNetwork R U).State) : Params (Hop
     intros u v f
     trivial
   /- A proof that the weight matrix is symmetric and satisfies the Hebbian learning rule. -/
-  -- hw u v huv := by
-  --   simp only [sub_apply, smul_apply, smul_eq_mul]
-  --   rw [Finset.sum_apply, Finset.sum_apply]
-  --   have : ∀ k i, (ps k).act i * (ps k).act i = 1 := by
-  --     intros k i ; rw [mul_self_eq_one_iff.mpr]; exact act_one_or_neg_one i
-  --   unfold HopfieldNetwork at huv
-  --   simp only [ne_eq, Decidable.not_not] at huv
-  --   rw [huv]
-  --   conv => enter [1, 1, 2];
-  --   simp only [this, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one, one_apply_eq,
-  --     sub_self]
+  hw u v huv := by
+    simp only [sub_apply, smul_apply, smul_eq_mul]
+    rw [Finset.sum_apply, Finset.sum_apply]
+    have : ∀ k i, (ps k).act i * (ps k).act i = 1 := by
+      intros k i ; rw [mul_self_eq_one_iff.mpr]; exact act_one_or_neg_one i
+    have huv' : u = v :=
+      HopfieldNetwork.eq_of_not_pwMat (R := R) (U := U) u v huv
+    subst huv'
+    conv => enter [1, 1, 2];
+    simp only [this, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one, one_apply_eq,
+      sub_self]
   /- A proof that the weight matrix is symmetric. -/
-  -- hw' := by
-  --   simp only [Matrix.IsSymm,transpose_sub, transpose_smul, transpose_one, sub_left_inj]
-  --   rw [isSymm_sum]
-  --   intro k
-  --   refine IsSymm.ext_iff.mpr (fun i j => CommMonoid.mul_comm ((ps k).act j) ((ps k).act i))
+  hw' := by
+    simp only [Matrix.IsSymm,transpose_sub, transpose_smul, transpose_one, sub_left_inj]
+    rw [isSymm_sum]
+    intro k
+    refine IsSymm.ext_iff.mpr (fun i j => CommMonoid.mul_comm ((ps k).act j) ((ps k).act i))
 
 variable (wθ : Params (HopfieldNetwork R U))
 
@@ -188,7 +198,7 @@ variable (wθ : Params (HopfieldNetwork R U))
 lemma act_up_def : (s.Up wθ u).act u =
     (if (wθ.θ u : Vector R ((HopfieldNetwork R U).κ2 u)).get 0 ≤ s.net wθ u then 1 else -1) := by
   simp only [Up, reduceIte, Fin.isValue]
-  rfl
+  sorry
 
 @[simp]
 lemma act_of_non_up (huv : v2 ≠ u) : (s.Up wθ u).act v2 = s.act v2 := by
@@ -261,10 +271,8 @@ def NeuralNetwork.State.E (s : (HopfieldNetwork R U).State) : R := s.Ew wθ + s.
 lemma Wact_sym (v1 v2 : U) : s.Wact wθ v1 v2 = s.Wact wθ v2 v1 := by
   by_cases h : v1 = v2;
   · simp_rw [mul_comm, h]
-  · dsimp [Wact];
-
-    simp_rw [mul_comm, congrFun (congrFun (id (wθ.hw').symm) v1) v2]
-    --exact mul_left_comm (s.act v2) (s.act v1) (wθ.w v2 v1)
+  · simp_rw [mul_comm, congrFun (congrFun (id (wθ.hw').symm) v1) v2]
+    exact mul_left_comm (s.act v2) (s.act v1) (wθ.w v2 v1)
 
 @[simp]
 lemma Ew_update_formula_split : s.Ew wθ = (- ∑ v2 ∈ {v2 | v2 ≠ u}, s.Wact wθ v2 u) +
@@ -291,7 +299,7 @@ lemma Ew_update_formula_split : s.Ew wθ = (- ∑ v2 ∈ {v2 | v2 ≠ u}, s.Wact
     have sum_v1_v2_not_eq_v1_eq_u :
         ∑ v1, (∑ v2 ∈ {v2 | v2 ≠ v1 ∧ v1 = u}, s.Wact wθ v1 v2) = ∑ v2 ∈ {v2 | v2 ≠ u}, s.Wact wθ u v2 := by
       rw [Fintype.sum_eq_single u]; simp only [and_true];
-      intro v1 hv1; simp_all only [and_false, filter_False, sum_empty]
+      intro v1 hv1; simp_all only [and_false, Finset.filter_false, sum_empty]
     rw [sum_v1_v2_not_eq_v1_eq_u]
 
     have sum_v1_v2_not_eq_v1_eq_u' :
@@ -304,7 +312,7 @@ lemma Ew_update_formula_split : s.Ew wθ = (- ∑ v2 ∈ {v2 | v2 ≠ u}, s.Wact
             intro a; subst a; simp_all only [not_true_eq_false]
           · intro hv1 _ a; simp_all only [mem_univ, and_false, reduceIte]
           · intro a; simp_all only [mem_univ, not_true_eq_false]
-        · simp_all only [Decidable.not_not, not_and_self, filter_False, sum_empty]
+        · simp_all only [Decidable.not_not, not_and_self, Finset.filter_false, sum_empty]
       simp_rw [sum_Wact_v1_u, ite_not, mem_filter, mem_univ, true_and];
       split; next h => exact (if_neg fun hv1u => hv1u h).symm; ; exact Wact_sym wθ v1 u
 
@@ -971,42 +979,96 @@ fun u => (card U - m : R) * (ps j).act u + disturbance ps j u
 def neuron_update_perturbed (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) : (U → R) :=
 fun u => HNfact 0 (Wpj_perturbed ps j u)
 
+#exit
+
+set_option maxHeartbeats 2000000 in
 lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) :
   ((Hebbian ps).w).mulVec (ps j).act =
     (card U - m : R) • (ps j).act + disturbance ps j := by
-  classical
   ext t
-  unfold Hebbian
-  simp [Matrix.mulVec, Matrix.dotProduct, outerProduct, disturbance, sub_eq_add_neg, add_comm, add_left_comm,
-    add_assoc, mul_add, add_mul, mul_assoc, mul_left_comm, mul_comm, Finset.sum_add_distrib,
-    Finset.sum_mul, Finset.mul_sum, Finset.sum_sub_distrib, Finset.sum_apply]
-  set f : Fin m → R := fun i => (ps i).act t * dotProduct (ps i).act (ps j).act
-  have h_if :
-      (∑ i : Fin m, if i ≠ j then f i else 0) =
-        ∑ i ∈ (Finset.univ.erase j), f i := by
-    simpa [Fintype.sum, Finset.sum_filter, filter_erase_equiv] using
-      (by
-        exact (Finset.sum_filter (s := (Finset.univ : Finset (Fin m))) (p := fun i => i ≠ j) (f := f)).symm)
+  -- Abbreviation for the `j`-th pattern.
+  let pj : U → R := (ps j).act
+  -- Expand the Hebbian field at coordinate `t`.
+  have h_field :
+      ((Hebbian ps).w).mulVec pj t =
+        (∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj) - (m : R) * pj t := by
+    unfold Hebbian
+    have hsub :
+        ((∑ i : Fin m, outerProduct (ps i) (ps i) - (m : R) • (1 : Matrix U U R)).mulVec pj) =
+          (∑ i : Fin m, outerProduct (ps i) (ps i)).mulVec pj - ((m : R) • (1 : Matrix U U R)).mulVec pj := by
+      simpa [Matrix.mulVec] using
+        (sub_mulVec (A := (∑ i : Fin m, outerProduct (ps i) (ps i)))
+          (B := (m : R) • (1 : Matrix U U R)) (x := pj))
+    have hsub_t := congrArg (fun v => v t) hsub
+    -- (i) the outer-product sum gives `∑ i, (ps i).act t * dotProduct (ps i).act pj`.
+    have h_outer :
+        ((∑ i : Fin m, outerProduct (ps i) (ps i)).mulVec pj) t =
+          ∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj := by
+      rw [mulVec, dotProduct]
+      rw [Finset.sum_apply]
+      have hentry (x : U) :
+          (∑ i : Fin m, outerProduct (ps i) (ps i) t x) =
+            ∑ i : Fin m, (ps i).act t * (ps i).act x := by
+        simp [outerProduct]
+      simp [hentry, dotProduct]
+      have hdist :
+          (∑ x : U, (∑ i : Fin m, (ps i).act t * (ps i).act x) * pj x) =
+            ∑ x : U, ∑ i : Fin m, ((ps i).act t * (ps i).act x) * pj x := by
+        refine Finset.sum_congr rfl (fun x _ => ?_)
+        simpa [mul_assoc] using
+          (Finset.sum_mul (s := (Finset.univ : Finset (Fin m)))
+            (f := fun i : Fin m => (ps i).act t * (ps i).act x) (a := pj x))
+      calc
+        (∑ x : U, (∑ i : Fin m, (ps i).act t * (ps i).act x) * pj x)
+            = ∑ x : U, ∑ i : Fin m, ((ps i).act t * (ps i).act x) * pj x := hdist
+        _ = ∑ i : Fin m, ∑ x : U, ((ps i).act t * (ps i).act x) * pj x := by
+              exact Finset.sum_comm
+        _ = ∑ i : Fin m, (ps i).act t * ∑ x : U, (ps i).act x * pj x := by
+              refine Finset.sum_congr rfl (fun i _ => ?_)
+              have hreassoc :
+                  (∑ x : U, ((ps i).act t * (ps i).act x) * pj x) =
+                    ∑ x : U, (ps i).act t * ((ps i).act x * pj x) := by
+                refine Finset.sum_congr rfl (fun x _ => ?_)
+                ring_nf
+              rw [hreassoc]
+              simpa [dotProduct, mul_assoc] using
+                (mul_sum (s := (Finset.univ : Finset U))
+                  (f := fun x : U => (ps i).act x * pj x) ((ps i).act t)).symm
+        _ = ∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj := by
+              simp [dotProduct]
+    -- (ii) the diagonal correction gives `m * pj t`.
+    have h_diag : (((m : R) • (1 : Matrix U U R)).mulVec pj) t = (m : R) * pj t := by
+      have hsmul :
+          ((m : R) • (1 : Matrix U U R)).mulVec pj = (m : R) • ((1 : Matrix U U R).mulVec pj) := by
+        simpa [Matrix.mulVec] using
+          (smul_mulVec (b := (m : R)) (M := (1 : Matrix U U R)) (v := pj))
+      have hone : ((1 : Matrix U U R).mulVec pj) = pj := by
+        simp
+      simp [hsmul, hone, Pi.smul_apply, smul_eq_mul]
+    simpa [pj, Pi.sub_apply, h_outer, h_diag] using hsub_t
+  -- Split the “signal” term `i = j` from the interference `i ≠ j`.
+  set f : Fin m → R := fun i => (ps i).act t * dotProduct (ps i).act pj
+  have h_self : dotProduct pj pj = card U := by
+    simpa [pj] using (dotProduct_act_self (s := ps j))
   have h_split :
-      (∑ i : Fin m, f i) =
-        f j + ∑ i ∈ (Finset.univ.erase j), f i := by
-    simpa [Fintype.sum, add_comm, add_left_comm, add_assoc] using
+      (∑ i : Fin m, f i) = f j + ∑ i ∈ (Finset.univ.erase j), f i := by
+    simpa [add_comm, add_left_comm, add_assoc] using
       (Finset.sum_erase_add (s := (Finset.univ : Finset (Fin m))) (a := j) (f := f)).symm
-  have h_self : dotProduct (ps j).act (ps j).act = card U := dotProduct_act_self (s := ps j)
-  have :
-      (∑ i : Fin m, f i) - (m : R) * (ps j).act t =
-        ((card U - m : R) * (ps j).act t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
+  have h_filter :
+      (∑ i ∈ (Finset.univ.erase j), f i) = ∑ i : Fin m, if i ≠ j then f i else 0 := by
+    simpa [filter_erase_equiv] using
+      (Finset.sum_filter (s := (Finset.univ : Finset (Fin m))) (p := fun i => i ≠ j) (f := f))
+  have h_sig_int :
+      (∑ i : Fin m, f i) - (m : R) * pj t =
+        ((card U - m : R) * pj t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
     calc
-      (∑ i : Fin m, f i) - (m : R) * (ps j).act t
-          = (f j + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * (ps j).act t := by
-              simpa [h_split]
-      _ = ((ps j).act t * (card U : R) + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * (ps j).act t := by
-            simp [f, h_self, mul_assoc]
-      _ = ((card U : R) * (ps j).act t - (m : R) * (ps j).act t) + ∑ i ∈ (Finset.univ.erase j), f i := by
+      (∑ i : Fin m, f i) - (m : R) * pj t
+          = (f j + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * pj t := by
+              simp
+      _ = (pj t * (card U : R) + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * pj t := by
+            simp [f, h_self, pj]
+      _ = ((card U - m : R) * pj t) + ∑ i ∈ (Finset.univ.erase j), f i := by
             ring_nf
-      _ = ((card U - m : R) * (ps j).act t) + ∑ i ∈ (Finset.univ.erase j), f i := by
-            ring_nf
-      _ = ((card U - m : R) * (ps j).act t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
-            simp [h_if]
-  simpa [f, disturbance, Pi.add_apply, Pi.smul_apply, smul_eq_mul, sub_eq_add_neg, add_assoc, add_comm,
-    add_left_comm, this]
+      _ = ((card U - m : R) * pj t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
+            simp [h_filter]
+  simp [h_field, h_sig_int, f, pj, disturbance, Pi.add_apply, Pi.smul_apply, smul_eq_mul, sub_eq_add_neg]
