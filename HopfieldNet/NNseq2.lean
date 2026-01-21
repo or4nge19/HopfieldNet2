@@ -325,11 +325,9 @@ def showState (s : SeqState (R := ℚ) exArch) : String :=
     s!"Layer {l}: {acts}"
   ))
 
--- 6. RUN THE EXAMPLE
 def finalState : SeqState (R := ℚ) exArch :=
   forwardPass (R := ℚ) exArch exParams exInputState exOnlyUi
 
--- Print the result
 #eval showState finalState
 
 end SequentialCase
