@@ -29,7 +29,8 @@ structure NeuralNetwork (R U : Type u) [Zero R] extends Quiver.{u+1} U where
    ∀ (σ : (u : U) → Vector R (κ1 u)) (θ : (u : U) → Vector R (κ2 u)) (current_neuron_activations : U → R),
   (∀ u_idx : U, pact (current_neuron_activations u_idx)) → -- Precondition on all current activations
   (∀ u_target : U, pact (fact u_target (current_neuron_activations u_target) -- Pass current_act of target neuron
-                               (fnet u_target (fun v => fout v (current_neuron_activations v)) current_neuron_activations (σ u_target))
+                               (fnet u_target (fun v => fout v (current_neuron_activations v))
+                                current_neuron_activations (σ u_target))
                                (θ u_target))))
 
 variable {R U : Type} [Zero R]
@@ -47,6 +48,7 @@ structure Params (NN : NeuralNetwork R U) where
   (σ : ∀ u : U, Vector R (NN.κ1 u))
   /-- External parameters for the `fact` function (e.g., activation function parameters). -/
   (θ : ∀ u : U, Vector R (NN.κ2 u))
+  --(hw' : NN.pw w)
 
 namespace NeuralNetwork
 

@@ -84,7 +84,6 @@ abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRi
     apply ite_eq_or_eq
      --((θ u).get 0 ≤ HNfnet u (w u) fun v => HNfout (act v)) 1 (-1)
 
-
 variable [Nonempty U]
 
 /--

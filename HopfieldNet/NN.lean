@@ -87,7 +87,8 @@ def onlyUi : Prop := ∀ u : U, ¬ u ∈ NN.Ui → s.act u = 0
 
 variable [DecidableEq U]
 
-def Up {NN_local : NeuralNetwork R U} (s : NN_local.State) (wσθ : Params NN_local) (u_upd : U) : NN_local.State :=
+def Up {NN_local : NeuralNetwork R U} (s : NN_local.State) (wσθ : Params NN_local) (u_upd : U) :
+    NN_local.State :=
   { act := fun v => if v = u_upd then
                       NN_local.fact u_upd (s.act u_upd)
                         (NN_local.fnet u_upd (wσθ.w u_upd) (fun n => s.out n) (wσθ.σ u_upd))

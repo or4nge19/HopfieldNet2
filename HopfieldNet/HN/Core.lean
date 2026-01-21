@@ -933,7 +933,6 @@ lemma Hebbian_stable (hm : m < card U) (ps : Fin m → (HopfieldNetwork R U).Sta
   apply stateisStablecondition ps (ps j) (card U - m) hmn0
   · intros u; rw [funext_iff] at this; exact this u
 
-
 lemma dotProduct_act_self (s : (HopfieldNetwork R U).State) :
   dotProduct s.act s.act = card U := by
   unfold dotProduct
@@ -961,7 +960,6 @@ set_option maxHeartbeats 2000000 in
 lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) :
   ((Hebbian ps).w).mulVec (ps j).act =
     (card U - m : R) • (ps j).act + disturbance ps j := by
-  classical
   ext t
   -- Abbreviation for the `j`-th pattern.
   let pj : U → R := (ps j).act
@@ -1020,8 +1018,8 @@ lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) 
         simpa [Matrix.mulVec] using
           (smul_mulVec (b := (m : R)) (M := (1 : Matrix U U R)) (v := pj))
       have hone : ((1 : Matrix U U R).mulVec pj) = pj := by
-        simp [Matrix.mulVec]
-      simp [hsmul, hone, Pi.smul_apply, smul_eq_mul, mul_assoc]
+        simp
+      simp [hsmul, hone, Pi.smul_apply, smul_eq_mul]
     simpa [pj, Pi.sub_apply, h_outer, h_diag] using hsub_t
   -- Split the “signal” term `i = j` from the interference `i ≠ j`.
   set f : Fin m → R := fun i => (ps i).act t * dotProduct (ps i).act pj
