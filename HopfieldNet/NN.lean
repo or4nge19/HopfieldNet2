@@ -42,8 +42,14 @@ structure NeuralNetwork (R U : Type) [Zero R] extends Digraph U where
   /-- Predicate on weight matrices. -/
   (pw : Matrix U U R → Prop)
   /-- If all activations satisfy `pact`, then the activations computed by `fact` also satisfy `pact`. -/
-  (hpact : ∀ (w : Matrix U U R) (_ : ∀ u v, ¬ Adj u v → w u v = 0) (_ : pw w)
-   (σ : (u : U) → Vector R (κ1 u)) (θ : (u : U) → Vector R (κ2 u)) (current_neuron_activations : U → R),
+  (hpact : ∀
+  (w : Matrix U U R)
+  (_ : ∀ u v, ¬ Adj u v → w u v = 0)
+  (_ : pw w)
+  (σ : (u : U) → Vector R (κ1 u))
+  (θ : (u : U) → Vector R (κ2 u))
+
+  (current_neuron_activations : U → R),
   (∀ u_idx : U, pact (current_neuron_activations u_idx)) → -- Precondition on all current activations
   (∀ u_target : U, pact (fact u_target (current_neuron_activations u_target) -- Pass current_act of target neuron
                                (fnet u_target (w u_target) (fun v => fout v (current_neuron_activations v)) (σ u_target))
