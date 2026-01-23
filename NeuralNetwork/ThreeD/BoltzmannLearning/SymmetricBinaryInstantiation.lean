@@ -34,7 +34,7 @@ noncomputable section
 variable {U : Type} [Fintype U] [DecidableEq U] [Nonempty U]
 
 /-
-We now *do* import `NeuralNetwork.NeuralNetwork.BoltzmannMachine` (it builds), and we use its
+We import `NeuralNetwork.NeuralNetwork.BoltzmannMachine` , and we use its
 canonical SymmetricBinary Hopfield Hamiltonian `HopfieldEnergy.hamiltonian`.
 
 To apply `VectorGibbs`/`VectorGibbsLearning`, we package parameters into a finite-dimensional
@@ -79,17 +79,13 @@ theorem hamiltonian_eq_vectorGibbs_energy
     VectorGibbs.energy (X := Config U) (Θ := Θ U) (stat := stat (U := U)) (thetaOfParams (U := U) p) c := by
   classical
   unfold HopfieldEnergy.hamiltonian
-  -- rewrite the state activation into `spin` (1/-1)
   have hact : (stateOfConfig (U := U) c).act = spin (U := U) c := by
     funext u
     by_cases hc : c u <;> simp [stateOfConfig, TwoStateBridge.stateOfConfig, spin, hc]
-  -- Now expand both sides into sums and normalize.
   -- The key identity used for the RHS is `EuclideanSpace.inner_toLp_toLp`.
   simp [VectorGibbs.energy, stat, thetaOfParams, hact, spin, NN, TwoState.fin0,
     EuclideanSpace.inner_toLp_toLp, Matrix.dotProduct_block]
-  -- expand remaining `dotProduct` / `mulVec` and normalize sums
   simp [dotProduct, Matrix.mulVec, Fintype.sum_prod_type, Finset.mul_sum]
-  -- finish by normalizing multiplication order inside the double sums (commutativity of `ℝ`)
   simp [spin, NN, mul_assoc, mul_left_comm, mul_comm, add_comm]
 
 end
