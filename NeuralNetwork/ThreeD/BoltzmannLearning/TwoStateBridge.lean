@@ -4,7 +4,7 @@ import NeuralNetwork.NeuralNetwork.TwoState
 /-!
 ## Bridge: `NeuralNetwork.NeuralNetwork.TwoState` → `ThreeD.BoltzmannLearning`
 
-Your `TwoState.lean` already provides:
+`TwoState.lean` already provides:
 
 - a general two-state NN interface (`TwoStateNeuralNetwork`)
 - a one-site Gibbs update `gibbsUpdate` and sweeps `gibbsSweep`
@@ -15,8 +15,6 @@ This file connects that work to the BM-learning vocabulary by:
 - interpreting a Bool-configuration `U → Bool` as a `NN.State` using `σ_pos`/`σ_neg`
 - using `EnergySpec'.E` (pushed along `f : R →+* ℝ`) as an energy on Bool-configurations
 
-This is the principled way to avoid misformalization:
-we don’t “re-derive” Gibbs or energies; we *reuse* the existing TwoState API.
 -/
 
 namespace NeuralNetwork
