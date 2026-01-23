@@ -202,6 +202,26 @@ theorem isStationary_iff_invariant (P : Matrix n n ℝ) (π : stdSimplex ℝ n)
     simpa [IsStationary, Matrix.mulVec, dotProduct, Matrix.transpose,
            Matrix.transpose_apply] using hcoord j
 
+/-!
+### (A) Finite-state existence/uniqueness of invariant measure
+
+We expose the Perron–Frobenius existence/uniqueness theorem (proved in `MCMC.Finite.Core` for the
+simplex) as a statement about `Kernel.Invariant` for the associated kernel on the finite space.
+-/
+
+theorem exists_unique_invariant_measure_of_irreducible
+    [Nonempty n] {P : Matrix n n ℝ} (hP : IsStochastic P) (h_irred : Matrix.IsIrreducible P) :
+    ∃! (π : stdSimplex ℝ n),
+      Kernel.Invariant (matrixToKernel P hP) (vecToMeasure π) := by
+  classical
+  obtain ⟨π, hπ_stat, hπ_unique⟩ :=
+    exists_unique_stationary_distribution_of_irreducible (n := n) (P := P) hP h_irred
+  refine ⟨π, (isStationary_iff_invariant (n := n) (P := P) (π := π) hP).1 hπ_stat, ?_⟩
+  intro π' hπ'_inv
+  have hπ'_stat : IsStationary P π' :=
+    (isStationary_iff_invariant (n := n) (P := P) (π := π') hP).2 hπ'_inv
+  exact hπ_unique π' hπ'_stat
+
 /-- Matrix reversibility is equivalent to kernel reversibility -/
 theorem isReversible_iff_kernel_reversible (P : Matrix n n ℝ) (π : stdSimplex ℝ n)
     (hP : IsStochastic P) :
