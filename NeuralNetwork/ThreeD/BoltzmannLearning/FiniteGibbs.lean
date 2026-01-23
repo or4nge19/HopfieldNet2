@@ -50,7 +50,6 @@ noncomputable def Z (φ : X → ℝ) (t : ℝ) : ℝ :=
 
 lemma Z_pos (φ : X → ℝ) (t : ℝ) : 0 < Z (X := X) φ t := by
   classical
-  -- all terms are positive
   have : 0 < (univ : Finset X).sum (fun x => weight (X := X) φ t x) := by
     refine Finset.sum_pos ?_ (Finset.univ_nonempty)
     intro x hx
@@ -68,12 +67,10 @@ lemma hasDerivAt_Z (φ : X → ℝ) (t : ℝ) :
     HasDerivAt (fun s : ℝ => Z (X := X) φ s)
       ((univ : Finset X).sum (fun x => (-φ x) * weight (X := X) φ t x)) t := by
   classical
-  -- differentiate each term and sum
   have hterm :
       ∀ x ∈ (univ : Finset X),
         HasDerivAt (fun s : ℝ => weight (X := X) φ s x) ((-φ x) * weight (X := X) φ t x) t := by
     intro x _hx
-    -- weight(s) = exp (-(s * φ x))
     have hmul : HasDerivAt (fun s : ℝ => s * φ x) (φ x) t := by
       simpa [id, one_mul] using (hasDerivAt_id t).mul_const (φ x)
     have hneg : HasDerivAt (fun s : ℝ => -(s * φ x)) (-(φ x)) t := hmul.neg
@@ -82,11 +79,8 @@ lemma hasDerivAt_Z (φ : X → ℝ) (t : ℝ) :
     have hcomp : HasDerivAt (fun s : ℝ => Real.exp (-(s * φ x)))
         (Real.exp (-(t * φ x)) * (-(φ x))) t :=
       by
-        -- `comp` produces a `Function.comp`; simplify it away.
         simpa [Function.comp] using (hexp.comp t hneg)
-    -- massage into the chosen normal form `(-φ x) * weight φ t x`
     simpa [weight, mul_assoc, mul_left_comm, mul_comm] using hcomp
-  -- Now sum over `x ∈ univ`
   have hsum :
       HasDerivAt (fun s : ℝ => (univ : Finset X).sum (fun x => weight (X := X) φ s x))
         ((univ : Finset X).sum (fun x => (-φ x) * weight (X := X) φ t x)) t := by
@@ -107,7 +101,6 @@ theorem hasDerivAt_logZ (φ : X → ℝ) (t : ℝ) :
       HasDerivAt (fun s : ℝ => Real.log (Z (X := X) φ s))
         (((univ : Finset X).sum (fun x => (-φ x) * weight (X := X) φ t x)) / Z (X := X) φ t) t :=
     (hZ.log hZne)
-  -- `(-a) / b = -(a / b)` turns the derivative into `-(expectation φ t)` by definitional unfolding.
   simpa [expectation, Z, neg_div] using hlog
 
 end FiniteGibbs
