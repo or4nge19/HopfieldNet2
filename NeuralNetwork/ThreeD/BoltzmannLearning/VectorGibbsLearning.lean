@@ -35,7 +35,6 @@ omit [DecidableEq X] in
 theorem hasGradientAt_negLogLik (stat : X → Θ) (x : X) (θ : Θ) :
     HasGradientAt (fun θ' : Θ => negLogLik (X := X) (Θ := Θ) stat x θ')
       (stat x - expectation (X := X) (Θ := Θ) stat θ) θ := by
-  -- prove via Fréchet derivatives (`HasGradientAt` is definitionaly `HasFDerivAt` via `toDual`)
   rw [hasGradientAt_iff_hasFDerivAt]
   have h1 :
       HasFDerivAt (fun θ' : Θ => inner ℝ (stat x) θ') (toDual ℝ Θ (stat x)) θ := by
@@ -45,9 +44,7 @@ theorem hasGradientAt_negLogLik (stat : X → Θ) (x : X) (θ : Θ) :
       HasFDerivAt (fun θ' : Θ => Real.log (Z (X := X) (Θ := Θ) stat θ'))
         (toDual ℝ Θ (-(expectation (X := X) (Θ := Θ) stat θ))) θ :=
     (hasGradientAt_logZ (X := X) (Θ := Θ) stat θ).hasFDerivAt
-  -- sum rule
   have hsum := h1.add h2
-  -- rewrite both the function and the derivative
   simpa [negLogLik, sub_eq_add_neg, map_add, map_neg] using hsum
 
 end VectorGibbs
