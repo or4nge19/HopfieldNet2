@@ -10,10 +10,10 @@ This file connects:
 - the **linear algebra bridge** in `NNQuiver.lean` (matrix-as-linear-map via `mulVec`)
 - the **differentiable programming core** in `NN.lean` (`CompBlock`)
 
-It provides a clean, SOTA entrypoint for “graph/quiver → linear operator → differentiable block”.
+It an entrypoint for “graph/quiver → linear operator → differentiable block”.
 
 We intentionally start with the *linear* case because it yields a fully-verified differentiability
-certificate without any recursion/differentiability-of-`WellFounded.fix` overhead.
+certificate without any recursion/differentiability-of-`WellFounded.fix`.
 -/
 
 namespace MCNN
@@ -66,7 +66,6 @@ lemma fderiv_apply_apply
           IsBoundedBilinearMap ℝ
             (fun p : ((U → ℝ) →L[ℝ] (U → ℝ)) × (U → ℝ) => p.1 p.2)))
         (p := (A, x)))
-  -- Evaluate the derivative and unfold `deriv_apply`.
   simp [hf, IsBoundedBilinearMap.deriv_apply]
 
 /-! ### Jacobian (as a continuous linear map) of the parameterized linear block -/
