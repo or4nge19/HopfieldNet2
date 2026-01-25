@@ -6,7 +6,7 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 /-!
 ## Boltzmann Machine learning (Ackley–Hinton–Sejnowski 1985): core, nontrivial definitions
 
-This module is designed to integrate the BM learning paper *without misformalization* by:
+This module is designed to integrate the BM learning paper by implementing the following design choices:
 
 - never using informal “probabilities” `p_ij` as raw numbers without stating the ambient measure;
 - keeping **positive phase** (clamped/data) and **negative phase** (free-running/model) as explicit measures;
@@ -14,7 +14,7 @@ This module is designed to integrate the BM learning paper *without misformaliza
 
 We intentionally separate:
 
-- **Definitions** (this file, compile-safe)
+- **Definitions** (this file)
 - **Theorems** (to be added next: gradient of KL / logZ and the classic learning rule)
 
 This keeps the formalization deep and audit-friendly: every symbol has a type and a scope.
@@ -109,7 +109,7 @@ Then the “canonical” update direction is:
 
 `E_pos[φ] - E_neg[φ]`.
 
-We package this as a map `Θ → Θ` supplied by the user, together with the statement that it matches
+We bundle this as a map `Θ → Θ` supplied by the user, together with the statement that it matches
 this expectation-difference pattern for the chosen statistics.
 
 This is the right place to later prove the theorem “this equals the gradient of KL / log-likelihood”
