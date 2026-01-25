@@ -5,7 +5,7 @@ import GibbsMeasure.Specification
 /-!
 ## Bridge: GibbsMeasure.Specification → ThreeD indexed stochastic dynamics (infinite lattices)
 
-In the Georgii/DLR approach (your `GibbsMeasure` folder), a **specification**
+In the Georgii/DLR `GibbsMeasure` approach, a **specification**
 
 `γ : Specification S E`
 
@@ -59,13 +59,7 @@ lemma isGibbsMeasure_iff_forall_bind_kernelFull
     Specification.IsGibbsMeasure (S := S) (E := E) γ μ
       ↔
       ∀ Λ : Finset S, μ.bind (kernelFull (S := S) (E := E) γ Λ) = μ := by
-  -- unfold `kernelFull` and use the library lemma.
-  -- `Specification.isGibbsMeasure_iff_forall_bind_eq` is stated for `γ Λ` with its own measurability,
-  -- but `bind` is defined using the kernel directly and `comap id _` is definitional on the measure.
-  -- We rewrite by `rfl` after unfolding.
   classical
-  -- First, use the existing fixed-point characterization.
-  -- Then unfold `kernelFull`; the `bind` equality matches by definitional reduction.
   simpa [kernelFull] using
     (Specification.isGibbsMeasure_iff_forall_bind_eq
       (S := S) (E := E) (γ := γ) (μ := μ) hγ)
@@ -80,7 +74,6 @@ lemma isGibbsMeasure_iff_stationaryIndexed_kernelFull
       ThreeD.IsStationaryIndexed
         (Θ := PUnit) (ι := Finset S) (X := (S → E))
         (toIndexedStochasticDynamics (S := S) (E := E) γ) PUnit.unit μ := by
-  -- `Kernel.Invariant` is definitional `bind =`.
   simpa [ThreeD.IsStationaryIndexed, Bridges.GibbsMeasure.toIndexedStochasticDynamics,
     kernelFull, ProbabilityTheory.Kernel.Invariant] using
     (isGibbsMeasure_iff_forall_bind_kernelFull (S := S) (E := E) (γ := γ) (μ := μ) hγ)
