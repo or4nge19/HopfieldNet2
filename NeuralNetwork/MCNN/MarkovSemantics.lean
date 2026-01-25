@@ -3,8 +3,8 @@ import Mathlib.CategoryTheory.MarkovCategory.Basic
 /-!
 ## MarkovCategory integration (minimal, compile-safe)
 
-This is a small “hook point” for later probabilistic semantics:
-it packages the core MarkovCategory lemma (`discard_natural`) in a way that is
+This is an entry point for later probabilistic semantics:
+it bundles the core MarkovCategory lemma (`discard_natural`) in a way that is
 immediately useful when viewing a stochastic/dynamical *step* as a morphism.
 
 The goal is to make it easy to later interpret neural dynamics / kernels as
