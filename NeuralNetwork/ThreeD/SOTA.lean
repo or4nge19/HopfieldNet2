@@ -5,7 +5,7 @@ import NeuralNetwork.ThreeD.Bridges.DeterministicKernel
 import NeuralNetwork.ThreeD.BoltzmannLearning.SOTA
 
 /-!
-## ThreeD “SOTA” entrypoint
+## ThreeD with entrypoint to the different layers
 
 This is the stable import surface for the **unified 3D vocabulary**:
 
@@ -13,6 +13,6 @@ This is the stable import surface for the **unified 3D vocabulary**:
 - `ThreeD.Bridges.*`: small adapters from existing stacks (MCNN, MCMC, …)
 - additional bridges into `GibbsMeasure`, `SpinGlass`, `Optlib` will be added incrementally
 
-The intent is that “Hopfield networks are all you need” is expressed by mapping diverse models
+The long-term intent is that “Hopfield networks are all you need” is expressed by mapping diverse models
 into these shared interfaces (energy + dynamics + learning).
 -/
