@@ -8,7 +8,7 @@ For infinite-lattice foundations, the most stable path is:
 
 `Potential Φ`  →  `Potential.gibbsSpecification Φ β ν`  →  `ThreeD.IndexedStochasticDynamics`
 
-This file packages that pipeline so that any finitary measurable interaction can be used as a
+This file bundles that pipeline so that any finitary measurable interaction can be used as a
 ThreeD-local-update kernel family indexed by finite volumes `Λ : Finset S`.
 -/
 
