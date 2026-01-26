@@ -123,7 +123,7 @@ lemma stateisStablecondition (ps : Fin m → (HopfieldNetwork R U).State)
     · rfl
   exact (Hebbian ps).hw u u fun a => a rfl
 
-lemma Hebbian_stable (hm : m < card U) (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m)
+lemma Hebbian_stable_orthogonal (hm : m < card U) (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m)
     (horth : ∀ {i j : Fin m} (_ : i ≠ j), dotProduct (ps i).act (ps j).act = 0):
   isStable (Hebbian ps) (ps j) := by
   unfold isStable
@@ -156,7 +156,6 @@ fun u => (card U - m : R) * (ps j).act u + disturbance ps j u
 def neuron_update_perturbed (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) : (U → R) :=
 fun u => HNfact 0 (Wpj_perturbed ps j u)
 
-#exit
 set_option maxHeartbeats 2000000 in
 lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) :
   ((Hebbian ps).w).mulVec (ps j).act =
@@ -165,9 +164,8 @@ lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) 
   -- Abbreviation for the `j`-th pattern.
   let pj : U → R := (ps j).act
   -- Expand the Hebbian field at coordinate `t`.
-  have h_field :
-      ((Hebbian ps).w).mulVec pj t =
-        (∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj) - (m : R) * pj t := by
+  have h_field : ((Hebbian ps).w).mulVec pj t =
+    (∑ i : Fin m, (ps i).act t * dotProduct (ps i).act pj) - (m : R) * pj t := by
     unfold Hebbian
     have hsub :
         ((∑ i : Fin m, outerProduct (ps i) (ps i) - (m : R) • (1 : Matrix U U R)).mulVec pj) =
@@ -239,8 +237,7 @@ lemma patterns_general (ps : Fin m → (HopfieldNetwork R U).State) (j : Fin m) 
         ((card U - m : R) * pj t) + (∑ i : Fin m, if i ≠ j then f i else 0) := by
     calc
       (∑ i : Fin m, f i) - (m : R) * pj t
-          = (f j + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * pj t := by
-              simp
+          = (f j + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * pj t := by simp
       _ = (pj t * (card U : R) + ∑ i ∈ (Finset.univ.erase j), f i) - (m : R) * pj t := by
             simp [f, h_self, pj]
       _ = ((card U - m : R) * pj t) + ∑ i ∈ (Finset.univ.erase j), f i := by

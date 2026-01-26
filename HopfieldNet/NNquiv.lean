@@ -67,7 +67,6 @@ structure Params (NN : NeuralNetwork R U) where
   --     The matrix `w` must satisfy the global parameter predicate `pm`. -/
   (hw' : NN.pm w)
 
-
 namespace NeuralNetwork
 
 structure State (NN : NeuralNetwork R U) where
