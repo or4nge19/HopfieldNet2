@@ -1,6 +1,6 @@
 import HopfieldNet.HN.Core
 import Mathlib.Analysis.Normed.Ring.Basic
-import Mathlib.Data.Complex.Exponential
+import Mathlib.Analysis.Complex.Exponential
 
 /- Several helper lemmas to support proofs of correctness, such as:
 Lemmas (`energy_decomposition`, `weight_symmetry`, `energy_sum_split`) connecting the local
@@ -277,7 +277,8 @@ lemma pmf_filter_update_neuron
       ext b
       simp only [mem_filter, mem_univ, true_and]
       rw [@bool_update_eq_iff]
-      simp only [h1, and_false, h2, or_self, ↓reduceIte, not_mem_empty]
+      simp only [h1, and_false, h2, or_self, ↓reduceIte]
+      norm_num
 
 /-- For a PMF over binary values mapped to states, the probability of a specific state
     equals the probability of its corresponding binary value -/

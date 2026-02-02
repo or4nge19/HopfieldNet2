@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Michail Karatarakis. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michail Karatarakis
+-/
 import HopfieldNet.NNquiv
 import Mathlib.Analysis.Normed.Field.Lemmas
 import Mathlib.LinearAlgebra.Matrix.Defs
@@ -50,7 +55,7 @@ def test : NeuralNetwork ℚ (Fin 3) := {
   -- F. Constraints / Predicates
   pact := fun _ => True
   pw := fun _ _ _ => True -- We accept any arrow defined by our Hom
-  hpact := fun _ _ _ _ _ _ _ _ => True.intro
+  hpact := fun _ _ _ _ _ _ _ _ _ => True.intro
   pwMat := by {
     intro u v
     exact (test.M u v ≠ 0)
