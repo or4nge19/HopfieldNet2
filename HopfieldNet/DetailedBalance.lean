@@ -83,6 +83,7 @@ lemma gibbs_single_site_transition_prob (s s' : (HopfieldNetwork R U).State)
   exact
     Eq.symm (Real.ext_cauchy (congrArg Real.cauchy (congrArg ENNReal.toReal (id (Eq.symm h_eq)))))
 
+omit [Coe R ℝ] in
 lemma gibbs_transition_sum_single_site
   (wθ : Params (HopfieldNetwork R U)) (T : ℝ) (s s' : (HopfieldNetwork R U).State) [Coe R ℝ]
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
@@ -105,6 +106,7 @@ lemma gibbs_update_single_neuron_formula (s : (HopfieldNetwork R U).State)
     else ENNReal.ofReal (Real.exp (-local_field / T)) / Z :=
   gibbs_update_single_neuron_prob wθ s T u val hval
 
+omit [Coe R ℝ] in
 lemma gibbs_single_site_transition_explicit
   (s s' : (HopfieldNetwork R U).State) [Coe R ℝ]
   (u : U) (h_same_elsewhere : ∀ v : U, v ≠ u → s.act v = s'.act v)
@@ -221,6 +223,7 @@ lemma gibbsUpdateSingleNeuron_support
     exact (PMF.apply_pos_iff (NN.State.gibbsUpdateSingleNeuron wθ s T u) s').mpr h_mem_support
   exact gibbsUpdate_possible_states wθ s T u s' h_pos
 
+omit [Coe R ℝ] in
 lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update [Coe R ℝ] (T : ℝ)
   (s s' : (HopfieldNetwork R U).State) (u : U) :
   ¬(s' = NN.State.updateNeuron s u 1 (Or.inl rfl) ∨
@@ -230,7 +233,7 @@ lemma gibbsUpdateSingleNeuron_prob_zero_if_not_update [Coe R ℝ] (T : ℝ)
   -- Use the contrapositive of the support lemma
   rw [PMF.apply_eq_zero_iff]
   contrapose! h_not_update -- This assumes s' is in the support
-  exact gibbsUpdateSingleNeuron_support wθ T s u s' h_not_update
+  exact gibbsUpdateSingleNeuron_support wθ T s s' u h_not_update
 
 lemma gibbsSamplingStep_prob_zero_if_multi_site (s s' : (HopfieldNetwork R U).State) :
   (¬∃ u : U, ∀ v : U, v ≠ u → s.act v = s'.act v) →
