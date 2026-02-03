@@ -47,7 +47,7 @@ lemma BM_pact_of_HNfact (θ val : R) :
   unfold HNfact
   split_ifs
   · left; rfl
-  · right; rfl
+  · simp
 
 variable [Coe R ℝ]
 
@@ -175,7 +175,14 @@ noncomputable def gibbsUpdateSingleNeuron (p : ParamsBM R U)
   let prob_one_ennreal := ENNReal.ofReal prob_one_R
   have h_prob_ennreal_le_one : prob_one_ennreal ≤ 1 :=
     ENNReal.ofReal_le_one.mpr (probNeuronIsOne_le_one p s u)
-  PMF.bernoulli prob_one_ennreal h_prob_ennreal_le_one >>= fun takes_value_one =>
+  PMF.bernoulli (by {
+    let prob_one_ennreal := ENNReal.ofReal prob_one_R
+    constructor
+    cases' prob_one_ennreal with h h2
+    aesop
+    aesop
+  }) (by {simp only [NNReal.mk_zero, zero_le]
+  })>>= fun takes_value_one =>
     let new_val : R := if takes_value_one then (1 : R) else (-1 : R)
     PMF.pure
       { act := fun v => if v = u then new_val else s.act v

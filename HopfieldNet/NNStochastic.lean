@@ -17,7 +17,7 @@ def NeuralNetwork.StochasticDynamics {R U : Type} [Zero R]
 
 
 /-- Metropolis acceptance decision as a probability mass function over Boolean outcomes -/
-def NN.State.metropolisDecision' (p : ℝ) : PMF Bool := by
+def NN.State.metropolisDecision (p : ℝ) : PMF Bool := by
   -- Clamp `p` into `[0,1]` and use it as an `NNReal` parameter for `PMF.bernoulli`.
   let q : NNReal :=
     ⟨min (max p 0) 1, by

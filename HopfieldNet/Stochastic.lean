@@ -52,17 +52,23 @@ noncomputable def NN.State.gibbsUpdateNeuron [Coe R ℝ] (T : ℝ) (u : U) : PMF
       intro h
       have h1 : 0 ≤ 1 + a := zero_le (1 + a)
       have h2 : 1 + a = 0 := h
-      simp_all only [zero_le, add_eq_zero, one_ne_zero, ENNReal.ofReal_eq_zero, false_and, a, ΔE, h_u, p_flip]
+      simp_all only [zero_le, add_eq_zero, one_ne_zero, ENNReal.ofReal_eq_zero, false_and, a, ΔE,
+        h_u]
     have h_sum_ne_top : (1 + a) ≠ ⊤ := by
       apply ENNReal.add_ne_top.2
       constructor
       · exact ENNReal.one_ne_top
       · apply ENNReal.ofReal_ne_top
     rw [ENNReal.div_le_iff h_denom_ne_zero h_sum_ne_top]
-    simp only [one_mul, h_u, ΔE, a, p_flip]
+    simp only [one_mul, h_u, ΔE, a]
     exact le_add_self
-  PMF.bind (PMF.bernoulli p_flip p_flip_le_one) $ λ should_flip =>
-    PMF.pure $ if should_flip then s.Up wθ u else s
+  PMF.bind (PMF.bernoulli p_flip.toNNReal (by
+    have h : p_flip.toNNReal ≤ (1 : ENNReal).toNNReal :=
+      ENNReal.toNNReal_mono ?_ p_flip_le_one
+    simpa using h
+    simp only [ne_eq, ENNReal.one_ne_top, not_false_eq_true]
+  )) $ λ should_flip =>
+  PMF.pure $ if should_flip then s.Up wθ u else s
 
 /-- Update a single neuron according to Gibbs sampling rule -/
 noncomputable def NN.State.gibbsUpdateSingleNeuron (u : U) : PMF ((HopfieldNetwork R U).State) :=
@@ -82,7 +88,7 @@ noncomputable def NN.State.gibbsUpdateSingleNeuron (u : U) : PMF ((HopfieldNetwo
               NN.State.updateNeuron s u (-1) (AffineMap.lineMap_eq_lineMap_iff.mp rfl))
     (PMF.ofFintype norm_probs (by
       have h_total : total ≠ 0 := by {
-        simp [probs]
+        simp
         refine ENNReal.inv_ne_top.mp ?_
         have h_exp_pos := Real.exp_pos (local_field * 1 / T)
         have h := ENNReal.ofReal_pos.mpr h_exp_pos
@@ -115,11 +121,11 @@ noncomputable def NN.State.gibbsSamplingStep : PMF ((HopfieldNetwork R U).State)
         rw [ENNReal.div_eq_inv_mul]
         simp only [mul_one]
         have h : (Fintype.card U : ENNReal) ≠ 0 := by
-          simp [Fintype.card_pos_iff.mpr inferInstance]
+          simp
         have h_top : (Fintype.card U : ENNReal) ≠ ⊤ := ENNReal.coe_ne_top
         rw [← ENNReal.mul_inv_cancel h h_top]
-        simp_all only [ne_eq, Nat.cast_eq_zero, Fintype.card_ne_zero, not_false_eq_true, ENNReal.natCast_ne_top,
-          nsmul_eq_mul])
+        simp_all only [ne_eq, Nat.cast_eq_zero,
+          Fintype.card_ne_zero, not_false_eq_true, ENNReal.natCast_ne_top, nsmul_eq_mul])
   -- Bind neuron selection with conditional update
   PMF.bind neuron_pmf $ λ u => NN.State.gibbsUpdateSingleNeuron wθ s T u
 
@@ -139,7 +145,7 @@ noncomputable def patternStochasticUpdate
         exact h_diag_zero v
       else
         have h_adj : (HopfieldNetwork ℝ (Fin n)).Adj u v := by
-          simp only [HopfieldNetwork]; simp only [ne_eq]
+          simp only; simp only [ne_eq]
           exact h_eq
         contradiction
     hw' := by
@@ -227,7 +233,7 @@ noncomputable def NN.State.metropolisHastingsStep : PMF ((HopfieldNetwork R U).S
         rw [ENNReal.div_eq_inv_mul]
         simp only [mul_one]
         have h : (Fintype.card U : ENNReal) ≠ 0 := by
-          simp [Fintype.card_pos_iff.mpr inferInstance]
+          simp
         have h_top : (Fintype.card U : ENNReal) ≠ ⊤ := ENNReal.coe_ne_top
         rw [← ENNReal.mul_inv_cancel h h_top]
         simp_all only [ne_eq, Nat.cast_eq_zero, Fintype.card_ne_zero, not_false_eq_true, ENNReal.natCast_ne_top,
@@ -459,7 +465,7 @@ lemma gibbs_normalization_factor
     (Real.exp (-local_field / T)) := by
   intro probs total
   simp only [probs, total]
-  simp only [↓reduceIte, mul_one, Bool.false_eq_true, mul_neg, total, probs]
+  simp only [↓reduceIte, mul_one, Bool.false_eq_true, mul_neg]
 
 /-- The probability mass assigned to true when using Gibbs sampling -/
 lemma gibbs_prob_true
@@ -476,10 +482,10 @@ lemma gibbs_prob_true
   simp only [norm_probs, probs]
   have h_total : total = ENNReal.ofReal (Real.exp (local_field / T)) +
       ENNReal.ofReal (Real.exp (-local_field / T)) := by
-    simp only [mul_ite, mul_one, mul_neg, ↓reduceIte, Bool.false_eq_true, total, probs, norm_probs]
+    simp only [mul_ite, mul_one, mul_neg, ↓reduceIte, Bool.false_eq_true, total, probs]
   rw [h_total]
   congr
-  simp only [↓reduceIte, mul_one, total, norm_probs, probs]
+  simp only [↓reduceIte, mul_one]
 
 /-- The probability mass assigned to false when using Gibbs sampling -/
 lemma gibbs_prob_false
@@ -498,7 +504,7 @@ lemma gibbs_prob_false
     simp [total, probs]
   rw [h_total]
   congr
-  simp only [Bool.false_eq_true, ↓reduceIte, mul_neg, mul_one, norm_probs, probs, total]
+  simp only [Bool.false_eq_true, ↓reduceIte, mul_neg, mul_one]
 
 
 /-- Converts the ratio of Boltzmann factors to ENNReal sigmoid form. -/
@@ -533,13 +539,13 @@ lemma ENNReal_exp_ratio_to_sigmoid (x : ℝ) :
     field_simp
   rw [h1, h2]
 
-@[simp]
-lemma ENNReal.div_ne_top {a b : ENNReal} (ha : a ≠ ⊤) (hb : b ≠ 0) :
-  a / b ≠ ⊤ := by
-  intro h_top
-  rw [ENNReal.div_eq_top] at h_top
-  rcases h_top with (⟨_, h_right⟩ | ⟨h_left, _⟩);
-  exact hb h_right; exact ha h_left
+-- @[simp]
+-- lemma ENNReal.div_ne_top {a b : ENNReal} (ha : a ≠ ⊤) (hb : b ≠ 0) :
+--   a / b ≠ ⊤ := by
+--   intro h_top
+--   rw [ENNReal.div_eq_top] at h_top
+--   rcases h_top with (⟨_, h_right⟩ | ⟨h_left, _⟩);
+--   exact hb h_right; exact ha h_left
 
 lemma gibbs_prob_positive
   (local_field : ℝ) (T : ℝ) :
@@ -637,7 +643,7 @@ lemma gibbs_prob_positive_case
     rw [h_if_true, h_if_false]
     rw [h_ratio_sum]
     have h_Z_ne_zero : Z ≠ 0 := by
-      simp only [ne_eq, add_eq_zero, ENNReal.ofReal_eq_zero, not_and, not_le, Z, norm_probs]
+      simp only [ne_eq, add_eq_zero, ENNReal.ofReal_eq_zero, not_and, not_le, Z]
       intros
       exact Real.exp_pos (-Coe.coe local_field / T)
     have h_Z_ne_top : Z ≠ ⊤ := by simp [Z]
@@ -667,7 +673,7 @@ lemma gibbs_prob_negative_case
                           ENNReal.ofReal (Real.exp (-local_field / T))) / Z := by
       exact ENNReal.div_add_div_same
     simp only [Bool.false_eq_true]
-    simp only [↓reduceIte, norm_probs]
+    simp only [↓reduceIte]
     rw [h_ratio_sum]
     have h_Z_ne_zero : Z ≠ 0 := by
       simp only [Z, ne_eq, add_eq_zero]
@@ -677,8 +683,7 @@ lemma gibbs_prob_negative_case
         apply Real.exp_pos
       exact (not_and_or.mpr (Or.inl h_exp_pos.ne')) h
     have h_Z_ne_top : Z ≠ ⊤ := by
-      simp only [ne_eq, ENNReal.add_eq_top, ENNReal.ofReal_ne_top, or_self, not_false_eq_true, Z,
-        norm_probs]
+      simp only [ne_eq, ENNReal.add_eq_top, ENNReal.ofReal_ne_top, or_self, not_false_eq_true, Z]
     exact ENNReal.div_self h_Z_ne_zero h_Z_ne_top)))
     (NN.State.updateNeuron s u (-1) (Or.inr rfl)) = norm_probs false := by
   intro
@@ -751,8 +756,8 @@ lemma gibbsUpdate_prob_positive
     simp only [mul_ite, mul_one, mul_neg, ↓reduceIte, Bool.false_eq_true, total, probs, Z]
   have h_result := pmf_map_update_one s u (fun b => probs b / total) (by
     have h_sum : ∑ b : Bool, probs b / total = (probs true + probs false) / total := by
-      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false,
-          not_false_eq_true,sum_insert, sum_singleton, total, probs, Z]
+      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false, not_false_eq_true,
+        sum_insert, sum_singleton, total, probs]
       exact
         ENNReal.div_add_div_same
     rw [h_sum]
@@ -766,7 +771,7 @@ lemma gibbsUpdate_prob_positive
     have h_total_ne_top : total ≠ ⊤ := by simp [total, probs]
     exact ENNReal.div_self h_total_ne_zero h_total_ne_top)
   rw [h_result]
-  simp only [probs, mul_one_div]
+  simp only [probs]
   rw [h_total_eq_Z]
   simp only [if_true, mul_one]
 
@@ -787,8 +792,8 @@ lemma gibbsUpdate_prob_negative
     simp only [mul_ite, mul_one, mul_neg, ↓reduceIte, Bool.false_eq_true, total, probs, Z]
   have h_result := pmf_map_update_neg_one s u (fun b => probs b / total) (by
     have h_sum : ∑ b : Bool, probs b / total = (probs true + probs false) / total := by
-      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false,
-          not_false_eq_true, sum_insert, sum_singleton, total, probs, Z]
+      simp only [Fintype.univ_bool, mem_singleton, Bool.true_eq_false, not_false_eq_true,
+        sum_insert, sum_singleton, total, probs]
       exact ENNReal.div_add_div_same
     rw [h_sum]
     have h_total_ne_zero : total ≠ 0 := by
@@ -799,14 +804,13 @@ lemma gibbsUpdate_prob_negative
         apply Real.exp_pos
       exact (not_and_or.mpr (Or.inl h_exp_pos.ne')) h
     have h_total_ne_top : total ≠ ⊤ := by
-      simp only [mul_ite, mul_one, mul_neg, ↓reduceIte,
-        Bool.false_eq_true, ne_eq, ENNReal.add_eq_top, ENNReal.ofReal_ne_top, or_self,
-        not_false_eq_true, total, probs, Z]
+      simp only [mul_ite, mul_one, mul_neg, ↓reduceIte, Bool.false_eq_true, ne_eq,
+        ENNReal.add_eq_top, ENNReal.ofReal_ne_top, or_self, not_false_eq_true, total, probs]
     exact ENNReal.div_self h_total_ne_zero h_total_ne_top)
   rw [h_result]
-  simp only [probs, one_div_neg_one_eq_neg_one, one_div_neg_one_eq_neg_one]
+  simp only [probs]
   rw [h_total_eq_Z]
-  simp only [Bool.false_eq_true, ↓reduceIte, mul_neg, mul_one, probs, Z, total]
+  simp only [Bool.false_eq_true, ↓reduceIte, mul_neg, mul_one, Z]
 
 /-- Computes the probability of updating a neuron to a specific value using Gibbs sampling.
 - If new_val = 1: probability = exp(local_field/T)/Z
