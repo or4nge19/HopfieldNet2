@@ -100,7 +100,8 @@ lemma path_exists_of_pos_entry {A : Matrix n n ℝ} {i j : n} (h_pos : 0 < A i j
     letI : Quiver n := toQuiver A
     ∃ p : Quiver.Path i j, 0 < p.length := by
   letI : Quiver n := toQuiver A
-  refine ⟨(show Quiver.Path i j from (show i ⟶ j from h_pos).toPath), ?_⟩
+  let e : i ⟶ j := ⟨h_pos⟩
+  refine ⟨e.toPath, ?_⟩
   simp
 
 lemma irreducible_of_all_entries_positive {A : Matrix n n ℝ} (hA : ∀ i j, 0 < A i j) :
@@ -153,7 +154,7 @@ theorem exists_connecting_edge_of_irreducible {A : Matrix n n ℝ} (hA_irred : A
         not_true_eq_false]
         exact (hy_not_T hy_in_T').elim
     exact hy_not_S hy_in_S
-  exact ⟨y, z, hy_in_T, hz_in_S, e⟩
+  exact ⟨y, z, hy_in_T, hz_in_S, by simpa using e.down⟩
 
 lemma exists_boundary_crossing_in_support [DecidableEq n] [Fintype n]
     (hA_irred : IsIrreducible A) (_ : ∀ i j, 0 ≤ A i j)
@@ -182,7 +183,7 @@ lemma exists_boundary_crossing_in_support [DecidableEq n] [Fintype n]
         not_false_eq_true, not_true_eq_false]
         exact (hy_not_T hy_in_T').elim
     exact hy_not_S hy_in_S
-  exact ⟨y, z, hy_in_T, hz_in_S, e⟩
+  exact ⟨y, z, hy_in_T, hz_in_S, by simpa using e.down⟩
 
 theorem irreducible_mulVec_ne_zero [DecidableEq n] [Fintype n]
     (hA_irred : IsIrreducible A) (hA_nonneg : ∀ i j, 0 ≤ A i j) (hA_ne_zero : A ≠ 0)
@@ -246,7 +247,7 @@ lemma not_irreducible_of_zero_matrix {n : Type*} [Fintype n] [Nonempty n]
   | nil =>
       simp at hp_pos
   | cons p' e =>
-      exact (lt_irrefl (0 : ℝ)) e
+      exact (lt_irrefl (0 : ℝ)) e.down
 
 /-- If an irreducible matrix `A` has a row `i` where `A*v` is zero, then all entries `A i k` must be zero
     for `k` in the support of `v`. -/
@@ -275,7 +276,7 @@ lemma irreducible_one_element_implies_diagonal_pos [Fintype n]
     exact ⟨fun x y => by simp [ha x, ha y]⟩
   haveI : Subsingleton n := h_sub
   have hji : j = i := Subsingleton.elim _ _
-  have e_pos : 0 < A j i := e
+  have e_pos : 0 < A j i := by simpa using e.down
   simpa [hji] using e_pos
 
 /-- An irreducible matrix with a positive diagonal is primitive. -/
@@ -313,7 +314,7 @@ theorem IsPrimitive.of_irreducible_pos_diagonal [Fintype n][Nonempty n] [Decidab
         have h := @Quiver.Path.length_le_card_minus_one_of_isSimple n _ _ _ i j p_shortest h_simple
         simpa [N] using h
       exact h_len
-    let e_loop : i ⟶ i := hA_diag_pos i
+    let e_loop : i ⟶ i := ⟨hA_diag_pos i⟩
     let p_loop : Path i i := e_loop.toPath
     have p_loop_len : p_loop.length = 1 := by simp_all only [le_refl, lt_add_iff_pos_left, List.Nat.eq_of_le_zero,
       length_toPath, N, k, p_loop]
@@ -390,7 +391,7 @@ lemma Irreducible.exists_edge_out {A : Matrix n n ℝ}
   have hj : j ∉ S := by simpa using hj_compl
   obtain ⟨u, v, e, _p₁, _p₂, hu_in_S, hv_not_in_S, _hp⟩ :=
     Quiver.Path.exists_boundary_edge_from_set p S hi hj
-  exact ⟨u, hu_in_S, v, hv_not_in_S, e⟩
+  exact ⟨u, hu_in_S, v, hv_not_in_S, by simpa using e.down⟩
 
 -- Lemma: Simple paths have bounded length by vertex count
 lemma length_bounded_by_support_size [Quiver n] [DecidableEq n] [Fintype n] {_ : Matrix n n ℝ}
