@@ -70,23 +70,14 @@ lemma weightFromVertices_comp (w : V → V → R) {a b c : V} (p : Path a b) (q 
 
 end Weight
 
-section PositiveWeight
-
-variable [Semiring R] [PartialOrder R] [IsOrderedRing R] [PosMulStrictMono R] [Nontrivial R]
-
-
-end PositiveWeight
-
 section RealWeight
 
-lemma weightFromVertices_pos {w : V → V → ℝ}
-    (hw : ∀ i j : V, 0 < w i j) {i j : V} (p : Path i j) :
-    0 < weightFromVertices w p := by
+variable {w : V → V → ℝ} {i j : V} (p : Path i j)
+
+lemma weightFromVertices_pos (hw : ∀ i j : V, 0 < w i j) : 0 < weightFromVertices w p := by
   apply weight_pos; intro i j _; exact hw i j
 
-lemma weightFromVertices_nonneg {w : V → V → ℝ}
-    (hw : ∀ i j : V, 0 ≤ w i j) {i j : V} (p : Path i j) :
-    0 ≤ weightFromVertices w p := by
+lemma weightFromVertices_nonneg (hw : ∀ i j : V, 0 ≤ w i j) : 0 ≤ weightFromVertices w p := by
   induction p using Path.rec with
   | nil => simp only [weightFromVertices, weight, zero_le_one]
   | cons p' e ih => simp only [weightFromVertices, weight]; exact mul_nonneg ih (hw _ _)
@@ -95,7 +86,7 @@ end RealWeight
 
 section PathDecomposition
 
-variable {V : Type*} [Quiver V]
+variable {V : Type*} [Quiver V] {a b : V} (p : Path a b)
 
 /-- Every non-empty path can be decomposed as an initial path plus a final edge. -/
 lemma path_decomposition_last_edge {a b : V} (p : Path a b) (h : p.length > 0) :
@@ -103,7 +94,7 @@ lemma path_decomposition_last_edge {a b : V} (p : Path a b) (h : p.length > 0) :
   cases p with | nil => simp at h | cons p' e => exact ⟨_, p', e, rfl⟩
 
 /-- Every non-empty path can be decomposed as a first edge plus a remaining path. -/
-lemma path_decomposition_first_edge {a b : V} (p : Path a b) (h : p.length > 0) :
+lemma path_decomposition_first_edge (h : p.length > 0) :
     ∃ (c : V) (e : a ⟶ c) (p' : Path c b), p = e.toPath.comp p' ∧ p.length = p'.length + 1 := by
   have h_len : p.length = (p.length - 1) + 1 := by omega
   obtain ⟨c, e, p', hp', rfl⟩ := Path.eq_toPath_comp_of_length_eq_succ p h_len
@@ -115,9 +106,7 @@ section BoundaryEdges
 
 variable {V : Type*} [Quiver V]
 
-lemma cons_eq_comp_toPath {a b c : V} (p : Path a b) (e : b ⟶ c) :
-    p.cons e = p.comp e.toPath := by
-  rfl
+lemma cons_eq_comp_toPath {a b c : V} (p : Path a b) (e : b ⟶ c) : p.cons e = p.comp e.toPath :=  rfl
 
 /-- A path from a vertex not in `S` to a vertex in `S` must cross the boundary. -/
 theorem exists_boundary_edge {a b : V} (p : Path a b) (S : Set V)
@@ -127,7 +116,7 @@ theorem exists_boundary_edge {a b : V} (p : Path a b) (S : Set V)
   induction' h_len : p.length with n ih generalizing a b S ha_not_in_S hb_in_S
   · -- Base case n = 0: Path must be nil, so a = b. Contradiction.
     have hab : a = b := eq_of_length_zero p h_len
-    subst hab
+    subst (hab)
     exact (ha_not_in_S hb_in_S).elim
   · -- Inductive step: Assume true for all paths of length < n+1.
     have h_pos : 0 < p.length := by rw[h_len]; simp only [lt_add_iff_pos_left, add_pos_iff,
@@ -136,13 +125,11 @@ theorem exists_boundary_edge {a b : V} (p : Path a b) (S : Set V)
     by_cases hc_in_S : c ∈ S
     · -- Case 1: The endpoint of `p'` is already in `S`.
       have p'_len : p'.length = n := by exact Nat.succ_inj.mp h_len
-      obtain ⟨u, v, e_uv, p₁, p₂, hu_not_S, hv_S, hp'⟩ :=
-        ih p' S ha_not_in_S hc_in_S p'_len
+      obtain ⟨u, v, e_uv, p₁, p₂, hu_not_S, hv_S, hp'⟩ := ih p' S ha_not_in_S hc_in_S p'_len
       refine ⟨u, v, e_uv, p₁, p₂.comp e.toPath, hu_not_S, hv_S, ?_⟩
       rw [cons_eq_comp_toPath, hp', Path.comp_assoc, Path.comp_assoc]
     · -- Case 2: The endpoint of `p'` is not in `S`.
       refine ⟨c, b, e, p', Path.nil, hc_in_S, hb_in_S, ?_⟩
-      simp only [comp_nil]
       simp_all only [exists_and_left, length_cons, Nat.add_right_cancel_iff, lt_add_iff_pos_left, add_pos_iff,
         Nat.lt_one_iff, pos_of_gt, or_true]
       subst h_len
@@ -153,14 +140,9 @@ theorem exists_boundary_edge_from_set {a b : V} (p : Path a b) (S : Set V)
     (ha_in_S : a ∈ S) (hb_not_in_S : b ∉ S) :
     ∃ (u v : V) (e : u ⟶ v) (p₁ : Path a u) (p₂ : Path v b),
       u ∈ S ∧ v ∉ S ∧ p = p₁.comp (e.toPath.comp p₂) := by
-  classical
-  have ha_not_in_compl : a ∉ Sᶜ := by simpa
-  have hb_in_compl : b ∈ Sᶜ := by simpa
   obtain ⟨u, v, e, p₁, p₂, hu_not_in_compl, hv_in_compl, hp⟩ :=
-    exists_boundary_edge p Sᶜ ha_not_in_compl hb_in_compl
-  refine ⟨u, v, e, p₁, p₂, ?_, ?_, hp⟩
-  · simpa using hu_not_in_compl
-  · simpa using hv_in_compl
+    exists_boundary_edge p Sᶜ (by grind) (by grind)
+  grind
 
 /-- Alternative formulation: there exists an edge crossing the boundary. -/
 theorem exists_crossing_edge {a b : V} (p : Path a b) (S : Set V)

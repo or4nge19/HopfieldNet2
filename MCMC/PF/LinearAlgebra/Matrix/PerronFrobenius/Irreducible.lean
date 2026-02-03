@@ -14,16 +14,14 @@ variable {A : Matrix n n ℝ}
 /-- If `A` is irreducible then so is `1 + A`. -/
 theorem Irreducible.add_one (h_irred : A.IsIrreducible) : (1 + A).IsIrreducible := by
   let B := (1 : Matrix n n ℝ) + A
-  constructor
-  · intro i j
-    by_cases h : i = j
+  refine ⟨fun i j => ?_, fun i j => ?_⟩
+  · by_cases h : i = j
     · subst h
       simpa [B] using by
         have : (0 : ℝ) ≤ A i i := h_irred.1 i i
         linarith
     · simpa [B, h] using h_irred.1 i j
-  · intro i j
-    -- Work in the quiver of `A` to extract a positive-length path.
+  · -- Work in the quiver of `A` to extract a positive-length path.
     letI : Quiver n := toQuiver A
     obtain ⟨pA, hpA_pos⟩ := h_irred.connected i j
     -- Any arrow in `A.toQuiver` is also an arrow in `(1 + A).toQuiver`.
@@ -64,11 +62,9 @@ theorem Irreducible.add_one (h_irred : A.IsIrreducible) : (1 + A).IsIrreducible 
 A non-zero, non-negative eigenvector of an irreducible matrix is
 in fact strictly positive.
 -/
-lemma eigenvector_no_zero_entries_of_irreducible [Fintype n]
-  {r : ℝ} (hA_irred : A.IsIrreducible) (_ : 0 < r)
-    {v : n → ℝ} (h_eig : A *ᵥ v = r • v)
-    (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
-    ∀ i, 0 < v i := by
+lemma eigenvector_no_zero_entries_of_irreducible [Fintype n] {r : ℝ} (hA_irred : A.IsIrreducible)
+    (_ : 0 < r) {v : n → ℝ} (h_eig : A *ᵥ v = r • v) (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
+  ∀ i, 0 < v i := by
   by_contra h_has_zero
   push_neg at h_has_zero
   obtain ⟨i₀, hi₀_zero⟩ := h_has_zero
