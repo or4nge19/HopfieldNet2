@@ -3,15 +3,14 @@ Copyright (c) 2025 Matteo Cipollina. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Matteo Cipollina
 -/
-import HopfieldNet.BM.Core
-import HopfieldNet.Markov
+import HopfieldNet.BM.CoreQuiv
+import HopfieldNet.MarkovQuiv
 
 open Finset Matrix NeuralNetwork State ENNReal Real
 open PMF MeasureTheory ProbabilityTheory.Kernel Set
 
 variable {R U : Type} [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
-  [Fintype U] [Nonempty U]
-variable [Coe R ℝ]
+  [Fintype U] [Nonempty U] [Coe R ℝ]
 
 noncomputable instance : Fintype ((BoltzmannMachine R U).State) := by
   -- States are functions from U to {-1, 1} with a predicate

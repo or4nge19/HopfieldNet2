@@ -30,6 +30,7 @@ import HopfieldNet.SpinState.Basic
 import HopfieldNet.SpinState.StochasticUpdate
 
 import HopfieldNet.BM.Core
+import HopfieldNet.BM.CoreQuiv
 import HopfieldNet.BM.Markov
 
 /-

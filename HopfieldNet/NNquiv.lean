@@ -75,7 +75,7 @@ structure State (NN : NeuralNetwork R U) where
 
 /-- Extensionality lemma for neural network states -/
 @[ext]
-lemma ext {R U : Type} [Zero R] [Quiver U] {NN : NeuralNetwork R U}
+lemma ext {R U : Type} [Zero R] {NN : NeuralNetwork R U}
     {s₁ s₂ : NN.State} : (∀ u, s₁.act u = s₂.act u) → s₁ = s₂ := by
   intro h
   cases s₁
