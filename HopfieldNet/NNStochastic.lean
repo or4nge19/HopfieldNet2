@@ -15,7 +15,6 @@ def NeuralNetwork.StochasticDynamics {R U : Type} [Zero R]
 --   exact PMF.bernoulli (ENNReal.ofReal (min p 1))
 --   (mod_cast min_le_right p 1)
 
-
 /-- Metropolis acceptance decision as a probability mass function over Boolean outcomes -/
 def NN.State.metropolisDecision (p : ℝ) : PMF Bool := by
   -- Clamp `p` into `[0,1]` and use it as an `NNReal` parameter for `PMF.bernoulli`.
