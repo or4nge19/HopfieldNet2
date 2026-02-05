@@ -13,33 +13,20 @@ variable {n : Type*} {A : Matrix n n ℝ}
 /-- If a property `P` holds for at least one vertex `i₀` and propagates along the edges
 of an irreducible matrix's graph (`P i ∧ A i j > 0 → P j`), then `P` holds for all vertices. -/
 lemma IsIrreducible.eq_univ_of_propagate (hA_irred : A.IsIrreducible) (P : n → Prop)
-    (h_nonempty : ∃ i₀, P i₀)
-    (h_propagate : ∀ i j, P i → 0 < A i j → P j) :
-    ∀ i, P i := by
-  classical
-  let S : Set n := {i | P i}
-  let T : Set n := {i | ¬ P i}
-  by_contra h_not_all
-  push_neg at h_not_all
-  have hS_nonempty : (S : Set n).Nonempty := h_nonempty
-  have hT_nonempty : (T : Set n).Nonempty := h_not_all
-  have hS_ne_univ : (S : Set n) ≠ Set.univ := by
-    intro h_eq
-    rcases hT_nonempty with ⟨i, hi_T⟩
-    have hPi : P i := by
-      have : i ∈ S := by
-        have : i ∈ (Set.univ : Set n) := Set.mem_univ i
-        simp only [Set.mem_univ] at this
-        simp_all only [Set.mem_setOf_eq, Set.mem_univ, S, T]
-      simpa [S] using this
-    exact hi_T hPi
-  obtain ⟨i, hi_S, j, hj_not_S, hAij_pos⟩ :=
-    Matrix.Irreducible.exists_edge_out (A := A) hA_irred S hS_nonempty hS_ne_univ
-  have hPi : P i := by
-    simpa [S] using hi_S
-  have hPj : P j := h_propagate i j hPi hAij_pos
-  exact hj_not_S (by
-    simpa [S] using hPj)
+  (h₀ : ∃ i₀, P i₀) (hstep : ∀ i j, P i → 0 < A i j → P j) :
+  ∀ i, P i := by
+  by_contra hP
+  push_neg at hP
+  set S : Set n := {i | P i}
+  have hS' : S ≠ Set.univ := by
+    intro hSu
+    obtain ⟨j, hj⟩ := hP
+    exact hj (by
+      have : j ∈ S := by simpa [hSu.symm] using (Set.mem_univ j)
+      simpa [S] using this)
+  obtain ⟨i, hiS, j, hjS, hij⟩ :=
+    Irreducible.exists_edge_out (A := A) hA_irred S h₀ hS'
+  exact hjS (by simpa [S] using (hstep i j (by simpa [S] using hiS) hij))
 
 variable {n : Type*} [Fintype n]
 variable {A : Matrix n n ℝ}
@@ -47,55 +34,66 @@ variable {A : Matrix n n ℝ}
 /-- For an irreducible, non-negative matrix `A`, if `v` is an eigenvector for an eigenvalue `μ`,
 then the vector `w` of absolute values of `v` satisfies the inequality `|μ| • w ≤ A *ᵥ w`.
 This is a key step in the Perron-Frobenius theorem. -/
-lemma abs_eigenvector_inequality
-  (hA_nonneg : ∀ i j, 0 ≤ A i j)
+lemma abs_eigenvector_inequality (hA_nonneg : ∀ i j, 0 ≤ A i j)
   {μ : ℝ} {v : n → ℝ} (h_eig : A *ᵥ v = μ • v) :
   let w := fun i ↦ |v i|; |μ| • w ≤ A *ᵥ w := by
   intro w i
-  calc
-    (|μ| • w) i = |μ| * |v i| := by simp [w]
-    _ = |μ * v i| := by rw [abs_mul]
-    _ = |(μ • v) i| := by simp
-    _ = |(A *ᵥ v) i| := by rw [← h_eig]
-    _ = |∑ j, A i j * v j| := by simp [mulVec, dotProduct]
-    _ ≤ ∑ j, |A i j * v j| := by exact Finset.abs_sum_le_sum_abs _ _
-    _ = ∑ j, (A i j) * |v j| := by simp_rw [abs_mul, abs_of_nonneg (hA_nonneg i _)]
-    _ = (A *ᵥ w) i := by simp [w, mulVec, dotProduct]
+  calc (|μ| • w) i = |μ| * |v i| := ?_
+    _ = |μ * v i| := ?_
+    _ = |(μ • v) i| := ?_
+    _ = |(A *ᵥ v) i| := ?_
+    _ = |∑ j, A i j * v j| := ?_
+    _ ≤ ∑ j, |A i j * v j| := ?_
+    _ = ∑ j, (A i j) * |v j| := ?_
+    _ = (A *ᵥ w) i := ?_
+  · simp [w, Pi.smul_apply, smul_eq_mul]
+  · simp
+  · simp [Pi.smul_apply, smul_eq_mul]
+  · simp [h_eig, Pi.smul_apply, smul_eq_mul]
+  · simp [mulVec_apply]
+  · simpa using
+    (Finset.abs_sum_le_sum_abs (s := Finset.univ) (f := fun j => A i j * v j))
+  ·classical
+   refine Finset.sum_congr rfl ?_
+   intro j _
+   simp [abs_mul, abs_of_nonneg (hA_nonneg i j)]
+  · simp [w, mulVec_apply]
 
 /--
 If the triangle equality holds for the complex eigenvector equation `A * x = lam * x`,
 then the vector of norms `‖x‖` is a real eigenvector of `A` with eigenvalue `‖lam‖`.
 -/
-lemma norm_eigenvector_is_eigenvector_of_triangle_eq
-    {A : Matrix n n ℝ} (hA_nonneg : ∀ i j, 0 ≤ A i j)
-    {lam : ℂ} {x : n → ℂ} (hx_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = lam • x)
-    (h_triangle_eq : ∀ i, ‖∑ j, (A i j : ℂ) * x j‖ = ∑ j, ‖(A i j : ℂ) * x j‖) :
-    A *ᵥ (fun i => ‖x i‖) = (‖lam‖ : ℝ) • (fun i => ‖x i‖) := by
+lemma norm_eigenvector_is_eigenvector_of_triangle_eq (hA_nonneg : ∀ i j, 0 ≤ A i j)
+  {lam : ℂ} {x : n → ℂ} (hx_eig : (A.map (algebraMap ℝ ℂ)) *ᵥ x = lam • x)
+  (h_triangle_eq : ∀ i, ‖∑ j, (A i j : ℂ) * x j‖ = ∑ j, ‖(A i j : ℂ) * x j‖) :
+  A *ᵥ (fun i => ‖x i‖) = (‖lam‖ : ℝ) • (fun i => ‖x i‖) := by
   funext i
-  calc
-    (A *ᵥ fun i => ‖x i‖) i
-        = ∑ j, A i j * ‖x j‖ := by simp [mulVec_apply]
-    _   = ∑ j, ‖(A i j : ℂ)‖ * ‖x j‖ := by simp_rw [Complex.norm_ofReal, abs_of_nonneg (hA_nonneg _ _)]
-    _   = ∑ j, ‖(A i j : ℂ) * x j‖ := by simp_rw [norm_mul]
-    _   = ‖∑ j, (A i j : ℂ) * x j‖ := (h_triangle_eq i).symm
-    _   = ‖((A.map (algebraMap ℝ ℂ)) *ᵥ x) i‖ := by simp; rfl
-    _   = ‖(lam • x) i‖ := by rw [hx_eig]
-    _   = ‖lam * x i‖ := by rw [Pi.smul_apply]; rfl
-    _   = ‖lam‖ * ‖x i‖ := by rw [norm_mul]
-    _   = ((‖lam‖ : ℝ) • fun i => ‖x i‖) i := by simp [smul_eq_mul]
+  calc (A *ᵥ fun i => ‖x i‖) i = ∑ j, A i j * ‖x j‖ := ?_
+       _   = ∑ j, ‖(A i j : ℂ)‖ * ‖x j‖ := ?_
+       _   = ∑ j, ‖(A i j : ℂ) * x j‖ := ?_
+       _   = ‖∑ j, (A i j : ℂ) * x j‖ := ?_
+       _   = ‖((A.map (algebraMap ℝ ℂ)) *ᵥ x) i‖ := ?_
+       _   = ‖(lam • x) i‖ := ?_
+       _   = ‖lam * x i‖ := ?_
+       _   = ‖lam‖ * ‖x i‖ := ?_
+       _   = ((‖lam‖ : ℝ) • fun i => ‖x i‖) i := ?_
+  · simp [mulVec_apply]
+  · simp_rw [Complex.norm_ofReal, abs_of_nonneg (hA_nonneg _ _)]
+  · simp_rw [norm_mul]
+  · exact (h_triangle_eq i).symm
+  · simp; rfl
+  · rw [hx_eig]
+  · rw [Pi.smul_apply]; rfl
+  · rw [norm_mul]
+  · simp [smul_eq_mul]
 
 /--
 If equality holds in the triangle inequality for `∑ z_j`, then all non-zero `z_j`
 are aligned with the sum.
 -/
-lemma aligned_of_all_nonneg_re_im
-    {A : Matrix n n ℝ} {i : n} {x : n → ℂ}
-    (h_sum_eq : ‖∑ j, (A i j : ℂ) * x j‖ =
-                ∑ j, ‖(A i j : ℂ) * x j‖) :
-    ∀ j, (A i j : ℂ) * x j ≠ 0 →
-      ∃ c : ℝ, 0 ≤ c ∧
-        (A i j : ℂ) * x j = c • (∑ k, (A i k : ℂ) * x k) := by
-  classical
+lemma aligned_of_all_nonneg_re_im {i : n} {x : n → ℂ}
+  (h_sum_eq : ‖∑ j, (A i j : ℂ) * x j‖ = ∑ j, ‖(A i j : ℂ) * x j‖) :
+    ∀ j, (A i j : ℂ) * x j ≠ 0 → ∃ c : ℝ, 0 ≤ c ∧ (A i j : ℂ) * x j = c • (∑ k, (A i k : ℂ) * x k) := by
   let z : n → ℂ := fun j => (A i j : ℂ) * x j
   let s : ℂ     := ∑ j, z j
   have h_z_sum : ‖s‖ = ∑ j, ‖z j‖ := by
@@ -103,47 +101,33 @@ lemma aligned_of_all_nonneg_re_im
   intro j hz_ne_zero
   have hs_ne_zero : s ≠ 0 := by
     intro hs
-    have h_norms_zero : ∑ j, ‖z j‖ = 0 := by
-      simp_all only [Complex.norm_mul, norm_real, Real.norm_eq_abs, Finset.sum_def, ne_eq, mul_eq_zero, ofReal_eq_zero,
-        not_or, norm_zero, z, s]
+    have h_norms_zero : ∑ j, ‖z j‖ = 0 := by aesop
     have h_all_zero : ∀ k, ‖z k‖ = 0 := by
       intro k
-      exact eq_zero_of_sum_eq_zero
-              (fun k => ‖z k‖) (fun _ => norm_nonneg _) h_norms_zero k
+      exact eq_zero_of_sum_eq_zero (fun k => ‖z k‖) (fun _ => norm_nonneg _) h_norms_zero k
     have h_zj_zero : z j = 0 := by
-      apply norm_eq_zero.mp
-      simpa using h_all_zero j
+      apply norm_eq_zero.mp; simpa using h_all_zero j
     exact hz_ne_zero h_zj_zero
   have h_align :=
-    Complex.each_term_is_nonneg_real_multiple_of_sum_of_triangle_eq
-      (s := Finset.univ)
-      (v := z)
-      (u := s)
-      (by simp [s])
-      (by simpa [s] using h_z_sum)
-      hs_ne_zero
+    Complex.each_term_is_nonneg_real_multiple_of_sum_of_triangle_eq (s := Finset.univ)
+      (v := z) (u := s) (by simp [s]) (by simpa [s] using h_z_sum) hs_ne_zero
   rcases h_align j (by simp) with ⟨c, hc_nonneg, hcz⟩
   have hcz' : z j = (c : ℂ) * s := hcz
   have hcz_smul : z j = c • s := by simpa [smul_eq_mul] using hcz'
   refine ⟨c, hc_nonneg, ?_⟩
   simpa [z, s] using hcz_smul
 
-/-- For a non-negative matrix A, if the row sums are all equal to λ, then λ is an eigenvalue
-    with the all-ones vector as its eigenvector. -/
-lemma row_sum_eigenvalue
-    (_ : ∀ i j, 0 ≤ A i j) (lambda : ℝ) (h_row_sums : ∀ i, ∑ j, A i j = lambda) :
-    A *ᵥ (fun _ => (1 : ℝ)) = lambda • (fun _ => (1 : ℝ)) := by
+/-- For a non-negative matrix `A`, if the row sums are all
+equal to `lambda`, then `lambda` is an eigenvalue with the all-ones vector as its eigenvector. -/
+lemma row_sum_eigenvalue (_ : ∀ i j, 0 ≤ A i j) (h_row_sums : ∀ i, ∑ j, A i j = lambda) :
+  A *ᵥ (1 : n → ℝ) = lambda • (1 : n → ℝ) := by
   ext i
-  rw [mulVec_apply, Pi.smul_apply, smul_eq_mul]
-  simp only [mul_one]
-  rw [h_row_sums i]
+  simp [mulVec_apply, h_row_sums i, smul_eq_mul]
 
 /-- If the dot product of a non-negative vector `v` and a strictly positive vector `w` is zero,
     then `v` must be the zero vector. -/
-lemma eq_zero_of_dotProduct_eq_zero_of_nonneg_of_pos
-    {v w : n → ℝ} (hv_nonneg : ∀ i, 0 ≤ v i) (hw_pos : ∀ i, 0 < w i)
-    (h_dot : v ⬝ᵥ w = 0) :
-    v = 0 := by
+lemma eq_zero_of_dotProduct_eq_zero_of_nonneg_of_pos {v w : n → ℝ}
+    (hv_nonneg : ∀ i, 0 ≤ v i) (hw_pos : ∀ i, 0 < w i) (h_dot : v ⬝ᵥ w = 0) : v = 0 := by
   rw [dotProduct] at h_dot
   have h_terms_nonneg : ∀ i, 0 ≤ v i * w i := by
     intro i
@@ -158,67 +142,55 @@ lemma eq_zero_of_dotProduct_eq_zero_of_nonneg_of_pos
 If a scalar `μ` is in the spectrum of a complex matrix `A`, then there exists a non-zero
 eigenvector `x` for that eigenvalue.
 -/
-theorem exists_eigenvector_of_mem_spectrum
-    {A' : Matrix n n ℝ} {μ : ℂ} (h : μ ∈ spectrum ℂ (A'.map (algebraMap ℝ ℂ))) :
+theorem exists_eigenvector_of_mem_spectrum {A' : Matrix n n ℝ} {μ : ℂ}
+    (h : μ ∈ spectrum ℂ (A'.map (algebraMap ℝ ℂ))) :
     ∃ x, x ≠ 0 ∧ (A'.map (algebraMap ℝ ℂ)) *ᵥ x = μ • x := by
-  let B := A'.map (algebraMap ℝ ℂ)
-  have h_spec : μ ∈ spectrum ℂ (toLin' B) := by
+  have h_spec : μ ∈ spectrum ℂ (toLin' (A'.map (algebraMap ℝ ℂ))) := by
     rwa [spectrum.Matrix_toLin'_eq_spectrum]
-  rcases Module.End.exists_eigenvector_of_mem_spectrum h_spec with ⟨x, hx_ne_zero, hx_eig⟩
-  refine ⟨x, hx_ne_zero, ?_⟩
-  have h_mul_eq := hx_eig
-  rw [toLin'_apply] at h_mul_eq
-  exact h_mul_eq
+  obtain ⟨x, hx_ne_zero, hx_eig⟩ := Module.End.exists_eigenvector_of_mem_spectrum h_spec
+  refine ⟨x, hx_ne_zero, by aesop⟩
 
 /- If `v` is an eigenvector of `A` with eigenvalue `r`, then `v` is an eigenvector of `A^m`
 with eigenvalue `r^m`.
 -/
-lemma pow_eigenvector_of_eigenvector {R : Type*} [DecidableEq n][CommSemiring R] {A : Matrix n n R} {r : R} {v : n → R}
-    (h_eig : A *ᵥ v = r • v) (m : ℕ) :
-    (A ^ m) *ᵥ v = (r ^ m) • v := by
+lemma pow_eigenvector_of_eigenvector [DecidableEq n] [CommSemiring R]
+  {A : Matrix n n R} {r : R} {v : n → R} (h_eig : A *ᵥ v = r • v) (m : ℕ) :
+  (A ^ m) *ᵥ v = (r ^ m) • v := by
   induction m with
   | zero =>
-      simp [pow_zero]            -- (A ^ 0) *ᵥ v = v  and  (r ^ 0) • v = v
+  simp [pow_zero]
   | succ m ih =>
-      -- Goal: (A ^ (m + 1)) *ᵥ v = r ^ (m + 1) • v
-      calc
-        (A ^ m.succ) *ᵥ v
-            = (A ^ m * A) *ᵥ v := by
-                simp [pow_succ]
-        _   = A ^ m *ᵥ (A *ᵥ v) := by
-                rw [Matrix.mulVec_mulVec]
-        _   = A ^ m *ᵥ (r • v) := by
-                simp [h_eig]
-        _   = r • (A ^ m *ᵥ v) := by
-                rw [mulVec_smul]
-        _   = r • (r ^ m • v) := by
-                simp [ih]
-        _   = r ^ (m + 1) • v := by
-                simp [pow_succ', smul_smul]
-
-
-theorem mul_mulVec {α : Type*} [NonUnitalSemiring α] {m l : Type*} [Fintype m] [Fintype l]
-    (M : Matrix l m α) (N : Matrix m n α) (v : n → α) :
-    (M * N) *ᵥ v = M *ᵥ (N *ᵥ v) := by
-  ext i
-  simp only [mulVec, mul_apply, dotProduct]
-  apply dotProduct_assoc
+  calc
+    (A ^ m.succ) *ᵥ v = (A ^ m * A) *ᵥ v := ?_
+    _ = A ^ m *ᵥ (A *ᵥ v) := ?_
+    _ = A ^ m *ᵥ (r • v) := ?_
+    _ = r • (A ^ m *ᵥ v) := ?_
+    _ = r • (r ^ m • v) := ?_
+    _ = r ^ (m + 1) • v := ?_
+  · simp [pow_succ]
+  · rw [Matrix.mulVec_mulVec]
+  · simp [h_eig]
+  · rw [mulVec_smul]
+  · simp [ih]
+  · simp [pow_succ', smul_smul]
 
 private lemma sum_component_norms_eq_perron_power_norm [DecidableEq n] -- [CommSemiring R]
-    {A : Matrix n n ℝ} {x : n → ℂ}
-    (h_x_abs_eig : A *ᵥ (fun i ↦ ‖x i‖) = (perronRoot_alt A) • (fun i ↦ ‖x i‖))
-    (k : ℕ) (m : n) (hAk_pos : ∀ i j, 0 < (A ^ k) i j) :
-    ∑ l, ‖((A ^ k) m l : ℂ) * x l‖ = (perronRoot_alt A) ^ k * ‖x m‖ := by
+      {A : Matrix n n ℝ} {x : n → ℂ}
+      (h_x_abs_eig : A *ᵥ (fun i ↦ ‖x i‖) = (perronRoot_alt A) • (fun i ↦ ‖x i‖))
+      (k : ℕ) (m : n) (hAk_pos : ∀ i j, 0 < (A ^ k) i j) :
+      ∑ l, ‖((A ^ k) m l : ℂ) * x l‖ = (perronRoot_alt A) ^ k * ‖x m‖ := by
   have h_pow_eig : (A ^ k) *ᵥ (fun i ↦ ‖x i‖) = (perronRoot_alt A) ^ k • (fun i ↦ ‖x i‖) :=
-    pow_eigenvector_of_eigenvector h_x_abs_eig k
-  calc ∑ l, ‖((A ^ k) m l : ℂ) * x l‖
-    = ∑ l, |(A ^ k) m l| * ‖x l‖ := by
-        simp_rw [norm_mul, Complex.norm_ofReal]
-    _ = ∑ l, (A ^ k) m l * ‖x l‖ := by
-      simp_rw [abs_of_pos (hAk_pos m _)]
-    _ = ((A ^ k) *ᵥ (fun i ↦ ‖x i‖)) m := by simp [mulVec_apply]
-    _ = ((perronRoot_alt A) ^ k • (fun i ↦ ‖x i‖)) m := by rw [h_pow_eig]
-    _ = (perronRoot_alt A) ^ k * ‖x m‖ := by simp [Pi.smul_apply, smul_eq_mul]
+  pow_eigenvector_of_eigenvector h_x_abs_eig k
+  calc ∑ l, ‖((A ^ k) m l : ℂ) * x l‖ = ∑ l, |(A ^ k) m l| * ‖x l‖ := ?_
+    _ = ∑ l, (A ^ k) m l * ‖x l‖ := ?_
+    _ = ((A ^ k) *ᵥ (fun i ↦ ‖x i‖)) m := ?_
+    _ = ((perronRoot_alt A) ^ k • (fun i ↦ ‖x i‖)) m := ?_
+    _ = (perronRoot_alt A) ^ k * ‖x m‖ := ?_
+  · simp_rw [norm_mul, Complex.norm_ofReal]
+  · simp_rw [abs_of_pos (hAk_pos m _)]
+  · simp [mulVec_apply]
+  · simpa using congrArg (fun v => v m) h_pow_eig
+  · simp [Pi.smul_apply, smul_eq_mul]
 
 /--
 If `x` is a complex eigenvector of a real matrix `A` with eigenvalue `μ`, then `x` is an
@@ -432,7 +404,8 @@ lemma subinvariant_equality_implies_eigenvector
         _   = perronRoot_alt A   := (perronRoot_transpose_eq A hA_irred).symm
         _   = r                 := rfl
     have h_dot_z : u ⬝ᵥ z = 0 := by
-      rw [dotProduct_sub, dotProduct_mulVec, h_u_left_eig, h_rT_eq_r, dotProduct_smul_left, dotProduct_smul, smul_eq_mul, sub_self]
+      rw [dotProduct_sub, dotProduct_mulVec, h_u_left_eig, h_rT_eq_r, dotProduct_smul_left,
+        dotProduct_smul, smul_eq_mul, sub_self]
     have h_z_is_zero' := eq_zero_of_dotProduct_eq_zero_of_nonneg_of_pos hz_nonneg hu_pos (by rwa [dotProduct_comm])
     contradiction
 
@@ -742,7 +715,7 @@ lemma IsIrreducible.exists_pos_entry_in_row {A : Matrix n n ℝ} (hA_irred : A.I
   have h_pos : p.length > 0 := hp_pos
   obtain ⟨c, e, p', hp_eq, hp_len_eq⟩ :=
     Quiver.Path.path_decomposition_first_edge p h_pos
-  have hic_pos : 0 < A i c := e
+  have hic_pos : 0 < A i c := e.down
   exact (h_row_zero c).symm.not_lt hic_pos
 
 /-- If a complex number z ≠ 0 is a positive real multiple of another complex number w ≠ 0,
@@ -1237,6 +1210,6 @@ theorem spectral_dominance_of_primitive'
   cases h_lt_or_eq with
   | inl h_lt   => exact h_lt
   | inr h_eq   =>
-      have h_eqμ : μ = perronRoot_alt A := by
-        exact @spectral_dominance_of_primitive n _ _ _ A hA_prim hA_nonneg μ h_is_eigenvalue h_eq
-      exact (h_ne_perron h_eqμ).elim
+  have h_eqμ : μ = perronRoot_alt A :=
+    @spectral_dominance_of_primitive n _ _ _ A hA_prim hA_nonneg μ h_is_eigenvalue h_eq
+  exact (h_ne_perron h_eqμ).elim

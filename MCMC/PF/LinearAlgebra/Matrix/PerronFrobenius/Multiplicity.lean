@@ -21,10 +21,7 @@ lemma LinearMap.ker_pow_eq_ker_of_ker_sq_eq_ker
   · simp [pow_one]
   · apply le_antisymm
     · intro x hx
-      have hx' : (f ^ (m + 1)) (f x) = 0 := by
-        simp_all only [Nat.succ_eq_add_one, ge_iff_le, le_add_iff_nonneg_left, le_refl, List.Nat.eq_of_le_zero,
-          zero_le, forall_const, LinearMap.mem_ker]
-        exact hx
+      have hx' : (f ^ (m + 1)) (f x) = 0 := by aesop
       have : f x ∈ LinearMap.ker (f ^ (m + 1)) := by
         simpa [LinearMap.mem_ker] using hx'
       have : f x ∈ LinearMap.ker f := by simpa [ih] using this
@@ -43,7 +40,8 @@ lemma geometric_multiplicity_one_of_irreducible
     ∃ v : n → ℝ, (∀ i, 0 < v i) ∧ Module.End.eigenspace (toLin' A) r = Submodule.span ℝ {v} := by
   let r := perronRoot_alt A
   let f := toLin' A
-  obtain ⟨r_ex, v, hr_pos, hv_pos, hv_eig_mat, hr_eq_r⟩ := perron_root_eq_positive_eigenvalue hA_irred hA_nonneg
+  obtain ⟨r_ex, v, hr_pos, hv_pos, hv_eig_mat, hr_eq_r⟩ :=
+    perron_root_eq_positive_eigenvalue hA_irred hA_nonneg
   rw [← hr_eq_r] at hv_eig_mat hr_pos
   have hv_eig_f : f v = r • v := by rwa [toLin'_apply]
   use v, hv_pos

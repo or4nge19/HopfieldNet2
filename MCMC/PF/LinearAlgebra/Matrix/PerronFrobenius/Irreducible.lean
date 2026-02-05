@@ -44,8 +44,8 @@ theorem Irreducible.add_one (h_irred : A.IsIrreducible) : (1 + A).IsIrreducible 
           ⟨@Quiver.Path.nil n (toQuiver B) u, ⟨by simp⟩⟩
       | u, _, @Quiver.Path.cons n (toQuiver A) u b c p e =>
           let ⟨p', hp'⟩ := liftPath_len p
-          have eA : 0 < A b c := e
-          ⟨@Quiver.Path.cons n (toQuiver B) u b c p' (map_edge eA),
+          have eA : 0 < A b c := e.down
+          ⟨@Quiver.Path.cons n (toQuiver B) u b c p' ⟨map_edge eA⟩,
             ⟨by simp [hp'.down]⟩⟩
     obtain ⟨pB, hp_len⟩ := liftPath_len pA'
     have hpA_pos' : 0 < (@Quiver.Path.length n (toQuiver A) i j pA') := by
@@ -62,8 +62,9 @@ theorem Irreducible.add_one (h_irred : A.IsIrreducible) : (1 + A).IsIrreducible 
 A non-zero, non-negative eigenvector of an irreducible matrix is
 in fact strictly positive.
 -/
-lemma eigenvector_no_zero_entries_of_irreducible [Fintype n] {r : ℝ} (hA_irred : A.IsIrreducible)
-    (_ : 0 < r) {v : n → ℝ} (h_eig : A *ᵥ v = r • v) (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
+lemma eigenvector_no_zero_entries_of_irreducible [Fintype n] {r : ℝ}
+    (hA_irred : A.IsIrreducible) (_ : 0 < r) {v : n → ℝ}
+    (h_eig : A *ᵥ v = r • v) (hv_nonneg : ∀ i, 0 ≤ v i) (hv_ne_zero : v ≠ 0) :
   ∀ i, 0 < v i := by
   by_contra h_has_zero
   push_neg at h_has_zero
@@ -123,11 +124,13 @@ variable {n : Type*} [Fintype n] [DecidableEq n]
 variable {A : Matrix n n ℝ}
 
 /-- **Perron–Frobenius, irreducible case (Existence part)**
-If `A` is a non-negative irreducible matrix, then there exists a strictly positive eigenvalue `r > 0`
-and a strictly positive eigenvector `v` (`∀ i, 0 < v i`) such that `A *ᵥ v = r • v`.
+If `A` is a non-negative irreducible matrix, then there exists a
+strictly positive eigenvalue `r > 0` and a strictly positive
+eigenvector `v` (`∀ i, 0 < v i`) such that `A *ᵥ v = r • v`.
 
-The proof uses the auxiliary matrix `B = 1 + A`, which is primitive, to apply the Perron-Frobenius theorem
-for primitive matrices and translate the result back to `A`. -/
+The proof uses the auxiliary matrix `B = 1 + A`, which is primitive,
+to apply the Perron-Frobenius theorem for primitive matrices and translate
+the result back to `A`. -/
 theorem exists_positive_eigenvector_of_irreducible [Nonempty n]
   (hA_irred : A.IsIrreducible) :
     ∃ (r : ℝ) (v : n → ℝ),
@@ -175,7 +178,7 @@ theorem exists_positive_eigenvector_of_irreducible [Nonempty n]
     obtain ⟨p₀, hp₀_len⟩ := hA_irred.connected i₀ i₀
     rcases Quiver.Path.path_decomposition_first_edge p₀ hp₀_len with
       ⟨j, e, -, -, -⟩
-    exact ⟨i₀, j, e⟩
+    exact ⟨i₀, j, e.down⟩
   rcases h_pos_entry with ⟨i₀, j₀, hA_pos⟩
   -- 4b.  The `i₀`-component of `A * v` is positive.
   have hAv_i₀_pos : 0 < (A *ᵥ v) i₀ := by
@@ -207,7 +210,8 @@ theorem exists_positive_eigenvector_of_irreducible [Nonempty n]
   have hrA_pos : 0 < rB - 1 := sub_pos.mpr hrB_gt_one
   exact ⟨rB - 1, v, hrA_pos, hv_pos, h_eig_A⟩
 
-/-! A non-zero, non-negative eigenvector of an irreducible matrix is in fact **strictly** positive. -/
+/-! A non-zero, non-negative eigenvector of an irreducible matrix
+  is in fact **strictly** positive. -/
 lemma eigenvector_is_positive_of_irreducible [Nonempty n] {r : ℝ}
   (hA_irred : A.IsIrreducible)
     {v : n → ℝ} (h_eig : A *ᵥ v = r • v)
@@ -235,7 +239,7 @@ lemma eigenvector_is_positive_of_irreducible [Nonempty n] {r : ℝ}
       have : 0 < v i₀ := by
         have : i₀ ∈ S := by
           have : i₀ ∈ (Set.univ : Set n) := by trivial
-          simp_all only [ne_eq, Set.mem_setOf_eq, gt_iff_lt, implies_true, Set.mem_univ, S, T]
+          aesop
         simpa [S] using this
       have : v i₀ = 0 := by
         have : 0 ≤ v i₀ := hv_nonneg i₀
@@ -468,9 +472,7 @@ theorem pft_primitive
     have w_j₀_eq : w.1 j₀ = d * v0 j₀ := by
       have : d = w.1 j₀ / v0 j₀ := hd_eq
       have v0_ne : v0 j₀ ≠ 0 := ne_of_gt v0_j₀_pos
-      simp_all only [gt_iff_lt, sum_def, ne_eq, Pi.smul_apply, smul_eq_mul, inv_pos, mul_nonneg_iff_of_pos_left,
-        mul_pos_iff_of_pos_left, implies_true, div_pos_iff_of_pos_left, mem_univ, ge_iff_le, mul_eq_zero, inv_eq_zero,
-        false_or, isUnit_iff_ne_zero, or_self, not_false_eq_true, IsUnit.div_mul_cancel, s, v0, c, d]
+      aesop
     have h_r'_ge_r : r' ≥ r := by
       have h_pos : 0 < d * v0 j₀ := mul_pos hd_pos v0_j₀_pos
       have h1 : d * r * v0 j₀ ≤ r' * w.1 j₀ := by
@@ -516,19 +518,21 @@ lemma Irreducible.exists_pos_entry
   obtain ⟨p, hp_pos⟩ := hA_irred.connected i₀ i₀
   rcases Quiver.Path.path_decomposition_first_edge p hp_pos with
     ⟨j, e, -, -, -⟩
-  exact ⟨i₀, j, e⟩
+  exact ⟨i₀, j, e.down⟩
 
 /--
 **Perron–Frobenius theorem for irreducible real matrices (Existence, positivity, uniqueness)**.
 
-Let A : Matrix n n ℝ be an irreducible nonnegative matrix indexed by a finite nonempty type n.
+Let A : Matrix n n ℝ be an irreducible nonnegative matrix
+indexed by a finite nonempty type n.
 Then there exists a unique eigenpair (v, r) where
-  • v : stdSimplex ℝ n is a probability vector (i.e. v.val has nonnegative entries summing to 1),
+  • v : stdSimplex ℝ n is a probability vector
+    (i.e. v.val has nonnegative entries summing to 1),
   • r : ℝ is a positive scalar,
 such that
   A *ᵥ v.val = r • v.val   and   r > 0.
-Moreover, this eigenvector v in the standard simplex is unique, and the corresponding eigenvalue r
-is the Perron root of A.
+Moreover, this eigenvector v in the standard simplex is unique,
+and the corresponding eigenvalue r is the Perron root of A.
 -/
 theorem pft_irreducible {n : Type*} [Fintype n] [Nonempty n] [DecidableEq n]
   {A : Matrix n n ℝ} (hA_irred : A.IsIrreducible) :
@@ -555,7 +559,8 @@ theorem pft_irreducible {n : Type*} [Fintype n] [Nonempty n] [DecidableEq n]
   let r : ℝ := rB - 1
   have h_eig_A : A *ᵥ v.val = r • v.val := by
     have h_B_eig_expanded : (1 + A) *ᵥ v.val = rB • v.val := by simpa [B] using h_eig_B
-    have h_A_eig_expanded : v.val + A *ᵥ v.val = rB • v.val := by simpa [add_mulVec, one_mulVec] using h_B_eig_expanded
+    have h_A_eig_expanded : v.val + A *ᵥ v.val = rB • v.val :=
+      by simpa [add_mulVec, one_mulVec] using h_B_eig_expanded
     have : A *ᵥ v.val = rB • v.val - v.val := eq_sub_of_add_eq' h_A_eig_expanded
     simpa [r, sub_smul, one_smul] using this
   let v_pos :=
@@ -602,8 +607,7 @@ theorem pft_irreducible {n : Type*} [Fintype n] [Nonempty n] [DecidableEq n]
         _ = r' := by ring
     have h_eig_A'_r : A *ᵥ v'.val = r • v'.val := by
       subst hr_eq
-      simp_all only [add_apply, one_apply_eq, gt_iff_lt, exists_prop, forall_exists_index, and_imp, Subtype.forall,
-        sub_pos, implies_true, B, r]
+      aesop
     obtain ⟨c, hc_pos, hcv⟩ :=
       uniqueness_of_positive_eigenvector_gen
         hA_irred hr_pos v_pos' v'_pos h_eig_A h_eig_A'_r
