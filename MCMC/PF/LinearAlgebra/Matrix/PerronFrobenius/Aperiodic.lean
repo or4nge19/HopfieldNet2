@@ -1,10 +1,10 @@
 import MCMC.PF.Combinatorics.Quiver.Cyclic
 import MCMC.PF.Combinatorics.Quiver.Path
 
+namespace Matrix
+
 open Quiver
 
-namespace Matrix
-open Quiver
 variable {n : Type*} [Fintype n] [DecidableEq n] {A : Matrix n n ℝ}
 
 /-! # Aperiodic matrices -/
@@ -52,7 +52,8 @@ theorem primitive_implies_irreducible_and_aperiodic [Nonempty n] (hA_nonneg : �
 
 /-! # Frobenius Normal Form -/
 
-/-- Predicate: `P` is a permutation matrix (entries are 1 on a single position in each row given by a permutation, 0 elsewhere). -/
+/-- Predicate: `P` is a permutation matrix
+ (entries are 1 on a single position in each row given by a permutation, 0 elsewhere). -/
 def IsPermutationMatrix (P : Matrix n n ℝ) : Prop :=
   ∃ σ : Equiv.Perm n, ∀ i j, P i j = if σ i = j then 1 else 0
 
