@@ -23,7 +23,7 @@ theorem exists_positive_eigenvector_of_irreducible_stochastic
   have hAT_row_sum : ∀ i, ∑ j, A_T i j = 1 := by
     simpa [A_T, transpose_apply] using h_col_stoch
   have h_ones_eig : A_T *ᵥ (fun _ => 1) = 1 • (fun _ => 1) := by
-    simpa using row_sum_eigenvalue hAT_nonneg 1 hAT_row_sum
+    simpa using row_sum_eigenvalue hAT_nonneg hAT_row_sum
   have hAT_irred : A_T.IsIrreducible := Matrix.IsIrreducible.transpose hA_irred
   have r_AT_eq_one : perronRoot_alt A_T = 1 := by
     have h :=

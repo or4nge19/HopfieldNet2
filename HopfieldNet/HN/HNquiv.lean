@@ -49,7 +49,7 @@ abbrev HNfout (act : R) : R := act
 abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
    [Nonempty U] [Fintype U] : NeuralNetwork R U where
   /- The adjacency relation between neurons `u` and `v`, defined as `u ≠ v`. -/
-  Hom u v := PLift (u ≠ v)
+  Hom u v := (u ≠ v)
   /- The set of input neurons, defined as the universal set. -/
   Ui := Set.univ
   /- The set of output neurons, defined as the universal set. -/

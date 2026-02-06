@@ -475,11 +475,8 @@ theorem le_eigenvalue_of_right_eigenvector [Nonempty n]  [DecidableEq n]
   let D := Matrix.diagonal v
   let D_inv := Matrix.diagonal (v⁻¹)
   let B := D_inv * A * D
-  have hB_nonneg : ∀ i j, 0 ≤ B i j := by
-    intro i j
-    have hBij : B i j = (v i)⁻¹ * A i j * v j := by
-      simp [B, D, D_inv, Matrix.mul_apply, mul_assoc, diagonal]
-    simpa [hBij, mul_assoc] using
+  have hB_nonneg : ∀ i j, 0 ≤ B i j := fun i j ↦ by
+    simpa [B, D, D_inv, Matrix.mul_apply, mul_assoc, diagonal, mul_assoc] using
       mul_nonneg (mul_nonneg (inv_nonneg.2 (hv_pos i).le) (hA_nonneg i j)) (hv_pos j).le
   have h_B_row_sum := row_sum_of_similarity_transformed_matrix hv_pos h_eig
   let x := D_inv *ᵥ w
@@ -489,17 +486,17 @@ theorem le_eigenvalue_of_right_eigenvector [Nonempty n]  [DecidableEq n]
     rw [mulVec_diagonal]
     exact mul_nonneg (inv_nonneg.mpr (hv_pos i).le) (hw_nonneg i)
   have hx_ne_zero : x ≠ 0 := by
-    contrapose! hw_ne_zero
+    intro hx
+    apply hw_ne_zero
     have h_w_eq_Dx : w = D *ᵥ x := by
-      ext i
-      simp [x, D, D_inv, mulVec_diagonal, (hv_pos i).ne']
-    rw [h_w_eq_Dx, hw_ne_zero, mulVec_zero]
+      ext i;simp [x, D, D_inv, mulVec_diagonal, (hv_pos i).ne']
+    calc
+      w = D *ᵥ x := h_w_eq_Dx
+      _ = 0 := by simp [hx]
   have h_le_Bx : (collatzWielandtFn A w) • x ≤ B *ᵥ x := by
     have h_le_mulVec := CollatzWielandt.le_mulVec hA_nonneg hw_nonneg hw_ne_zero
     have h_w_eq_Dx : w = D *ᵥ x := by
-      ext i
-      simp [x, D, D_inv, mulVec_diagonal, (hv_pos i).ne']
-    have h_smul_le : (collatzWielandtFn A w) • w ≤ A *ᵥ w := h_le_mulVec
+      ext i; simp [x, D, D_inv, mulVec_diagonal, (hv_pos i).ne']
     have h1 : (collatzWielandtFn A w) • x = D_inv *ᵥ ((collatzWielandtFn A w) • w) := by
       rw [← mulVec_smul, h_w_eq_Dx]
     rw [h1]
@@ -508,7 +505,7 @@ theorem le_eigenvalue_of_right_eigenvector [Nonempty n]  [DecidableEq n]
       by_cases h : i = j <;>
       simp [D_inv, h, inv_nonneg, (hv_pos _).le]
     intro i
-    have h_comp_le : ((collatzWielandtFn A w) • w) i ≤ (A *ᵥ w) i := h_smul_le i
+    have h_comp_le : ((collatzWielandtFn A w) • w) i ≤ (A *ᵥ w) i := h_le_mulVec i
     have h_mulVec_mono :
       (D_inv *ᵥ ((collatzWielandtFn A w) • w)) i ≤ (D_inv *ᵥ (A *ᵥ w)) i := by
       simpa [mulVec_apply] using
@@ -522,14 +519,13 @@ theorem le_eigenvalue_of_right_eigenvector [Nonempty n]  [DecidableEq n]
 /- Any positive eigenvalue `r` with a strictly positive right eigenvector `v` is an
 upper bound for the range of the Collatz-Wielandt function.
 -/
-theorem eigenvalue_is_ub_of_positive_eigenvector [Nonempty n]  [DecidableEq n]
+theorem eigenvalue_is_ub_of_positive_eigenvector [Nonempty n] [DecidableEq n]
     (hA_nonneg : ∀ i j, 0 ≤ A i j) {r : ℝ} (hr_pos : 0 < r) {v : n → ℝ}
-    (hv_pos : ∀ i, 0 < v i) (h_eig : A *ᵥ v = r • v) :
-    perronRoot_alt A ≤ r := by
-  apply csSup_le (CollatzWielandt.set_nonempty (A := A))
-  rintro _ ⟨w, ⟨hw_nonneg, hw_ne_zero⟩, rfl⟩
-  exact CollatzWielandt.le_eigenvalue_of_right_eigenvector
-    hA_nonneg hr_pos hv_pos h_eig hw_nonneg hw_ne_zero
+    (hv_pos : ∀ i, 0 < v i) (h_eig : A *ᵥ v = r • v) : perronRoot_alt A ≤ r := by
+  refine csSup_le (CollatzWielandt.set_nonempty (A := A)) (fun y hy ↦ ?_)
+  obtain ⟨w, ⟨hw_nonneg, hw_ne_zero⟩, rfl⟩ := hy
+  exact (CollatzWielandt.le_eigenvalue_of_right_eigenvector (A := A)
+    hA_nonneg hr_pos hv_pos h_eig hw_nonneg hw_ne_zero)
 
 open CollatzWielandt
 
@@ -584,20 +580,17 @@ lemma maximizer_satisfies_le_mulVec [Nonempty n] [DecidableEq n]
         · simpa [hx'] using (mul_nonneg (inv_nonneg.2 s_pos.le) (hx_nonneg i))
         · simp only [hx', Pi.smul_apply, smul_eq_mul, ← mul_sum, ← hs]
           field_simp [ne_of_gt s_pos]
-      have h_max : collatzWielandtFn A x' ≤ collatzWielandtFn A v :=
-        v_is_max hx'_in_simplex
       have h_scale : collatzWielandtFn A x = collatzWielandtFn A x' := by
-        have h_smul := smul (inv_pos.mpr s_pos) hA_nonneg hx_nonneg hx_ne_zero
-        rw [← hx'] at h_smul
-        exact h_smul.symm
-      rwa [h_scale]
+        simpa [hx'] using
+          (smul (A := A) (x := x) (c := s⁻¹) (inv_pos.2 s_pos)
+          hA_nonneg hx_nonneg hx_ne_zero).symm
+      simpa [h_scale] using v_is_max hx'_in_simplex
     · -- `collatzWielandtFn A v ≤ perronRoot_alt A`
       apply le_csSup (bddAbove_image_P_set A hA_nonneg)
        (Set.mem_image_of_mem _ ⟨v_in_simplex.1, v_ne_zero⟩)
-  have h_le : (perronRoot_alt A) • v ≤ A *ᵥ v := by
-    simpa [r_eq] using (le_mulVec hA_nonneg (v_in_simplex.1) v_ne_zero)
   refine ⟨v, v_in_simplex, ?_⟩
-  simpa [r] using h_le
+  simpa [r, r_eq] using
+    (le_mulVec (A := A) hA_nonneg v_in_simplex.1 v_ne_zero)
 
 /--
 The conditional supremum of a non-empty, bounded above set of
@@ -638,8 +631,6 @@ theorem le_of_subinvariant [DecidableEq n] (_ : ∀ i j, 0 ≤ A i j)
   rw [collatzWielandtFn, dif_pos hS_nonempty]
   apply le_inf'
   intro j hj
-  have h_j : lambda * w j ≤ (A *ᵥ w) j := by
-    simp_all only [ne_eq, Set.toFinset_setOf, mem_filter, S]
-    apply h_sub
+  have h_j : lambda * w j ≤ (A *ᵥ w) j := by aesop
   have hw_j_pos : 0 < w j := by simpa [S] using hj
   exact (le_div_iff₀ hw_j_pos).mpr (h_sub j)
