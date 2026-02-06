@@ -1,5 +1,3 @@
-
-
 import HopfieldNet.StochasticQuiv
 import Mathlib.Analysis.Normed.Field.Instances
 import Mathlib.Data.ENNReal.Basic
