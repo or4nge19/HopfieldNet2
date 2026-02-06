@@ -1,8 +1,4 @@
-/-
-Copyright (c) 2024 Michail Karatarakis. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michail Karatarakis
--/
+
 import Mathlib.LinearAlgebra.Matrix.Symmetric
 import Mathlib.Data.Matrix.Reflection
 import Mathlib.Data.Vector.Defs
@@ -49,7 +45,7 @@ abbrev HNfout (act : R) : R := act
 abbrev HopfieldNetwork (R U : Type) [Field R] [LinearOrder R] [IsStrictOrderedRing R] [DecidableEq U]
    [Nonempty U] [Fintype U] : NeuralNetwork R U where
   /- The adjacency relation between neurons `u` and `v`, defined as `u ≠ v`. -/
-  Hom u v := (u ≠ v)
+  Hom u v := PLift (u ≠ v)
   /- The set of input neurons, defined as the universal set. -/
   Ui := Set.univ
   /- The set of output neurons, defined as the universal set. -/

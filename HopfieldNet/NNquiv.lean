@@ -1,8 +1,4 @@
-/-
-Copyright (c) 2025 Michail Karatarakis. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Michail Karatarakis
--/
+
 import Mathlib.Combinatorics.Quiver.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Analysis.Normed.Field.Lemmas
@@ -11,9 +7,9 @@ import Mathlib.Data.List.Pairwise
 
 open Mathlib
 
-universe u
+universe u v
 
-structure NeuralNetwork (R U : Type u) [Zero R] extends Quiver.{u+1} U where
+structure NeuralNetwork (R U : Type u) [Zero R] extends Quiver.{v,u} U where
   (Ui Uo Uh : Set U)
   (hUi : Ui ≠ ∅)
   (hUo : Uo ≠ ∅)

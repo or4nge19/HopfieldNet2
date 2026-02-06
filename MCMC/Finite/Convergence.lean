@@ -28,7 +28,8 @@ lemma LimitMatrix_is_stochastic (π : stdSimplex ℝ n) : IsStochastic (LimitMat
 
 omit [DecidableEq n] in
 /--  P * Π = Π and Π * P = Π. The limit matrix is absorbing. -/
-theorem LimitMatrix_absorbing (P : Matrix n n ℝ) (π : stdSimplex ℝ n) (h_stoch : IsStochastic P) (h_stat : IsStationary P π) :
+theorem LimitMatrix_absorbing (P : Matrix n n ℝ) (π : stdSimplex ℝ n)
+    (h_stoch : IsStochastic P) (h_stat : IsStationary P π) :
   P * LimitMatrix π = LimitMatrix π ∧ LimitMatrix π * P = LimitMatrix π := by
   constructor
   · -- P * Π = Π (Relies on P being stochastic).
@@ -87,7 +88,7 @@ lemma pow_stationary_mulVec [Nonempty n] (P : Matrix n n ℝ) (k : ℕ)
           = (Pᵀ * (Pᵀ ^ k)) *ᵥ π.val := by
               simp [pow_succ, Matrix.transpose_mul, Matrix.transpose_pow]
       _ = Pᵀ *ᵥ ((Pᵀ ^ k) *ᵥ π.val) := by
-              simp_rw [Matrix.mul_mulVec]
+              simp only [mulVec_mulVec]
       _ = Pᵀ *ᵥ π.val := by
               simp [ih']
       _ = π.val := by
@@ -504,6 +505,6 @@ theorem ergodic_theorem_lln [Nonempty n]
         fun N : ℕ => (∑ k ∈ Finset.range N, a_k k) / (N : ℝ) := by
     funext N
     simp [expected_time_average, div_eq_inv_mul]
-  simp_all only [CollatzWielandt.Finset.sum_def, one_div, a_k, μₖ, L, expected_time_average]
+  simp_all only [one_div, a_k, μₖ, L, expected_time_average]
 
 end MCMC.Finite
