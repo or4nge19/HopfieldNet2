@@ -22,11 +22,8 @@ noncomputable def vecToMeasure (π : stdSimplex ℝ n) : Measure n :=
   ∑ i : n, (ENNReal.ofReal (π.val i)) • Measure.dirac i
 
 omit [DecidableEq n] in
-private lemma kernel_eval_on_set
-    {P : Matrix n n ℝ} (hP : IsStochastic P) (i : n)
-    (B : Set n) (hB : MeasurableSet B) :
-    (matrixToKernel P hP) i B
-      = ∑ j : n, ENNReal.ofReal (P i j) * B.indicator 1 j := by
+private lemma kernel_eval_on_set (hP : IsStochastic P) (i : n) (B : Set n) (hB : MeasurableSet B) :
+  (matrixToKernel P hP) i B = ∑ j : n, ENNReal.ofReal (P i j) * B.indicator 1 j := by
   change ((∑ j : n, ENNReal.ofReal (P i j) • Measure.dirac j) : Measure n) B = _
   simp [hB, Measure.dirac_apply']
 
