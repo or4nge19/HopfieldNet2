@@ -290,6 +290,7 @@ lemma gibbsUpdate_apply_updPos
     exact hPos_nonneg
   simp [q, hcoe, PMF.bernoulli_bind_pure_apply_left_of_ne (α:=NN.State) hq_le hne,
         pPos]
+  grind
 
 /-- Pointwise evaluation at `updNeg`: exact equality with `1 - probPos`. -/
 lemma gibbsUpdate_apply_updNeg
@@ -332,7 +333,12 @@ lemma gibbsUpdate_apply_updNeg
     have h1 : 0 ≤ 1 - pPos := sub_nonneg.mpr hPos_le_one
     simp [q, ENNReal.ofReal, pPos]
     rfl
-  simpa [q, h_sub, hENN, pPos]
+  simp only [bind_apply, bernoulli_apply, tsum_fintype, Fintype.univ_bool, mem_singleton,
+    Bool.true_eq_false, not_false_eq_true, sum_insert, cond_true, pure_apply, mul_ite, mul_one,
+    mul_zero, sum_singleton, cond_false, ENNReal.coe_sub, ENNReal.coe_one, ↓reduceIte]
+  split
+  · grind
+  · aesop
 
 /-- Eventual equality rewriting Gibbs mass at updPos along β → ∞ to ENNReal.ofReal (probPos at T). -/
 lemma eventually_eval_updPos_eq_ofReal_probPos
