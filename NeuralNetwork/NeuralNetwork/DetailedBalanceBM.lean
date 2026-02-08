@@ -236,12 +236,22 @@ lemma flip_prob_neg_pos
   intro ΔE
   have h_sPos : updPos (NN := NN) s u = s' := by
     ext v; by_cases hv : v = u
-    · subst hv; simp [updPos_act_at_u, h_pos]
-    · simp [updPos_act_noteq (NN := NN) s u v hv, h_off v hv]
+    ·
+      subst hv; simp [updPos_act_at_u, h_pos]
+      dsimp [updPos, updNeg]
+      simp only [Function.update_self]
+      -- aesop
+    · dsimp [updPos, updNeg]
+      grind
+      --simp [updPos_act_noteq (NN := NN) s u v hv, h_off v hv]
   have h_sNeg : updNeg (NN := NN) s u = s := by
     ext v; by_cases hv : v = u
     · subst hv; simp [updNeg_act_at_u, h_neg]
-    · simp [updNeg_act_noteq (NN := NN) s u v hv]
+      dsimp [updPos, updNeg]
+      simp only [Function.update_self]
+    · dsimp [updPos, updNeg]
+      grind
+      --simp [updNeg_act_noteq (NN := NN) s u v hv]
   obtain ⟨h_prob_s, _⟩ :=
     (TwoState.EnergySpec'.probPos_flip_pair (NN := NN) spec p T s u)
   have hΔ₁ :
@@ -257,11 +267,18 @@ lemma flip_prob_neg_pos
   have h_s'Pos : updPos (NN := NN) s' u = s' := by
     ext v; by_cases hv : v = u
     · subst hv; simp [updPos_act_at_u, h_pos]
-    · simp [updPos_act_noteq (NN := NN) s' u v hv]
+      dsimp [updPos, updNeg]
+      simp only [Function.update_self]
+    · dsimp [updPos, updNeg]
+      grind
   have h_s'Neg : updNeg (NN := NN) s' u = s := by
     ext v; by_cases hv : v = u
     · subst hv; simp [updNeg_act_at_u, h_neg]
-    · simp [updNeg_act_noteq (NN := NN) s' u v hv, (h_off v hv).symm]
+      dsimp [updPos, updNeg]
+      simp only [Function.update_self]
+    · dsimp [updPos, updNeg]
+      grind
+      --simp [updNeg_act_noteq (NN := NN) s' u v hv, h_off v hv]
   obtain ⟨_, h_prob_s'⟩ :=
     (TwoState.EnergySpec'.probPos_flip_pair (NN := NN) spec p T s' u)
   have hΔ₂ :
