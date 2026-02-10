@@ -54,13 +54,13 @@ def test : NeuralNetwork ℚ (Fin 3) := {
   fout := fun u act => act
   -- F. Constraints / Predicates
   pact := fun _ => True
-  pw := fun _ => True -- We accept any arrow defined by our Hom
-  hpact := fun _ _ _ _ _ _ _ _  => True.intro
-  -- pwMat := by {
-  --   intro u v
-  --   exact (test.M u v ≠ 0)
-  -- }
-  -- pm W := True
+  pw := fun _ _ _ => True -- We accept any arrow defined by our Hom
+  hpact := fun _ _ _ _ _ _ _ _ _ => True.intro
+  pwMat := by {
+    intro u v
+    exact (test.M u v ≠ 0)
+  }
+  pm W := True
 }
 
 
