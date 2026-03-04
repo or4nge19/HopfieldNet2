@@ -20,10 +20,12 @@ instance : LE (CRealAQ AQ) :=
 instance : LT (CRealAQ AQ) :=
   ⟨fun a b => toCReal (AQ := AQ) a < toCReal (AQ := AQ) b⟩
 
-@[simp] theorem le_def (a b : CRealAQ AQ) :
+@[simp]
+theorem le_def (a b : CRealAQ AQ) :
     (a ≤ b) ↔ toCReal (AQ := AQ) a ≤ toCReal (AQ := AQ) b := Iff.rfl
 
-@[simp] theorem lt_def (a b : CRealAQ AQ) :
+@[simp]
+theorem lt_def (a b : CRealAQ AQ) :
     (a < b) ↔ toCReal (AQ := AQ) a < toCReal (AQ := AQ) b := Iff.rfl
 
 /-- Reflexivity of the transported order. -/
@@ -98,7 +100,6 @@ theorem mul_le_mul_of_nonneg_right' (a b : CRealAQ AQ) (h : a ≤ b) (c : CRealA
     (a := toCReal (AQ := AQ) a) (b := toCReal (AQ := AQ) b) (c := toCReal (AQ := AQ) c) h' hc'
 
 theorem zero_le_one : (0 : CRealAQ AQ) ≤ (1 : CRealAQ AQ) := by
-  -- pulled back from `CReal`.
   simp
 
 instance : IsOrderedRing (CRealAQ AQ) where

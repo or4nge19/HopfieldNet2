@@ -37,13 +37,10 @@ lemma bernoulli_bind_pure_apply_right_of_ne
   simp only [PMF.bernoulli_apply, tsum_fintype]
   have : (Finset.univ : Finset Bool) = ({false, true} : Finset Bool) := by
     ext b; simp
-  simp [this]
-  simp_all only [ne_eq, Fintype.univ_bool]
-  split
-  next h =>
-    subst h
-    simp_all only [not_true_eq_false]
-  next h => simp_all only [add_zero]
+  have hyx : y ≠ x := by
+    intro hyx
+    exact hxy hyx.symm
+  simp [this, hyx]
 
 /-- Bernoulli bind at a point different from both pure branches has mass 0. -/
 @[simp]

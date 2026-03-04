@@ -7,7 +7,6 @@ open scoped BigOperators
 
 namespace Pre
 
-set_option maxHeartbeats 0
 /-!
 ## Sigmoid on small rationals
 
@@ -19,6 +18,7 @@ We implement this using the constructive inverse `Pre.inv` with an explicit
 `InvWitness` showing the denominator is bounded away from `0`.
 -/
 
+set_option maxHeartbeats 0 in
 lemma expPartial_lower_bound_at_four (x : ℚ) (hx : |x| ≤ (1/2 : ℚ)) :
     (1/16 : ℚ) ≤ expPartial (-x) 4 := by
   -- Expand the finite sum and bound the negative terms by absolute values.
@@ -76,6 +76,7 @@ lemma expPartial_lower_bound_at_four (x : ℚ) (hx : |x| ≤ (1/2 : ℚ)) :
 def sigmoidDenomPre (x : ℚ) (hx : |x| ≤ (1/2 : ℚ)) : CReal.Pre :=
   CReal.Pre.add CReal.Pre.one (small_exp (-x) (by simpa [abs_neg] using hx))
 
+set_option maxHeartbeats 0 in
 def sigmoidDenom_witness (x : ℚ) (hx : |x| ≤ (1/2 : ℚ)) :
     CReal.Pre.InvWitness (sigmoidDenomPre x hx) := by
   -- take `N = 0`, so we need `1 < |approx 1|`

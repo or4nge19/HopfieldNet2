@@ -14,7 +14,7 @@ namespace Pre
 This file provides the bounded-exponential layer used by total `exp` via
 range-reduction.
 
-Deliverable (this step): a proved continuity modulus (`SmallExpModulus`) for the
+A proved continuity modulus (`SmallExpModulus`) for the
 rational bounded exponential constructor `Pre.small_exp` defined in `CRealPre.lean`.
 -/
 
@@ -57,11 +57,9 @@ lemma abs_pow_succ_sub_pow_succ_le
   | zero =>
       simp
   | succ k ih =>
-      -- Decompose `x^(k+2) - y^(k+2)` to expose `x - y` and the induction hypothesis.
       have hdecomp :
           x^(k+2) - y^(k+2)
             = x^(k+1) * (x - y) + (x^(k+1) - y^(k+1)) * y := by
-        -- expand `pow_succ`, then rearrange (commutative ring)
         simp [pow_succ]
         ring
       have hxpow :
@@ -73,7 +71,6 @@ lemma abs_pow_succ_sub_pow_succ_le
       have hxy_nonneg : 0 ≤ |x - y| := abs_nonneg (x - y)
       have hA_nonneg :
           0 ≤ (k+1 : ℚ) * (1/2 : ℚ)^k * |x - y| := by
-        -- Disambiguate from `Computable.CReal.mul_nonneg`; here we are in `ℚ`.
         exact _root_.mul_nonneg (_root_.mul_nonneg (by positivity) (by positivity)) hxy_nonneg
       calc
         |x^(k+2) - y^(k+2)|
@@ -89,20 +86,13 @@ lemma abs_pow_succ_sub_pow_succ_le
               · exact mul_le_mul_of_nonneg_right ih hy_nonneg
         _ ≤ (1/2 : ℚ)^(k+1) * |x - y| +
               ((k+1 : ℚ) * (1/2 : ℚ)^k * |x - y|) * (1/2 : ℚ) := by
-              -- `add_le_add_left` in this file's namespace is for `CReal`; use the root lemma for `ℚ`.
               refine Rat.add_le_add_left.mpr ?_
-              -- use `|y| ≤ 1/2` and nonnegativity of the other factor
               simpa [mul_assoc, mul_left_comm, mul_comm] using
                 (mul_le_mul_of_nonneg_left hy hA_nonneg)
-        -- Match the induction-goal normal form `↑(k+1)+1`.
         _ = ((k + 1 : ℚ) + 1) * (1/2 : ℚ)^(k+1) * |x - y| := by
-              -- simplify `... + (k+1)*...` with common factor `(1/2)^(k+1) * |x-y|`
-              -- note `(1/2)^k * (1/2) = (1/2)^(k+1)`
-              ring_nf -- [pow_succ, mul_assoc, mul_left_comm, mul_comm, add_assoc, add_left_comm, add_comm]
+              ring_nf
         _ ≤ (↑(k + 1) + 1) * (1/2 : ℚ)^(k+1) * |x - y| := by
-              -- Just a cast-reassociation: `↑(k+1) = ↑k + 1`.
               simp [Nat.cast_add]
-      -- no remaining goals
 
 /--
 Taylor-coefficient difference bound on `[-1/2,1/2]`:
@@ -129,9 +119,7 @@ lemma abs_expCoeff_succ_sub_le
       |x^(k+1) - y^(k+1)| ≤ (k+1 : ℚ) * (1/2 : ℚ)^k * |x - y| :=
     abs_pow_succ_sub_pow_succ_le x y hx hy k
   have hnonneg : 0 ≤ (1/2 : ℚ)^k * |x - y| := by
-    -- Disambiguate from `Computable.CReal.mul_nonneg`; here we are in `ℚ`.
     exact _root_.mul_nonneg (by positivity) (abs_nonneg _)
-  -- take absolute values and divide by `factorial (k+1)`
   calc
     |expCoeff x (k+1) - expCoeff y (k+1)|
         = |(x^(k+1) - y^(k+1)) / (Nat.factorial (k+1) : ℚ)| := by
@@ -141,7 +129,6 @@ lemma abs_expCoeff_succ_sub_le
     _ ≤ ((k+1 : ℚ) * (1/2 : ℚ)^k * |x - y|) / (Nat.factorial (k+1) : ℚ) := by
             exact div_le_div_of_nonneg_right hpow (le_of_lt hfacpos)
     _ = ((k+1 : ℚ) / (Nat.factorial (k+1) : ℚ)) * ((1/2 : ℚ)^k * |x - y|) := by
-            -- rearrange as `(k+1)/fact * ...`
             simp [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm]
     _ ≤ (1 : ℚ) * ((1/2 : ℚ)^k * |x - y|) := by
             exact mul_le_mul_of_nonneg_right hratio hnonneg
@@ -162,22 +149,17 @@ lemma expPartial_lipschitz_two
   have habs :
       |expPartial x N - expPartial y N|
         ≤ (Finset.range (N+1)).sum (fun k => |expCoeff x k - expCoeff y k|) := by
-    -- apply `abs_sum_le_sum_abs` on the range sum representation
     simpa [hsum] using
       (Finset.abs_sum_le_sum_abs (s := Finset.range (N+1))
         (f := fun k => expCoeff x k - expCoeff y k))
-  -- split off `k = 0`
   have hsplit :
       (Finset.range (N+1)).sum (fun k => |expCoeff x k - expCoeff y k|)
         = |expCoeff x 0 - expCoeff y 0| +
             (Finset.range N).sum (fun j => |expCoeff x (j+1) - expCoeff y (j+1)|) := by
-    -- `sum_range_succ` splits off the *last* term; we need to split off `k = 0`,
-    -- so use the primed variant and commute the final `+`.
     simpa [add_comm, add_left_comm, add_assoc] using
       (Finset.sum_range_succ' (fun k => |expCoeff x k - expCoeff y k|) N)
   have hcoeff0 : |expCoeff x 0 - expCoeff y 0| = 0 := by
     simp [expCoeff]
-  -- geometric sum bound
   have hgeom : (Finset.range N).sum (fun j => (1/2 : ℚ)^j) ≤ (2 : ℚ) := by
     have hclosed := geom_closed N
     have hsuble : (2 : ℚ) - 2 * (1/2 : ℚ)^N ≤ (2 : ℚ) := by
@@ -187,20 +169,16 @@ lemma expPartial_lipschitz_two
       (Finset.range N).sum (fun j => (1/2 : ℚ)^j)
           = 2 - 2 * (1/2 : ℚ)^N := hclosed
       _ ≤ 2 := hsuble
-  -- termwise bound after splitting
   have hterm :
       (Finset.range N).sum (fun j => |expCoeff x (j+1) - expCoeff y (j+1)|)
         ≤ (Finset.range N).sum (fun j => (1/2 : ℚ)^j * |x - y|) := by
     refine Finset.sum_le_sum ?_
     intro j hj
     have := abs_expCoeff_succ_sub_le x y hx hy j
-    -- commute factors to match `(...)^j * |x-y|`
     simpa [mul_assoc, mul_left_comm, mul_comm] using this
-  -- factor out `|x-y|` from the sum
   have hfactor :
       (Finset.range N).sum (fun j => (1/2 : ℚ)^j * |x - y|)
         = ((Finset.range N).sum (fun j => (1/2 : ℚ)^j)) * |x - y| := by
-    -- `∑ (f j * a) = (∑ f j) * a`
     simpa [mul_assoc, mul_left_comm, mul_comm] using
       (Finset.sum_mul (s := Finset.range N) (f := fun j => (1/2 : ℚ)^j) (a := |x - y|)).symm
   have hnonneg : 0 ≤ |x - y| := abs_nonneg _
@@ -272,7 +250,6 @@ def expSmallSeq (x : ExpSmallInput) [Pre.SmallExpModulus] : CReal.RCauSeq :=
     have hin_raw :
         |x.pre.approx (n + 5) - x.pre.approx (m + 5)| ≤ (1 : ℚ) / 2 ^ (n + 5) :=
       x.pre.is_regular (n + 5) (m + 5) hnm'
-    -- weaken to `2^{-(n+2)}`
     have hmono1 : (1 : ℚ) / 2 ^ (n + 5) ≤ (1 : ℚ) / 2 ^ (n + 4) := by
       simpa [Nat.add_assoc] using inv_pow_antitone_succ (n + 4)
     have hmono2 : (1 : ℚ) / 2 ^ (n + 4) ≤ (1 : ℚ) / 2 ^ (n + 3) := by
@@ -286,7 +263,9 @@ def expSmallSeq (x : ExpSmallInput) [Pre.SmallExpModulus] : CReal.RCauSeq :=
       Pre.SmallExpModulus.approx_cauchy
         (x := x.pre.approx (n + 5)) (y := x.pre.approx (m + 5))
         (hx := x.bound (n + 5)) (hy := x.bound (m + 5)) n hin
-    aesop --simpa [expSmallSeq, expRatSmall] using hout
+    exact
+      SmallExpModulus.approx_cauchy (x.pre.approx (n + 2 + 3)) (x.pre.approx (m + 2 + 3))
+        (x.bound (n + 2 + 3)) (x.bound (m + 2 + 3)) n hin
 }
 
 /-- Bounded exponential as a `CReal`. -/
@@ -300,7 +279,6 @@ theorem expSmall_congr [Pre.SmallExpModulus]
   change (⟦CReal.lim_pre (expSmallSeq x)⟧ : CReal) = ⟦CReal.lim_pre (expSmallSeq y)⟧
   apply Quotient.sound
   intro n
-  -- use the modulus at parameter `n+1` (comparison index `n+3`)
   have hin_raw :
       |x.pre.approx (n + 6) - y.pre.approx (n + 6)| ≤ (1 : ℚ) / 2 ^ (n + 5) := by
     simpa [Nat.add_assoc] using hxy (n + 5)
@@ -315,7 +293,6 @@ theorem expSmall_congr [Pre.SmallExpModulus]
     Pre.SmallExpModulus.approx_cauchy
       (x := x.pre.approx (n + 6)) (y := y.pre.approx (n + 6))
       (hx := x.bound (n + 6)) (hy := y.bound (n + 6)) (n := n + 1) hin
-  -- weaken `2^{-(n+2)}` to `2^{-n}` for `Pre.Equiv`
   have hmono3 : (1 : ℚ) / 2 ^ (n + 2) ≤ (1 : ℚ) / 2 ^ (n + 1) := by
     simpa [Nat.add_assoc] using inv_pow_antitone_succ (n + 1)
   have hmono4 : (1 : ℚ) / 2 ^ (n + 1) ≤ (1 : ℚ) / 2 ^ n := by

@@ -147,6 +147,21 @@ lemma dobrushinCoeff_nonneg [Nonempty n] (P : Matrix n n ℝ) : 0 ≤ dobrushinC
   have hbdd : BddAbove (Set.range f) := hfin.bddAbove
   simpa [dobrushinCoeff, hset_eq] using le_csSup hbdd hmem
 
+/-- Any pairwise row TV distance is bounded by the Dobrushin coefficient. -/
+lemma tvDist_row_le_dobrushinCoeff [Nonempty n] (P : Matrix n n ℝ) (i i' : n) :
+    tvDist (rowDist P i) (rowDist P i') ≤ dobrushinCoeff P := by
+  classical
+  let f : (n × n) → ℝ := fun p => tvDist (rowDist P p.1) (rowDist P p.2)
+  have hset_eq : { d | ∃ a b : n, d = tvDist (rowDist P a) (rowDist P b) } = Set.range f := by
+    ext d; constructor
+    · intro h; rcases h with ⟨a, b, rfl⟩; exact ⟨⟨a, b⟩, rfl⟩
+    · intro h; rcases h with ⟨⟨a, b⟩, rfl⟩; exact ⟨a, b, rfl⟩
+  have hfin : (Set.range f).Finite := Set.finite_range f
+  have hbdd : BddAbove (Set.range f) := hfin.bddAbove
+  have hmem : tvDist (rowDist P i) (rowDist P i') ∈ Set.range f := by
+    exact ⟨⟨i, i'⟩, rfl⟩
+  simpa [dobrushinCoeff, hset_eq, f] using (le_csSup hbdd hmem)
+
 /-- Contraction in TV under a row-stochastic kernel (with Dobrushin's coefficient). -/
 lemma tvDist_contract [Nonempty n]
     (P : Matrix n n ℝ) --(hP : MCMC.Finite.IsStochastic P)

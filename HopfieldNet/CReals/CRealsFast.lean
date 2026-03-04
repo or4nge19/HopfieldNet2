@@ -838,6 +838,58 @@ def compare (x y : FastReal) (fuel : Nat := 100) : Option Ordering :=
       else loop (i + 1) fuel
   loop 0 (fuel + 1)
 
+/--
+Return a comparison *certificate* when interval separation succeeds.
+
+If it returns `some (ord, i, bx, by)`, then `bx = x i`, `by = y i`, and:
+- `ord = .lt` means `bx.hi < by.lo`
+- `ord = .gt` means `by.hi < bx.lo`
+
+This is intended for `#eval`/debugging and as a future hook for certified
+proof-by-computation bridges.
+-/
+def compareWitness (x y : FastReal) (fuel : Nat := 100) :
+    Option (Ordering × Nat × Ball × Ball) :=
+  let rec loop : Nat → Nat → Option (Ordering × Nat × Ball × Ball)
+    | _, 0 => none
+    | i, fuel + 1 =>
+      let bx := x i
+      let byy := y i
+      let x_max := bx.mid + bx.rad
+      let x_min := bx.mid - bx.rad
+      let y_max := byy.mid + byy.rad
+      let y_min := byy.mid - byy.rad
+      if x_max < y_min then some (Ordering.lt, i, bx, byy)
+      else if y_max < x_min then some (Ordering.gt, i, bx, byy)
+      else loop (i + 1) fuel
+  loop 0 (fuel + 1)
+
+def lt? (x y : FastReal) (fuel : Nat := 100) : Option Bool :=
+  match compare x y fuel with
+  | some Ordering.lt => some true
+  | some _ => some false
+  | none => none
+
+def gt? (x y : FastReal) (fuel : Nat := 100) : Option Bool :=
+  match compare x y fuel with
+  | some Ordering.gt => some true
+  | some _ => some false
+  | none => none
+
+/-- Human-readable explanation for `compareWitness` (intended for `#eval`). -/
+def compareExplain (x y : FastReal) (fuel : Nat := 100) (digits : Nat := 10) : String :=
+  match compareWitness x y fuel with
+  | none => "undecided"
+  | some (ord, i, bx, byy) =>
+      let ordS :=
+        match ord with
+        | Ordering.lt => "lt"
+        | Ordering.eq => "eq"
+        | Ordering.gt => "gt"
+      let xs := ballToDecimalInterval bx digits
+      let ys := ballToDecimalInterval byy digits
+      s!"{ordS} (i={i}): x∈{xs}, y∈{ys}"
+
 def min (x y : FastReal) : FastReal := fun n =>
   let prec := -((n : Int) + 2)
   Ball.min (x n) (y n) prec

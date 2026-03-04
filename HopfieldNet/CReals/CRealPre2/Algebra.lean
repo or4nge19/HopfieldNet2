@@ -102,6 +102,11 @@ lemma add_bounds_le_power_of_two (Bx By : ℕ) (hBx : 0 < Bx) (hBy : 0 < By) :
 
 /--
 The precision shift S for multiplication. S = `max (log Bx + 1) (log By + 1) + 1`.
+
+This is the key mechanism that preserves the **fixed** regularity modulus \(2^{-n}\) under
+multiplication: the error term in the usual product estimate scales with bounds on the inputs,
+so we choose `S` large enough that `(x.cBound + y.cBound) ≤ 2^S` and can “pay for” that scaling
+by shifting the input indices by `S`.
 -/
 def Pre.mulShift (x y : CReal.Pre) : ℕ :=
   let Bx := x.cBound

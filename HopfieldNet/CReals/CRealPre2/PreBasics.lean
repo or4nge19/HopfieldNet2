@@ -22,8 +22,13 @@ namespace Computable
 
 /--
 `CReal.Pre` is the pre-quotient representation of a computable real number.
-It is a regular Cauchy sequence: |approx n - approx m| ≤ 1/2^n for n ≤ m.
-(Bounds are derivable from regularity).
+It is a **regular Cauchy sequence with a fixed, built-in modulus**:
+
+- regularity: for all `n ≤ m`, we have `|approx n - approx m| ≤ 2^{-n}` (as a rational inequality).
+
+This hard-coded rate is the standard “regular sequence” presentation used in many
+constructive developments: it makes basic operations (addition/multiplication) preserve
+regularity by simple index shifts and explicit error budgets.
 -/
 structure CReal.Pre where
   approx : ℕ → ℚ

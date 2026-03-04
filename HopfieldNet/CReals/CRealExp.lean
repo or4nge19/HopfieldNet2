@@ -13,6 +13,15 @@ This module currently defines the *range-reduced auxiliary* exponential `expAux`
 parameterized by explicit range data, together with the basic congruence lemma
 when the range selector agrees on the halving exponent `k`.
 
+Constructive range reduction note:
+
+- Turning `expSmall` (defined only for inputs in `[-1/2,1/2]`) into a total `exp` does **not**
+  require branching on the sign of `x`. One can choose `k` using an *a priori magnitude bound*
+  (e.g. from `cBound`) so that `|x| / 2^k ≤ 1/2`.
+- This file does not yet implement such a chooser on the quotient `CReal`. Instead, we keep the
+  design maximally explicit by requiring `ExpRangeData x` as an input: a `k` together with a
+  bounded representative and a semantic link `small_spec : ⟦small.pre⟧ = x * 2^{-k}`.
+
 The remaining well-definedness lemma across distinct `k` values (`chooser independence`)
 requires the functional equation `exp(x) = (exp(x/2))^2` for the bounded exponential,
 and is intentionally left to `CRealExpKIndep.lean`.
@@ -39,8 +48,6 @@ theorem expAux_congr_of_k_eq [Pre.SmallExpModulus]
     (x : CReal) (d₁ d₂ : ExpRangeData x) (hk : d₁.k = d₂.k)
     (hsmall : CReal.Pre.Equiv d₁.small.pre d₂.small.pre) :
     expAux x d₁ = expAux x d₂ := by
-  -- `subst` doesn't work on projection equalities like `d₁.k = d₂.k`;
-  -- just rewrite using `hk` and the congruence for the bounded exponential.
   simp [expAux, hk, expSmall_congr hsmall]
 
 end CReal

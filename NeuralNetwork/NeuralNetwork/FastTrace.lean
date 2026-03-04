@@ -24,7 +24,8 @@ variable [FiniteEnum U]
 abbrev NNQ : NeuralNetwork ℚ U ℚ := TwoState.SymmetricBinary ℚ U
 
 def enumSites : List U :=
-  FiniteEnum.enum (α := U)
+  -- Match `FastStateEnum`: display sites in the deduplicated explicit order.
+  (FiniteEnum.enum (α := U)).dedup
 
 def enumStates : List (NNQ (U := U)).State :=
   FiniteEnum.enum (α := (NNQ (U := U)).State)

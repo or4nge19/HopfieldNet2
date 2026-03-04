@@ -1015,22 +1015,6 @@ private lemma vecToMeasure_eq_μBoltz :
     _ = (μBoltz (NN:=NN) (spec:=spec) (p:=p) (T:=T)) {s} := by
             simpa [ENNReal.ofReal_toReal, μBoltz_singleton_ne_top (NN:=NN) (spec:=spec) (p:=p) (T:=T) s]
 
-private lemma matrixToKernel_singleton
-    {P : Matrix NN.State NN.State ℝ} (hP : MCMC.Finite.IsStochastic P) (i j : NN.State) :
-    (MCMC.Finite.matrixToKernel P hP) i {j} = ENNReal.ofReal (P i j) := by
-  classical
-  have hmeas : MeasurableSet ({j} : Set NN.State) := measurableSet_singleton j
-  unfold MCMC.Finite.matrixToKernel
-  -- `matrixToKernel` is a finite sum of Diracs in each row; evaluate on the singleton `{j}`
-  change ((∑ x : NN.State, ENNReal.ofReal (P i x) • Measure.dirac x) : Measure NN.State) {j}
-      = ENNReal.ofReal (P i j)
-  simp [hmeas, Measure.dirac_apply']
-  rw [Finset.sum_eq_single j]
-  · simp [Set.indicator_of_mem, Set.mem_singleton_iff]
-  · intro t _ ht
-    simp [Set.indicator_of_notMem, ht]
-  · simp
-
 private lemma κ_singleton_ne_top (i j : NN.State) :
     (κKernel (NN:=NN) (spec:=spec) (p:=p) (T:=T) i) {j} ≠ (⊤ : ℝ≥0∞) := by
   -- {j} ⊆ univ, and κ i univ = 1 (since κ i is a PMF.toMeasure)
@@ -1103,7 +1087,9 @@ private lemma matrixToKernel_RSrow_eq_κ :
           (RSrow_isStochastic (NN:=NN) (spec:=spec) (p:=p) (T:=T))) i) {j}
           = ENNReal.ofReal (RSrow (NN:=NN) (spec:=spec) p T i j) := by
               simpa using
-                (matrixToKernel_singleton (NN:=NN) (P := RSrow (NN:=NN) (spec:=spec) p T)
+                (MCMC.Finite.matrixToKernel_apply_singleton
+                  (n := NN.State)
+                  (P := RSrow (NN:=NN) (spec:=spec) p T)
                   (hP := RSrow_isStochastic (NN:=NN) (spec:=spec) (p:=p) (T:=T)) i j)
       _ = ENNReal.ofReal ((κKernel (NN:=NN) (spec:=spec) (p:=p) (T:=T) i) {j}).toReal := by
               simp [RSrow, RScol, κKernel, Matrix.transpose_apply]

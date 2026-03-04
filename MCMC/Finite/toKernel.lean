@@ -1,7 +1,6 @@
 import MCMC.Finite.MetropolisHastings
 import Mathlib.Probability.Kernel.Invariance
 
-set_option maxHeartbeats 0
 namespace MCMC.Finite
 
 open ProbabilityTheory MeasureTheory Matrix Kernel Mathlib
@@ -22,7 +21,7 @@ noncomputable def vecToMeasure (π : stdSimplex ℝ n) : Measure n :=
   ∑ i : n, (ENNReal.ofReal (π.val i)) • Measure.dirac i
 
 omit [DecidableEq n] in
-private lemma kernel_eval_on_set
+lemma matrixToKernel_apply
     {P : Matrix n n ℝ} (hP : IsStochastic P) (i : n)
     (B : Set n) (hB : MeasurableSet B) :
     (matrixToKernel P hP) i B
@@ -31,11 +30,11 @@ private lemma kernel_eval_on_set
   simp [hB, Measure.dirac_apply']
 
 omit [DecidableEq n] in
-private lemma kernel_eval_singleton
+lemma matrixToKernel_apply_singleton
     {P : Matrix n n ℝ} (hP : IsStochastic P) (i j : n) :
     (matrixToKernel P hP) i {j} = ENNReal.ofReal (P i j) := by
   have hB : MeasurableSet ({j} : Set n) := measurableSet_singleton j
-  rw [kernel_eval_on_set (P := P) (hP := hP) (i := i) ({j}) hB]
+  rw [matrixToKernel_apply (P := P) (hP := hP) (i := i) ({j}) hB]
   rw [Finset.sum_eq_single j]
   · simp [Set.indicator_of_mem, Set.mem_singleton_iff]
   · intro b _ hb
@@ -147,7 +146,7 @@ theorem isStationary_iff_invariant (P : Matrix n n ℝ) (π : stdSimplex ℝ n)
     intro hinv
     have k_singleton : ∀ i j, κ i {j} = ENNReal.ofReal (P i j) := by
       intro i j
-      exact kernel_eval_singleton hP i j
+      exact matrixToKernel_apply_singleton (n := n) (P := P) hP i j
     have mu_singleton : ∀ j, μ {j} = ENNReal.ofReal (π.val j) := by
       intro j
       have hmeas : MeasurableSet ({j} : Set n) := measurableSet_singleton j
@@ -222,6 +221,13 @@ theorem exists_unique_invariant_measure_of_irreducible
     (isStationary_iff_invariant (n := n) (P := P) (π := π') hP).2 hπ'_inv
   exact hπ_unique π' hπ'_stat
 
+theorem exists_unique_invariant_measure_of_primitive
+    [Nonempty n] {P : Matrix n n ℝ} (hP : IsStochastic P) (h_prim : IsPrimitive P) :
+    ∃! (π : stdSimplex ℝ n),
+      Kernel.Invariant (matrixToKernel P hP) (vecToMeasure π) := by
+  have h_irred : Matrix.IsIrreducible P := Matrix.IsPrimitive.isIrreducible (A := P) h_prim
+  exact exists_unique_invariant_measure_of_irreducible (n := n) (P := P) hP h_irred
+
 /-- Matrix reversibility is equivalent to kernel reversibility -/
 theorem isReversible_iff_kernel_reversible (P : Matrix n n ℝ) (π : stdSimplex ℝ n)
     (hP : IsStochastic P) :
@@ -235,7 +241,7 @@ theorem isReversible_iff_kernel_reversible (P : Matrix n n ℝ) (π : stdSimplex
     have k_on_set :
         ∀ i, κ i B = ∑ j : n, ENNReal.ofReal (P i j) * B.indicator 1 j := by
       intro i
-      exact kernel_eval_on_set hP i B hB
+      exact matrixToKernel_apply (n := n) (P := P) hP i B hB
     have hL0' :
         ∫⁻ x, (A.indicator (fun x => κ x B)) x ∂μ
           = ∑ i : n, ENNReal.ofReal (π.val i) *
@@ -318,7 +324,7 @@ theorem isReversible_iff_kernel_reversible (P : Matrix n n ℝ) (π : stdSimplex
     have k_on_set' :
         ∀ j, κ j A = ∑ i : n, ENNReal.ofReal (P j i) * A.indicator 1 i := by
       intro j
-      exact kernel_eval_on_set hP j A hA
+      exact matrixToKernel_apply (n := n) (P := P) hP j A hA
     have hR1 :
         ∫⁻ x in B, κ x A ∂μ
           = ∑ j : n, ∑ i : n,
@@ -406,7 +412,7 @@ theorem isReversible_iff_kernel_reversible (P : Matrix n n ℝ) (π : stdSimplex
     intro hker
     have k_singleton : ∀ i j, κ i {j} = ENNReal.ofReal (P i j) := by
       intro i j
-      exact kernel_eval_singleton hP i j
+      exact matrixToKernel_apply_singleton (n := n) (P := P) hP i j
     intro i j
     have hAi : MeasurableSet ({i} : Set n) := measurableSet_singleton i
     have hBj : MeasurableSet ({j} : Set n) := measurableSet_singleton j

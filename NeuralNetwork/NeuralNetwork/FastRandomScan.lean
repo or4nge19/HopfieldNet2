@@ -13,6 +13,10 @@ we compute the **random-scan** (uniform-site) one-step transition probability en
 `P(s → s')` as a partial interval enclosure (`ℕ → Option Ball`).
 
 This is computable and avoids any `Fintype`/`Finset.toList` classical machinery.
+
+Correctness contract (important):
+- `FiniteEnum.enum` should list each site exactly once (no duplicates, no omissions).
+  This function defensively rejects the **duplicate** case; it cannot detect omissions.
 -/
 
 namespace NeuralNetwork
@@ -40,8 +44,12 @@ def randomScanEntry? (β : FastReal) (p : Params NN) (s s' : NN.State) : ℕ →
     let prec : Int := -((n : Int) + 2)
     let sites : List U := FiniteEnum.enum (α := U)
     let denom : Nat := sites.length
+    let card : Nat := (sites.toFinset).card
     if _h0 : denom = 0 then
       -- invalid enumeration; treat as failure
+      none
+    else if _hdup : card ≠ denom then
+      -- duplicates would overweight some sites; treat as failure
       none
     else
       -- accumulate the sum of the one-site transition probabilities
@@ -54,6 +62,31 @@ def randomScanEntry? (β : FastReal) (p : Params NN) (s s' : NN.State) : ℕ →
       -- multiply by uniform weight 1/denom
       let w : FastReal := Computable.Fast.FastReal.ofRat ((1 : ℚ) / (denom : ℚ))
       return Ball.mul (w n) sumBall prec
+
+/-!
+### Variant assuming a sound explicit enumeration
+
+If you additionally assume `FiniteEnumSound U`, then:
+- the enumeration list is nonempty (since `[Nonempty U]`), and
+- there are no duplicates,
+so the defensive failure branches for `denom = 0` / duplicates are unnecessary.
+-/
+
+def randomScanEntrySound?
+    (β : FastReal) (p : Params NN) (s s' : NN.State)
+    [FiniteEnumSound U] : ℕ → Option Ball :=
+  fun n => do
+    let prec : Int := -((n : Int) + 2)
+    let sites : List U := FiniteEnum.enum (α := U)
+    let denom : Nat := sites.length
+    let sumBall ←
+      sites.foldlM
+        (fun acc u => do
+          let pu ← (gibbsEntry? (NN := NN) β p s u s') n
+          return Ball.add acc pu prec)
+        Ball.zero
+    let w : FastReal := Computable.Fast.FastReal.ofRat ((1 : ℚ) / (denom : ℚ))
+    return Ball.mul (w n) sumBall prec
 
 end FastRandomScan
 end NeuralNetwork

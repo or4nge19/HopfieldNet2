@@ -16,7 +16,10 @@ The scalar `R` is linked to analysis/measure theory by a ring morphism
 
 Design:
 - **Proof layer** stays in `ℝ` (canonical ensemble, entropy, etc.).
-- **Model layer** can use `R := Computable.CReal`, `R := CRealAQ Dyadic`, etc.
+- **Model layer** can use any `R` equipped with the assumptions below and a bridge `toReal : R →+* ℝ`
+  (via `NeuralNetwork.HasToReal`). In particular, `R := Computable.CReal` works out of the box.
+  For `R := Computable.CRealAQ Dyadic`, you currently want to work through the *fast/executable*
+  layer (dyadic balls) or add appropriate transported/classical order/field instances separately.
 - This file assumes finite state space so measurability is trivial and the base measure is
   counting measure.
 -/

@@ -8,7 +8,6 @@ We expose a *partial* sampler:
 - input: a uniform dyadic `u ∈ [0,1)` and a list of probability enclosures (`Ball`s)
 - output: `Option Nat` (the chosen index) or `none` if the intervals are too wide to decide.
 
-This is the right SOTA shape:
 - increase precision until sampling becomes decidable,
 - keep the proof layer separate.
 -/

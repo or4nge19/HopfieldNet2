@@ -37,4 +37,9 @@ def piOver4 : FastReal := FastReal.mul FastReal.pi quarter
 -- `decide` demo (semi-decision via fuel + `Option`)
 #eval decide (FastReal.compare (2 : FastReal) (3 : FastReal) 40 == some Ordering.lt)
 
+-- Comparison certificate / explanation (useful for debugging and future proof bridges)
+#eval FastReal.compareWitness (2 : FastReal) (3 : FastReal) 40
+#eval FastReal.lt? (2 : FastReal) (3 : FastReal) 40
+#eval FastReal.compareExplain (2 : FastReal) (3 : FastReal) 40 12
+
 end Computable.Fast.Examples

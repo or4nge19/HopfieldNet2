@@ -21,56 +21,41 @@ namespace Dyadic
   simp
 
 @[simp] lemma toRat_neg (a : Dyadic) : Dyadic.toRat (-a) = - Dyadic.toRat a := by
-  -- help `simp` by unfolding the projections of `-a`
   simp [Dyadic.toRat, (show (-a).man = -a.man by rfl), (show (-a).exp = a.exp by rfl)]
 
 @[simp] lemma toRat_mul (a b : Dyadic) : Dyadic.toRat (a * b) = Dyadic.toRat a * Dyadic.toRat b := by
-  -- `2 ≠ 0`, so we can use `zpow_add₀` in `ℚ`.
   have h2 : (2 : ℚ) ≠ 0 := by norm_num
-  -- help `simp` by unfolding the projections of `a*b`
   simp [Dyadic.toRat, (show (a*b).man = a.man * b.man by rfl), (show (a*b).exp = a.exp + b.exp by rfl),
     zpow_add₀ h2, mul_assoc, mul_left_comm]
 
 @[simp] lemma toRat_shiftl (x : Dyadic) (k : Int) :
     Dyadic.toRat (Dyadic.shiftl x k) = Dyadic.toRat x * ((2 : ℚ) ^ k) := by
   have h2 : (2 : ℚ) ≠ 0 := by norm_num
-  -- help `simp` by unfolding the projections of `shiftl`
   simp [Dyadic.toRat, Dyadic.shiftl,
     zpow_add₀ h2, mul_left_comm, mul_comm]
 
 @[simp] lemma toRat_add (a b : Dyadic) : Dyadic.toRat (a + b) = Dyadic.toRat a + Dyadic.toRat b := by
   have h2 : (2 : ℚ) ≠ 0 := by norm_num
-  -- `Dyadic.add` aligns exponents; we split on the branch condition.
   by_cases h : a.exp ≤ b.exp
-  · -- branch: result exponent is `a.exp`
-    -- Expand `toRat` on the aligned representation.
-    have hs_nonneg : 0 ≤ (b.exp - a.exp) := sub_nonneg.mpr h
+  · have hs_nonneg : 0 ≤ (b.exp - a.exp) := sub_nonneg.mpr h
     set s : Nat := (b.exp - a.exp).toNat
     have hs_cast : (s : Int) = (b.exp - a.exp) := by
       simpa [s] using (Int.toNat_of_nonneg hs_nonneg).symm
     have hshiftInt : (b.man <<< s : Int) = b.man * (2 : Int) ^ s := by
       simpa using (Int.shiftLeft_eq b.man s)
     have hbexp : b.exp = a.exp + (s : Int) := by
-      -- `b = a + (b-a)` and rewrite `(b-a)` as `s`
       have : b.exp = a.exp + (b.exp - a.exp) := by abel
       simp [hs_cast]
-    -- Convert the integer power in `hshiftInt` to a rational power.
     have hshiftRat : ((b.man <<< s : Int) : ℚ) = (b.man : ℚ) * (2 : ℚ) ^ (s : Nat) := by
-      -- cast `b.man * (2:Int)^s` to ℚ
       have : ((b.man * (2 : Int) ^ s) : ℚ) = (b.man : ℚ) * (2 : ℚ) ^ (s : Nat) := by
         simp
-      -- rewrite the LHS via `hshiftInt`
       simp [hshiftInt]
     have hzpowNat : (2 : ℚ) ^ (s : Int) = (2 : ℚ) ^ (s : Nat) := by
-      -- `2^(↑s) = 2^s` (as a nat power), read backwards
       simp
-    -- Main computation: unfold `a+b` and distribute.
     have hab : a + b = Dyadic.add a b := rfl
-    -- rewrite the LHS projections using the chosen branch
     simp [hab, Dyadic.add, Dyadic.toRat, hshiftRat, hbexp, hzpowNat, zpow_add₀ h2,
       mul_add, mul_left_comm, mul_comm]
-  · -- branch: result exponent is `b.exp`
-    have h' : b.exp ≤ a.exp := le_of_not_ge h
+  · have h' : b.exp ≤ a.exp := le_of_not_ge h
     have hs_nonneg : 0 ≤ (a.exp - b.exp) := sub_nonneg.mpr h'
     set s : Nat := (a.exp - b.exp).toNat
     have hs_cast : (s : Int) = (a.exp - b.exp) := by
@@ -86,22 +71,13 @@ namespace Dyadic
       simp [hshiftInt]
     have hzpowNat : (2 : ℚ) ^ (s : Int) = (2 : ℚ) ^ (s : Nat) := by
       simp
-    -- Avoid rewriting the `if`-condition with `haexp` (it causes a split on `s=0`).
     have hab : a + b = Dyadic.add a b := rfl
-    -- First, unfold the chosen branch of `Dyadic.add` using `h` only.
     simp [hab, Dyadic.add, h, Dyadic.toRat, add_mul]
-    -- Now rewrite the shifted term and exponent relation to match `a.toRat`.
-    -- `((a.man <<< s):ℚ) * 2^b.exp = (a.man:ℚ) * 2^a.exp`.
     have h2z : (2 : ℚ) ≠ 0 := by norm_num
-    -- `2^a.exp = 2^(b.exp + s) = 2^b.exp * 2^s`
     have hzpow : (2 : ℚ) ^ a.exp = (2 : ℚ) ^ b.exp * (2 : ℚ) ^ (s : Int) := by
       simpa [haexp] using (zpow_add₀ (a := (2 : ℚ)) h2z b.exp (s : Int))
-    -- Turn `2^s` into a nat power so `hshiftRat` applies.
     have hzpow' : (2 : ℚ) ^ a.exp = (2 : ℚ) ^ b.exp * (2 : ℚ) ^ (s : Nat) := by
       simpa [hzpowNat] using hzpow
-    -- Finish with commutativity/associativity.
-    -- (At this point the goal is a ring identity over ℚ.)
-    -- Use `hshiftRat` and reassociate.
     calc
       (↑(a.man <<< s) : ℚ) * (2 : ℚ) ^ b.exp
           = ((a.man : ℚ) * (2 : ℚ) ^ s) * (2 : ℚ) ^ b.exp := by
@@ -113,7 +89,6 @@ namespace Dyadic
               simp [hzpow']
 
 @[simp] lemma toRat_sub (a b : Dyadic) : Dyadic.toRat (a - b) = Dyadic.toRat a - Dyadic.toRat b := by
-  -- `a - b` is definitional `a + (-b)` for this dyadic implementation.
   calc
     Dyadic.toRat (a - b) = Dyadic.toRat (a + (-b)) := by rfl
     _ = Dyadic.toRat a + Dyadic.toRat (-b) := by simp
@@ -132,11 +107,7 @@ if `m = floor(q * 2^n)`, then `m/2^n ≤ q < m/2^n + 1/2^n`.
 -/
 theorem abs_toRat_approxRat_sub_le (q : ℚ) (n : Nat) :
     |Dyadic.toRat (Dyadic.approxRat q n) - q| ≤ (1 : ℚ) / (2 ^ n) := by
-
-  -- unfold the definitions; this reduces to a pure floor/ulp inequality in ℚ
-  -- goal shape: `|m * (2^n)⁻¹ - q| ≤ (2^n)⁻¹` where `m = floor (q * 2^n)`
   simp [Dyadic.approxRat, Dyadic.toRat]
-  -- abbreviations
   set p : ℚ := (2 : ℚ) ^ n
   have hp_pos : 0 < p := by
     dsimp [p]
@@ -148,43 +119,29 @@ theorem abs_toRat_approxRat_sub_le (q : ℚ) (n : Nat) :
     simpa [m, t] using (Rat.floor_le t)
   have hlt : t < (m + 1 : ℚ) := by
     simpa [m, t] using (Rat.lt_floor_add_one t)
-  -- lower bound: `m/p ≤ q`
   have hq_ge : (m : ℚ) * p⁻¹ ≤ q := by
     have hmul : (m : ℚ) * p⁻¹ ≤ t * p⁻¹ :=
       mul_le_mul_of_nonneg_right hle (inv_nonneg.mpr (le_of_lt hp_pos))
-    -- simplify `t * p⁻¹ = q`
-    -- (`t = q*p` and `p ≠ 0`)
     simpa [t, p, mul_assoc, hp_ne] using hmul
-  -- upper bound: `q < m/p + 1/p`
   have hq_lt : q < (m : ℚ) * p⁻¹ + p⁻¹ := by
     have hmul : t * p⁻¹ < (m + 1 : ℚ) * p⁻¹ :=
       mul_lt_mul_of_pos_right hlt (inv_pos.mpr hp_pos)
-    -- simplify both sides
-    -- `t * p⁻¹ = q`, and `(m+1)*p⁻¹ = m*p⁻¹ + p⁻¹`
     have ht : t * p⁻¹ = q := by
-      -- `q * p * p⁻¹ = q`
       simp [t, p, hp_ne]
     have hm : (m + 1 : ℚ) * p⁻¹ = (m : ℚ) * p⁻¹ + p⁻¹ := by
       ring
-    -- rewrite and conclude
     simpa [ht, hm] using hmul
-  -- absolute value simplifies since `m/p ≤ q`
   have habs : |(m : ℚ) * p⁻¹ - q| = q - (m : ℚ) * p⁻¹ := by
     have hnonneg : 0 ≤ q - (m : ℚ) * p⁻¹ := sub_nonneg.mpr hq_ge
-    -- `|a-b| = b-a` when `a ≤ b`
     simpa [abs_sub_comm] using (abs_of_nonneg hnonneg)
   have hdiff : q - (m : ℚ) * p⁻¹ ≤ p⁻¹ := by
     have : q - (m : ℚ) * p⁻¹ < p⁻¹ := by linarith [hq_lt]
     exact le_of_lt this
-  -- finish
   calc
     |(m : ℚ) * p⁻¹ - q| = q - (m : ℚ) * p⁻¹ := habs
     _ ≤ p⁻¹ := hdiff
     _ ≤ (1 : ℚ) / (2 ^ n) := by
-      -- this is just rewriting `p = (2:ℚ)^n` and `a⁻¹ = 1/a`
       simp [p, one_div]
-  -- close the (definitional) inequality goal left by `calc`
-  -- (Lean sometimes flips the last step when mixing `≤` and `=` reductions under `simp`.)
   simp [p, one_div]
 
 /-- Error bound for `Int` floor division viewed in `ℚ`: the difference is at most `1`. -/
@@ -249,21 +206,17 @@ theorem abs_toRat_roundDown_sub_le (d : Dyadic) (n : Nat) :
         simp
       exact_mod_cast hnat
     have h2ne : (2 : ℚ) ≠ 0 := by norm_num
-
     have hshift : d.man >>> sh = d.man / den := by
       simpa [den] using (Int.shiftRight_eq_div_pow d.man sh)
-
     have hround : Dyadic.toRat (Dyadic.roundDown d min_exp) =
         ((d.man / den : Int) : ℚ) * (2 : ℚ) ^ min_exp := by
       simp [Dyadic.roundDown, h, Dyadic.toRat, min_exp, sh, hshift, den]
-
     have hden_pow : (2 : ℚ) ^ (min_exp - d.exp) = (den : ℚ) := by
       have hx : min_exp - d.exp = (sh : Int) := by simpa using hsh_cast.symm
       calc
         (2 : ℚ) ^ (min_exp - d.exp) = (2 : ℚ) ^ (sh : Int) := by simp [hx]
         _ = (2 : ℚ) ^ sh := by simp
         _ = (den : ℚ) := by simp [den]
-
     have htoRat : Dyadic.toRat d = ((d.man : ℚ) / (den : ℚ)) * (2 : ℚ) ^ min_exp := by
       have hpow : (2 : ℚ) ^ d.exp = (2 : ℚ) ^ min_exp / (den : ℚ) := by
         have hdexp : d.exp = min_exp - (min_exp - d.exp) := by abel
@@ -374,17 +327,14 @@ theorem abs_toRat_divDown_sub_le (a b : Dyadic) (n : Nat) :
 
     have h2ne : (2 : ℚ) ≠ 0 := by norm_num
     have hprec_pos : (0 : ℚ) < (2 : ℚ) ^ prec := zpow_pos (by norm_num : (0 : ℚ) < 2) _
-
     have hdivDown_toRat :
         Dyadic.toRat (Dyadic.divDown a b prec) = ((num / den : Int) : ℚ) * (2 : ℚ) ^ prec := by
       simp [Dyadic.divDown, hb, Dyadic.toRat, prec, num0den0, num0, den0, numden, num, den]
-
     have hnumden_eq : (num : ℚ) / (den : ℚ) = (num0 : ℚ) / (den0 : ℚ) := by
       dsimp [num, den, numden, Dyadic.normalizeDivisor]
       by_cases hneg : den0 < 0
       · simp [hneg, div_eq_mul_inv]
       · simp [hneg]
-
     have hnum0den0_ratio : (num0 : ℚ) / (den0 : ℚ) = ((a.man : ℚ) / (b.man : ℚ)) * (2 : ℚ) ^ shift := by
       by_cases hs : shift >= 0
       · have hs' : 0 ≤ shift := hs
@@ -417,7 +367,6 @@ theorem abs_toRat_divDown_sub_le (a b : Dyadic) (n : Nat) :
           simp [num0, num0den0, Dyadic.scaledNumDen, hcond]
         have hden0 : den0 = b.man <<< (prec - (a.exp - b.exp)).toNat := by
           simp [den0, num0den0, Dyadic.scaledNumDen, hcond]
-        -- negative shift case: divide by shifted denominator
         let k : Nat := (-shift).toNat
         have hk : (k : Int) = -shift := by
           have : 0 ≤ -shift := by linarith
@@ -442,20 +391,14 @@ theorem abs_toRat_divDown_sub_le (a b : Dyadic) (n : Nat) :
                   simp
             _ = (a.man : ℚ) / (b.man : ℚ) * (2 : ℚ) ^ shift := by
                   simp [hshift]
-        -- substitute back `k = (-shift).toNat`
         have hk_def : k = (-shift).toNat := rfl
-        -- and finish
         have hksimp : (b.man <<< (prec - (a.exp - b.exp)).toNat : Int) = (b.man <<< k : Int) := by
-          -- `prec - (a.exp - b.exp) = -shift`
           have : prec - (a.exp - b.exp) = -shift := by
             dsimp [shift]
             abel
           simp [k, this]
-        -- rewrite the denominator and apply `hneg_case`
         simpa [hnum0, hden0, hksimp] using hneg_case
-
     have hshift_add : shift + prec = a.exp - b.exp := by
-      -- `shift = a.exp - b.exp - prec`
       dsimp [shift]
       abel
     have hzpow : (2 : ℚ) ^ (a.exp - b.exp) = (2 : ℚ) ^ shift * (2 : ℚ) ^ prec := by
@@ -463,13 +406,10 @@ theorem abs_toRat_divDown_sub_le (a b : Dyadic) (n : Nat) :
         (2 : ℚ) ^ (a.exp - b.exp) = (2 : ℚ) ^ (shift + prec) := by simp [hshift_add]
         _ = (2 : ℚ) ^ shift * (2 : ℚ) ^ prec := by
               simpa using (zpow_add₀ (a := (2 : ℚ)) h2ne shift prec)
-
     have hratio_scaled : Dyadic.toRat a / Dyadic.toRat b = ((num : ℚ) / (den : ℚ)) * (2 : ℚ) ^ prec := by
-      -- compute `toRat a / toRat b` as mantissa ratio and exponent difference
       have htoRat_div : Dyadic.toRat a / Dyadic.toRat b =
           ((a.man : ℚ) / (b.man : ℚ)) * (2 : ℚ) ^ (a.exp - b.exp) := by
         simp [Dyadic.toRat, div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm, zpow_sub₀ h2ne]
-      -- combine the exponent split and `scaledNumDen`
       calc
         Dyadic.toRat a / Dyadic.toRat b
             = ((a.man : ℚ) / (b.man : ℚ)) * (2 : ℚ) ^ (a.exp - b.exp) := htoRat_div

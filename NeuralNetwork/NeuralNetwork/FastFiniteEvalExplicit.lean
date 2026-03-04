@@ -6,8 +6,14 @@ import Mathlib.Data.List.FinRange
 
 Mathlib's `Finset.toList` / `Fintype.elems` can be non-executable (classical) in general.
 
-To get a truly **computable** evaluator, we require the user to provide an explicit `List` enumerating
-the finite type. This is the SOTA separation:
+To get a truly **computable** evaluator, we require the user to provide an explicit `List`
+enumerating the finite type.
+
+Correctness contract (important):
+- `FiniteEnum.enum` should list **every** element exactly once (no duplicates, no omissions).
+  This file does not (and cannot, in general) enforce that contract computationally.
+
+This is the SOTA separation:
 
 - `Fintype` is great for proofs.
 - computation needs an *explicit enumeration*.
@@ -27,6 +33,34 @@ instance (n : Nat) : FiniteEnum (Fin n) where
   enum := List.finRange n
 
 end FiniteEnum
+
+/-!
+## Soundness predicate for explicit enumerations
+
+`FiniteEnum` is a compute-layer device: it carries only a list.
+
+For *theorems* relating compute-layer objects to proof-layer `Fintype` semantics, we also
+need a **Prop-only** contract stating that the list enumerates the type without duplicates.
+-/
+
+class FiniteEnumSound (α : Type) [FiniteEnum α] : Prop where
+  /-- No duplicates in the enumeration list. -/
+  nodup : (FiniteEnum.enum (α := α)).Nodup
+  /-- Completeness: every element appears in the enumeration list. -/
+  complete : ∀ a : α, a ∈ (FiniteEnum.enum (α := α))
+
+namespace FiniteEnumSound
+
+instance instFiniteEnumSoundFin (n : Nat) : FiniteEnumSound (Fin n) := by
+  classical
+  refine ⟨?_, ?_⟩
+  · change (List.finRange n).Nodup
+    exact List.nodup_finRange n
+  · intro a
+    change a ∈ List.finRange n
+    exact List.mem_finRange a
+
+end FiniteEnumSound
 
 variable {ι : Type} [FiniteEnum ι]
 

@@ -199,8 +199,6 @@ noncomputable instance : Ord CReal := ⟨fun a b => compareOfLessAndEq a b⟩
 
 /-- Classical linear order on `CReal` (extending the existing `≤`). -/
 noncomputable instance : LinearOrder CReal := by
-  classical
-  -- Use the existing `PartialOrder` and our `le_total`.
   refine LinearOrder.mk (α := CReal)
     (le_total := le_total)
     (toDecidableLE := fun a b => Classical.decRel (fun x y : CReal => x ≤ y) a b)
@@ -225,7 +223,6 @@ open Real
 
 -- Cauchy equivalence between the original sequence and its regularization subsequence.
 theorem toCauSeq_preOfCauSeq_equiv (f : CauSeq ℚ absℚ) : Pre.toCauSeq (preOfCauSeq f) ≈ f := by
-  -- show `LimZero (toCauSeq (preOfCauSeq f) - f)`
   intro ε hε
   have hpos : 0 < (1 : ℚ) / ε := one_div_pos.mpr hε
   obtain ⟨N, hN⟩ : ∃ N : ℕ, (1 : ℚ) / ε < (2 : ℚ) ^ N :=
@@ -244,33 +241,20 @@ theorem toCauSeq_preOfCauSeq_equiv (f : CauSeq ℚ absℚ) : Pre.toCauSeq (preOf
   have hmono : idxMono f N ≤ idxMono f (j + 2) := idxMono_mono f hj2_geN
   have hj2_ge : idx f N ≤ idxMono f (j + 2) := _root_.le_trans hidx hmono
   have hspec := idx_spec f N j hj_ge (idxMono f (j + 2)) hj2_ge
-  -- unfold the regularized sequence `preOfCauSeq`
-  -- `(preOfCauSeq f).approx (j+1) = f (idxMono f (j+3))`, but `toCauSeq` uses `approx`.
-  -- Here we need the value at index `j`.
-  -- `Pre.toCauSeq (preOfCauSeq f) j = (preOfCauSeq f).approx j = f (idxMono f (j+2))`.
   have : |(Pre.toCauSeq (preOfCauSeq f) - f : CauSeq ℚ absℚ) j| < ε := by
-    -- `(toCauSeq ... - f) j = (toCauSeq ...) j - f j`
-    -- and `(toCauSeq ...) j = f (idxMono f (j+2))`
     have : |f (idxMono f (j + 2)) - f j| < ε := by
-      -- `idx_spec` gives `|f j - f (idxMono ...) | < 1/2^N`, flip with `abs_sub_comm`
       have hlt : |f j - f (idxMono f (j + 2))| < (1 : ℚ) / (2 ^ N) := by
         simpa using hspec
       have hlt' : |f (idxMono f (j + 2)) - f j| < (1 : ℚ) / (2 ^ N) := by
         simpa [abs_sub_comm] using hlt
       exact lt_trans hlt' (by
-        -- rewrite `(2:ℚ)^N` to `2^N`
-        -- and use the chosen `N` with `1/2^N < ε`
         simpa [one_div, div_eq_mul_inv] using hN')
-    -- now rewrite in terms of `toCauSeq (preOfCauSeq f)`
     simpa [Pre.toCauSeq, preOfCauSeq, CauSeq.sub_apply, abs_sub_comm] using this
   simpa using this
 
 theorem toReal_ofReal (x : ℝ) : CReal.toReal (ofReal x) = x := by
-  -- reduce to the case `x = Real.mk f`
   refine Real.ind_mk x (fun f => ?_)
-  -- Definitional reduction: `toReal (ofReal (Real.mk f)) = Real.mk (toCauSeq (preOfCauSeq f))`.
   change Real.mk (Pre.toCauSeq (preOfCauSeq f)) = Real.mk f
-  -- Use `Real.mk_eq` and the Cauchy equivalence lemma.
   exact (Real.mk_eq).2 (toCauSeq_preOfCauSeq_equiv (f := f))
 
 end FromReal
@@ -279,7 +263,6 @@ theorem toReal_ofReal (x : ℝ) : toReal (FromReal.ofReal x) = x :=
   FromReal.toReal_ofReal x
 
 theorem ofReal_toReal (x : CReal) : FromReal.ofReal (toReal x) = x := by
-  -- left inverse from injectivity
   apply toReal_injective
   simp [toReal_ofReal]
 
@@ -291,9 +274,6 @@ theorem toReal_inv (x : CReal) : toReal x⁻¹ = (toReal x)⁻¹ := by
   simp [Inv.inv, toReal_ofReal]
 
 noncomputable instance : Field CReal := by
-  classical
-  -- Build a `Field` structure using Mathlib's minimal-axioms constructor, keeping the existing
-  -- ring operations and supplying the inverse axioms via `toReal`.
   refine
     Field.ofMinimalAxioms CReal
       (add_assoc := by intro a b c; exact _root_.add_assoc a b c)
@@ -338,7 +318,6 @@ theorem bddAbove_image_toReal_iff (s : Set CReal) : BddAbove (toReal '' s) ↔ B
     refine ⟨FromReal.ofReal r, ?_⟩
     intro x hx
     have : toReal x ≤ r := hr (a := toReal x) ⟨x, hx, rfl⟩
-    -- reflect back
     have : toReal x ≤ toReal (FromReal.ofReal r) := by simpa [toReal_ofReal] using this
     exact (toReal_le_iff).1 this
   · intro hs
@@ -373,7 +352,8 @@ noncomputable instance : ConditionallyCompleteLattice CReal := by
     have hℝ : toReal a ≤ sSup (toReal '' s) :=
       ConditionallyCompleteLattice.le_csSup (s := toReal '' s) (a := toReal a) hs' ⟨a, ha, rfl⟩
     have : toReal a ≤ toReal (sSup s) := by
-      simpa [SupSet.sSup, toReal_ofReal] using hℝ
+      change toReal a ≤ toReal (FromReal.ofReal (sSup (toReal '' s)))
+      simpa [toReal_ofReal] using hℝ
     exact (toReal_le_iff).1 this
   · -- csSup_le
     intro s a hs ha
@@ -385,7 +365,8 @@ noncomputable instance : ConditionallyCompleteLattice CReal := by
     have hℝ : sSup (toReal '' s) ≤ toReal a :=
       ConditionallyCompleteLattice.csSup_le (s := toReal '' s) (a := toReal a) hs' hub
     have : toReal (sSup s) ≤ toReal a := by
-      simpa [SupSet.sSup, toReal_ofReal] using hℝ
+      change toReal (FromReal.ofReal (sSup (toReal '' s))) ≤ toReal a
+      simpa [toReal_ofReal] using hℝ
     exact (toReal_le_iff).1 this
   · -- csInf_le
     intro s a hs ha
@@ -393,7 +374,8 @@ noncomputable instance : ConditionallyCompleteLattice CReal := by
     have hℝ : sInf (toReal '' s) ≤ toReal a :=
       ConditionallyCompleteLattice.csInf_le (s := toReal '' s) (a := toReal a) hs' ⟨a, ha, rfl⟩
     have : toReal (sInf s) ≤ toReal a := by
-      simpa [InfSet.sInf, toReal_ofReal] using hℝ
+      change toReal (FromReal.ofReal (sInf (toReal '' s))) ≤ toReal a
+      simpa [toReal_ofReal] using hℝ
     exact (toReal_le_iff).1 this
   · -- le_csInf
     intro s a hs ha
@@ -405,7 +387,8 @@ noncomputable instance : ConditionallyCompleteLattice CReal := by
     have hℝ : toReal a ≤ sInf (toReal '' s) :=
       ConditionallyCompleteLattice.le_csInf (s := toReal '' s) (a := toReal a) hs' hlb
     have : toReal a ≤ toReal (sInf s) := by
-      simpa [InfSet.sInf, toReal_ofReal] using hℝ
+      change toReal a ≤ toReal (FromReal.ofReal (sInf (toReal '' s)))
+      simpa [toReal_ofReal] using hℝ
     exact (toReal_le_iff).1 this
 
 noncomputable instance : ConditionallyCompleteLinearOrder CReal := by
@@ -422,20 +405,23 @@ noncomputable instance : ConditionallyCompleteLinearOrder CReal := by
     have hs' : ¬ BddAbove (toReal '' s) := by
       intro h
       exact hs ((bddAbove_image_toReal_iff s).1 h)
-    simpa [SupSet.sSup, toReal_ofReal] using
-      (csSup_of_not_bddAbove (α := ℝ) (s := toReal '' s) hs')
+    change
+      toReal (FromReal.ofReal (sSup (toReal '' s)))
+        = toReal (FromReal.ofReal (sSup (toReal '' (∅ : Set CReal))))
+    simpa [toReal_ofReal] using (csSup_of_not_bddAbove (α := ℝ) (s := toReal '' s) hs')
   · intro s hs
     apply toReal_injective
     have hs' : ¬ BddBelow (toReal '' s) := by
       intro h
       exact hs ((bddBelow_image_toReal_iff s).1 h)
-    simpa [InfSet.sInf, toReal_ofReal] using
-      (csInf_of_not_bddBelow (α := ℝ) (s := toReal '' s) hs')
+    change
+      toReal (FromReal.ofReal (sInf (toReal '' s)))
+        = toReal (FromReal.ofReal (sInf (toReal '' (∅ : Set CReal))))
+    simpa [toReal_ofReal] using (csInf_of_not_bddBelow (α := ℝ) (s := toReal '' s) hs')
 
 noncomputable instance : IsOrderedAddMonoid CReal :=
   IsOrderedAddMonoid.mk
     (fun a b hab c => by
-      -- use the existing `add_le_add_left` lemma (stated with `c + _`)
       simpa [add_comm] using (Computable.CReal.add_le_add_left a b hab c))
     (fun a b hab c => by
       simpa using (Computable.CReal.add_le_add_left a b hab c))
