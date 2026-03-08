@@ -5,6 +5,7 @@ import HopfieldNet.CReals.CRealCCLOF
 import HopfieldNet.CReals.CRealComplete
 import HopfieldNet.CReals.CRealRealEquiv
 import HopfieldNet.CReals.CRealsFastBackend
+import HopfieldNet.CReals.SignedDigit
 
 /-!
 # SOTA CReals façade (spec vs implementation)
@@ -199,6 +200,33 @@ Recommended APIs for “rigorously trying to decide”:
   `Computable.CReal.Pre.apart?_out` (same guarantees, but they use `Quotient.out`).
 - **Executable fast level**: `Computable.Fast.FastReal.compare` / `compareWitness` (also `Option`-valued),
   suitable for `#eval` and debugging.
+
+## Signed-digit (corecursive) streams (experimental)
+
+The regular-sequence model `Computable.CReal.Pre` is proof-friendly but can incur index-shift overhead
+in deeply nested arithmetic (especially repeated multiplication).
+
+As a complementary **spec-level** representation, we provide a minimal signed-digit stream development:
+
+- **digits**: `Computable.CReal.SignedDigit.Digit` with values `{-1,0,+1}`
+- **streams**: `Computable.CReal.SignedDigit.SDStream := ℕ → Digit`
+- **executable streams** (for computation): `Computable.CReal.SignedDigit.LazySDStream`
+- **bridge to the existing spec model**:
+  - `Computable.CReal.SignedDigit.toPre : SDStream → Computable.CReal.Pre`
+  - `Computable.CReal.SignedDigit.toCReal : SDStream → Computable.CReal`
+  - `Computable.CReal.SignedDigit.LazySDStream.toSDStream : LazySDStream → SDStream`
+
+This gives a fully proved embedding of corecursive streams into the current `CReal` stack, and is the
+starting point for a future “signed-digit-native” arithmetic layer.
+
+To extend beyond the bounded interval `[-1,1]`, we also provide an **exponent + mantissa**
+representation:
+
+- `Computable.CReal.SignedDigit.SDReal` with fields `exp : ℤ` and `mant : SDStream`,
+  denoting \(2^{\mathrm{exp}} \cdot \mathrm{mant}\).
+
+The denotation maps `SDReal.toPre` / `SDReal.toCReal` are fully constructive; choosing a suitable
+exponent for a given real is (as expected) not computable in general.
 -/
 
 namespace Computable

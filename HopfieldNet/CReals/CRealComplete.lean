@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Matteo Cipollina
 -/
 
-import HopfieldNet.CReals.CRealPre2.Lim
+import HopfieldNet.CReals.CRealLim
 
 /-!
 # Native Constructive Completeness of CReal
@@ -35,10 +35,9 @@ the quotient. This matches Bishop (1967), CoRN/O'Connor (2008), and Spitters.
 
 set_option maxHeartbeats 800000
 
-namespace Computable.CReal.Pre.CReal.Completeness
+namespace Computable.CReal.Completeness
 
-open Computable.CReal.Pre.CReal
-open Computable.CReal.Pre.CReal.Pre (ofRat)
+open Computable.CReal.Pre (ofRat)
 
 /-! ### Helpers -/
 
@@ -257,4 +256,4 @@ theorem constructive_complete_raw
   let s : RCauSeq := RCauSeq.mk (fun n => ⟦pre n⟧) pre (fun _ => rfl) hcauchy
   exact ⟨lim s, complete_eps s⟩
 
-end Computable.CReal.Pre.CReal.Completeness
+end Computable.CReal.Completeness
