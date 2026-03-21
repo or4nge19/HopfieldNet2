@@ -27,8 +27,9 @@ This is a **branch over reals**, which is undecidable in general (LPO). However:
    is a finite sum of dyadics, so the comparison is decidable at *some* precision.
 2. The `ExactRealM` monad automatically finds that precision.
 
-The result is: **verified exact neural computation with zero numerical error**,
-where the precision management is invisible to the programmer.
+The result is a constructive exact-real execution prototype with invisible
+precision management for the programmer. The remaining proof obligation is to
+connect this fast evaluator end-to-end to the spec-level `ExactHopfield` API.
 
 ## What this file demonstrates
 
@@ -39,13 +40,17 @@ where the precision management is invisible to the programmer.
 
 ## Connection to the proof layer
 
-The `ExactRealM` computations use the *same* mathematical operations (finite sums,
-products, comparisons) as the `CReal`-level definitions in `Defs.lean`. The bridge
-theorems in `Bridge.lean` ensure semantic agreement. Thus:
+This file is deliberately a **prototype execution layer**. It mirrors the intended
+specification-level operations from `Defs.lean`, but the full theorem saying that
+this evaluator implements `ExactHopfield.energy` / `ExactHopfield.zeroTempDet`
+has not yet been packaged.
 
-- Theorems proved about `ExactHopfield.energy` (e.g., energy descent) apply to
-  the values computed by this evaluator.
-- The evaluator is the *same* function, running on a different backend.
+What is already true:
+
+- the fast arithmetic lives on exact dyadic balls rather than floating point,
+- boundary comparisons are handled constructively by returning `none`,
+- the surrounding `CReal` and `Fast` infrastructure already contains the ingredients
+  needed for a later correctness theorem.
 -/
 
 open Computable.Fast ExactRealM

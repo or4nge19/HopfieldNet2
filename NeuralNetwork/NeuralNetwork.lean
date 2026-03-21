@@ -1,11 +1,3 @@
-/-
-Aggregator module for the `NeuralNetwork` development.
-
-We intentionally keep this file focused on the core `NeuralNetwork.NeuralNetwork.*` library.
-The auxiliary `NeuralNetwork.Mathematics.*` development may evolve independently (and currently
-depends on deprecated Mathlib modules).
--/
-
 import NeuralNetwork.NeuralNetwork.aux
 import NeuralNetwork.NeuralNetwork.BoltzmannMachine
 import NeuralNetwork.NeuralNetwork.Convergence
@@ -43,3 +35,14 @@ import NeuralNetwork.NeuralNetwork.test
 import NeuralNetwork.NeuralNetwork.TSAux
 import NeuralNetwork.NeuralNetwork.TwoState
 import NeuralNetwork.NeuralNetwork.ZeroTemp
+
+/-!
+# NeuralNetwork legacy stack umbrella import
+
+Aggregator module for the `NeuralNetwork` development.
+
+We intentionally keep this file focused on the core `NeuralNetwork.NeuralNetwork.*` library.
+The auxiliary `NeuralNetwork.Mathematics.*` development may evolve independently.
+-/
+
+set_option autoImplicit false

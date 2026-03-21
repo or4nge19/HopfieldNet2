@@ -32,8 +32,9 @@ Our answer: **all three**, via a principled three-layer split.
   which causes term blowup in deep expressions.
 
 The Hopfield energy `E(s) = -½ ∑ w_ij s_i s_j + ∑ θ_i s_i` is defined at this
-layer (`ExactHopfield.energy`) and all theorems (energy descent, convergence) are
-proved here.
+layer (`ExactHopfield.energy`), and the built theorem path currently establishes
+the one-step energy descent results. Broader convergence / fixed-point packaging
+over `CReal` is still future work.
 
 ## Layer 2: Execution (`Computable.Fast` / Dyadic Ball Arithmetic)
 
@@ -63,9 +64,12 @@ produces exact dyadic balls: `[-6.0 ± 0.0]` for stored patterns.
   correctly returns `none`, matching the constructive fact that `x = y` is
   undecidable for computable reals. This is the **LPO** made computationally manifest.
 
-The Hopfield update rule is defined here (`MonadicHopfield.updateNeuron`) and
-produces verified network dynamics: spurious states converge to attractors in
-exactly 1 sweep, with a certified comparison showing energy descent.
+The monadic update rule is prototyped here (`MonadicHopfield.updateNeuron`).
+For separated comparisons, it behaves like the expected threshold update; on the
+exact boundary it intentionally returns `none` rather than choosing a classical
+tie-breaking branch. The concrete `#eval` examples show attractor behavior on
+small networks, but a full backend-correctness theorem relating this evaluator
+to `ExactHopfield.zeroTempDet` is still future work.
 
 ## The Faithfulness Bridge
 
@@ -78,18 +82,23 @@ The three layers are connected by two bridge theorems:
 2. **Fast ↔ Spec** (via `ApproxRationals` + `CRealsFastBackend`):
    the dyadic ball backend is a certified implementation of the spec.
 
-Together: **theorems proved at Layer 1 apply to computations run at Layer 2/3.**
+Together, these layers supply the ingredients for end-to-end certification. At
+present, the fully packaged theorem bridge is the spec ↔ `ℝ` one; the final
+fast/spec correctness theorem for the `ExactHopfield` evaluator remains to be stated
+and proved explicitly.
 
 ## Roadmap: future extensions
 
-### Near-term (fills remaining `sorry`s)
+### Near-term (strengthen theorem surface and integration)
 
-- `energyDiff_eq_energy_sub`: algebraic identity relating energy difference to
-  `(old - new) * (localField - θ)`. Requires `Finset.sum` splitting at index `i`
-  and `w_ii = 0` / symmetry.
-- `energy_descent`: sign analysis showing `(old - new) * (localField - θ) ≤ 0`
-  under the "correct update" hypothesis.
-- RatCast diamond in `energy_toReal`: reconcile the two `RatCast` instances on `CReal`.
+- package a more explicit theorem API around the already built energy-descent path,
+  so downstream users can cite concise review-facing lemmas in addition to
+  `energy_descent_detUpdate` and `energy_strict_of_L_apart`;
+- state and prove the strongest end-to-end correctness theorem for the separate
+  `FastHopfieldEnergy` route in `NeuralNetwork`, clarifying exactly how that fast
+  path relates to the abstract Hopfield specification;
+- extend the current bridge story from energy preservation to larger proof bundles
+  that combine exact-real evaluation with convergence / stability statements.
 
 ### Medium-term (paper-ready)
 
@@ -116,15 +125,29 @@ Together: **theorems proved at Layer 1 apply to computations run at Layer 2/3.**
 
 ```
 ExactHopfield/
-├── SpinCReal.lean        Layer 1: Spin ↪ CReal (computable, 0 sorry)
-├── Defs.lean             Layer 1: energy, localField over CReal (computable, 0 sorry)
-├── EnergyDescent.lean    Layer 1: hero theorem (2 sorry: algebraic identity + sign)
-├── Bridge.lean           Bridge:  CReal energy = ℝ energy (1 sorry: ratcast diamond)
-├── ExactRealM.lean       Layer 3: precision-retry monad (computable, 0 sorry)
-├── MonadicHopfield.lean  Layer 3: monadic Hopfield evaluator (computable, 0 sorry)
-├── Eval.lean             Layer 2: FastReal energy #eval demos (computable, 0 sorry)
+├── SpinCReal.lean        Layer 1: Spin ↪ CReal (computable)
+├── Defs.lean             Layer 1: energy, localField over CReal (computable)
+├── EnergyDescent.lean    Layer 1: built energy-descent theorem path
+├── Bridge.lean           Bridge: CReal energy = ℝ energy
+├── ExactRealM.lean       Layer 3: precision-retry monad (computable)
+├── MonadicHopfield.lean  Layer 3: monadic Hopfield evaluator (computable)
+├── Eval.lean             Layer 2: FastReal energy #eval demos (computable)
 └── Architecture.lean     This file: facade + roadmap
 ```
+
+## Current status note
+
+The proof-facing `ExactHopfield` surface currently builds:
+
+- `HopfieldNet.ExactHopfield.Bridge`
+- `HopfieldNet.ExactHopfield.EnergyDescent`
+- `HopfieldNet.ExactHopfield.ExactRealM`
+
+The executable demo modules `MonadicHopfield` and `Eval` also build, but they are
+kept separate from the default umbrella import until the full fast/spec correctness
+story is packaged.
+
+So the roadmap above should be read as *integration strengthening*, not as “the core proof path is still blocked by `sorry`s”.
 -/
 
 -- This file is documentation-only; no definitions.

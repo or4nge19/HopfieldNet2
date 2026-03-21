@@ -28,6 +28,7 @@ import HopfieldNet.Papers.Hopfield82.MemoryStorage
 import HopfieldNet.Papers.Hopfield82.EnergyConvergence
 import HopfieldNet.SpinState.Basic
 import HopfieldNet.SpinState.StochasticUpdate
+import HopfieldNet.ExactHopfield
 
 import HopfieldNet.BM.Core
 import HopfieldNet.BM.Markov

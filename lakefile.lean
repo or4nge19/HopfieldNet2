@@ -25,6 +25,12 @@ lean_lib Optlib where
 
 lean_lib PhysLean where
 
+lean_lib SpinGlass where
+
+lean_lib Common where
+
+lean_lib Rebuild where
+
 require checkdecls from git "https://github.com/PatrickMassot/checkdecls.git"
 
 meta if get_config? env = some "dev" then

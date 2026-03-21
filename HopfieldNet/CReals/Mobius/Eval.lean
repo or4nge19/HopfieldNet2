@@ -141,6 +141,34 @@ theorem run_soundness_prefix (X Y : MobiusReal) (fuel : ℕ) (s : VMState)
   exact vm_soundness_prefix s (run X Y fuel s).2 X Y ((run X Y fuel s).1.map digit_to_LFT)
     (run_safeVMRun X Y fuel s hs)
 
+theorem run_soundness_prefix_digitListApprox
+    (X Y : MobiusReal) (fuel : ℕ) (s : VMState)
+    (hs : GeneralTrace.SafeAt X Y s) :
+    GeneralTrace.stateValue X Y s =
+      digitListApprox ((run X Y fuel s).1) +
+        GeneralTrace.stateValue X Y ((run X Y fuel s).2) /
+          2 ^ ((run X Y fuel s).1.length) := by
+  calc
+    GeneralTrace.stateValue X Y s
+        = emittedValue ((run X Y fuel s).1.map digit_to_LFT)
+            (GeneralTrace.stateValue X Y ((run X Y fuel s).2)) :=
+          run_soundness_prefix X Y fuel s hs
+    _ = digitListApprox ((run X Y fuel s).1) +
+          GeneralTrace.stateValue X Y ((run X Y fuel s).2) /
+            2 ^ ((run X Y fuel s).1.length) :=
+          emittedValue_map_digit_to_LFT_eq_digitListApprox_add_scaled
+            ((run X Y fuel s).1) (GeneralTrace.stateValue X Y ((run X Y fuel s).2))
+
+theorem run_soundness_prefix_digitListApprox_error
+    (X Y : MobiusReal) (fuel : ℕ) (s : VMState)
+    (hs : GeneralTrace.SafeAt X Y s)
+    (hres : GeneralTrace.stateValue X Y ((run X Y fuel s).2) ∈ baseI) :
+    |GeneralTrace.stateValue X Y s - digitListApprox ((run X Y fuel s).1)| ≤
+      (1 : ℝ) / 2 ^ ((run X Y fuel s).1.length) := by
+  rw [run_soundness_prefix X Y fuel s hs]
+  exact emittedValue_map_digit_to_LFT_sub_digitListApprox_abs_le
+    ((run X Y fuel s).1) hres
+
 theorem run_add (X Y : MobiusReal) (m n : ℕ) (s : VMState) :
     run X Y (m + n) s =
       let r1 := run X Y m s

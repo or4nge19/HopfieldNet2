@@ -40,6 +40,66 @@ noncomputable def emittedValue (ds : List LFT) (r : ℝ) : ℝ :=
 @[simp] theorem emittedValue_cons (d : LFT) (ds : List LFT) (r : ℝ) :
     emittedValue (d :: ds) r = LFT.apply d (emittedValue ds r) := rfl
 
+@[simp] lemma digit_to_LFT_apply (d : Digit) (x : ℝ) :
+    LFT.apply (digit_to_LFT d) x = (x + d.toRat) / 2 := by
+  cases d <;> simp [digit_to_LFT, digitNeg, digitZero, digitPos, LFT.apply, mul_comm]
+
+/-- Real value represented by a finite digit prefix, with zero residual tail. -/
+noncomputable def digitListApprox : List Digit → ℝ
+  | [] => 0
+  | d :: ds => (d.toRat : ℝ) / 2 + digitListApprox ds / 2
+
+@[simp] theorem digitListApprox_nil : digitListApprox [] = 0 := rfl
+
+@[simp] theorem digitListApprox_cons (d : Digit) (ds : List Digit) :
+    digitListApprox (d :: ds) = (d.toRat : ℝ) / 2 + digitListApprox ds / 2 := rfl
+
+private lemma div_pow_two_succ (r : ℝ) (n : ℕ) :
+    (r / 2 ^ n) / 2 = r / 2 ^ (n + 1) := by
+  have hpow : ((2 : ℝ) ^ n) ≠ 0 := by positivity
+  field_simp [pow_succ, hpow]
+  ring
+
+theorem emittedValue_map_digit_to_LFT_eq_digitListApprox_add_scaled :
+    ∀ (ds : List Digit) (r : ℝ),
+      emittedValue (ds.map digit_to_LFT) r =
+        digitListApprox ds + r / 2 ^ ds.length
+  | [], r => by
+      simp [digitListApprox]
+  | d :: ds, r => by
+      calc
+        emittedValue ((d :: ds).map digit_to_LFT) r
+            = LFT.apply (digit_to_LFT d) (emittedValue (ds.map digit_to_LFT) r) := by
+                simp [emittedValue]
+        _ = (emittedValue (ds.map digit_to_LFT) r + d.toRat) / 2 := by
+              rw [digit_to_LFT_apply]
+        _ = ((digitListApprox ds + r / 2 ^ ds.length) + d.toRat) / 2 := by
+              rw [emittedValue_map_digit_to_LFT_eq_digitListApprox_add_scaled ds r]
+        _ = (d.toRat : ℝ) / 2 + digitListApprox ds / 2 + (r / 2 ^ ds.length) / 2 := by
+              ring
+        _ = (d.toRat : ℝ) / 2 + digitListApprox ds / 2 + r / 2 ^ (ds.length + 1) := by
+              rw [div_pow_two_succ]
+        _ = digitListApprox (d :: ds) + r / 2 ^ (List.length (d :: ds)) := by
+              simp [digitListApprox]
+
+theorem emittedValue_map_digit_to_LFT_sub_digitListApprox_abs_le
+    (ds : List Digit) {r : ℝ} (hr : r ∈ baseI) :
+    |emittedValue (ds.map digit_to_LFT) r - digitListApprox ds| ≤
+      (1 : ℝ) / 2 ^ ds.length := by
+  have hrabs : |r| ≤ (1 : ℝ) := by
+    exact abs_le.mpr ⟨hr.1, hr.2⟩
+  calc
+    |emittedValue (ds.map digit_to_LFT) r - digitListApprox ds|
+        = |r / 2 ^ ds.length| := by
+            rw [emittedValue_map_digit_to_LFT_eq_digitListApprox_add_scaled]
+            congr 1
+            ring
+    _ = |r| * ((1 : ℝ) / 2 ^ ds.length) := by
+          simp [div_eq_mul_inv, abs_mul]
+    _ ≤ 1 * ((1 : ℝ) / 2 ^ ds.length) := by
+          gcongr
+    _ = (1 : ℝ) / 2 ^ ds.length := by ring
+
 theorem safe_step
     (X Y : MobiusReal) {s s' : VMState} {o : Option LFT}
     (h : GeneralTrace.VMStepXY X Y s o s')

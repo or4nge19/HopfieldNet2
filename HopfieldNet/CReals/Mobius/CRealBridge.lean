@@ -1,5 +1,6 @@
 import HopfieldNet.CReals.Mobius.Eval
 import HopfieldNet.CReals.CRealCCLOF
+import HopfieldNet.CReals.SignedDigit.Operations
 import HopfieldNet.CReals.SignedDigit.SDReal
 
 namespace Computable
@@ -25,6 +26,10 @@ def toCRealScaled (k : ℕ) (out : DigitStream) : Computable.CReal :=
 
 namespace DigitStream
 
+/-- Pointwise digit negation, reusing the signed-digit stream negation. -/
+def negStream (out : DigitStream) : DigitStream :=
+  Computable.CReal.SignedDigit.negStream out
+
 @[simp] lemma digit_to_LFT_apply (d : Digit) (x : ℝ) :
     LFT.apply (digit_to_LFT d) x = (x + d.toRat) / 2 := by
   cases d <;> simp [digit_to_LFT, digitNeg, digitZero, digitPos, LFT.apply, mul_comm]
@@ -36,7 +41,7 @@ lemma partialCompFrom_apply_prefix (out : DigitStream) :
           (Computable.CReal.SignedDigit.partialSum (fun i => out (k + i)) n : ℝ)
   | k, 0, x, hx => by
       simp [partialCompFrom, lftStreamOfDigits, Computable.CReal.SignedDigit.partialSum,
-        Computable.CReal.SignedDigit.coeff, digit_to_LFT_apply, div_eq_mul_inv]
+        Computable.CReal.SignedDigit.coeff, div_eq_mul_inv]
       ring
   | k, n + 1, x, hx => by
       have hx' :
@@ -93,7 +98,7 @@ lemma partialCompFrom_apply_prefix (out : DigitStream) :
             = LFT.apply ((lftStreamOfDigits out) k)
                 (LFT.apply (partialCompFrom (lftStreamOfDigits out) (k + 1) n) x) := happ
         _ = (LFT.apply (partialCompFrom (lftStreamOfDigits out) (k + 1) n) x + (out k).toRat) / 2 := by
-              simp [lftStreamOfDigits, digit_to_LFT_apply]
+              simp [lftStreamOfDigits]
         _ = (x / (2 : ℝ) ^ (n + 1) +
                 (Computable.CReal.SignedDigit.partialSum (fun i => out (k + 1 + i)) n : ℝ) +
                 (out k).toRat) / 2 := by
@@ -239,6 +244,25 @@ theorem toReal_toCReal (out : DigitStream) :
     have hBA : -ε < A - B := (abs_lt.mp habs).1
     linarith
 
+@[simp] theorem toCReal_negStream (out : DigitStream) :
+    toCReal (negStream out) = - toCReal out := by
+  change (⟦Computable.CReal.SignedDigit.toPre (Computable.CReal.SignedDigit.negStream out)⟧ : Computable.CReal) =
+    (⟦Computable.CReal.Pre.neg (Computable.CReal.SignedDigit.toPre out)⟧ : Computable.CReal)
+  exact Quotient.sound (Computable.CReal.SignedDigit.toPre_neg_equiv out)
+
+@[simp] theorem toReal_toCReal_negStream (out : DigitStream) :
+    Computable.CReal.toReal (toCReal (negStream out)) = - (MobiusReal.fromStream out).val := by
+  calc
+    Computable.CReal.toReal (toCReal (negStream out))
+        = Computable.CReal.toReal (- toCReal out) := by rw [toCReal_negStream]
+    _ = - Computable.CReal.toReal (toCReal out) := by simp [Computable.CReal.toReal_neg]
+    _ = - (MobiusReal.fromStream out).val := by rw [toReal_toCReal]
+
+@[simp] theorem fromStream_val_negStream (out : DigitStream) :
+    (MobiusReal.fromStream (negStream out)).val = - (MobiusReal.fromStream out).val := by
+  rw [← toReal_toCReal (negStream out)]
+  exact toReal_toCReal_negStream out
+
 theorem toReal_toCRealScaled_one (out : DigitStream) :
     Computable.CReal.toReal (toCRealScaled 1 out) = 2 * (MobiusReal.fromStream out).val := by
   let A : ℝ := Computable.CReal.toReal (toCRealScaled 1 out)
@@ -342,6 +366,16 @@ theorem toReal_toCRealScaled_one (out : DigitStream) :
     have habs : |A - B| < ε := lt_of_le_of_lt hdist hsmall
     have hBA : -ε < A - B := (abs_lt.mp habs).1
     linarith
+
+theorem toCRealScaled_one_eq_two_mul (out : DigitStream) :
+    toCRealScaled 1 out = Computable.CReal.two * toCReal out := by
+  apply Computable.CReal.toReal_injective
+  rw [Computable.CReal.toReal_mul, DigitStream.toReal_toCReal, Computable.CReal.toReal_two]
+  exact toReal_toCRealScaled_one out
+
+theorem toCRealScaled_one_eq_add_self (out : DigitStream) :
+    toCRealScaled 1 out = toCReal out + toCReal out := by
+  rw [toCRealScaled_one_eq_two_mul, Computable.CReal.two_mul]
 
 end DigitStream
 

@@ -1,0 +1,28 @@
+import Rebuild.StatMech.Specification.Core
+
+/-!
+# Rebuild Proper Specifications
+
+Boundary-condition/properness interface for local specifications.
+-/
+
+set_option autoImplicit false
+
+namespace Rebuild.StatMech.Specification
+
+open Rebuild.Core
+
+variable {Site Spin : Type*} [DecidableEq Site] [MeasurableSpace Spin]
+
+/-- A local kernel is proper if it leaves configurations unchanged off its index volume. -/
+def KernelIsProperOn (V : FiniteVolume Site)
+    (κ : ProbabilityTheory.Kernel (Configuration Site Spin) (Configuration Site Spin)) : Prop :=
+  ∀ σ,
+    ∀ᵐ τ ∂κ σ, ∀ i, i ∉ V.carrier → τ i = σ i
+
+/-- A local specification is proper if every local kernel only updates inside its volume. -/
+def IsProper (γ : LocalSpecification Site Spin) : Prop :=
+  ∀ V : FiniteVolume Site,
+    KernelIsProperOn V (γ V)
+
+end Rebuild.StatMech.Specification

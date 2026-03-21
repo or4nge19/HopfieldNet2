@@ -33,8 +33,6 @@ lemma pmfToMatrix_nonneg (κ : α → PMF α) (x y : α) :
 
 lemma pmfToMatrix_row_sum (κ : α → PMF α) (x : α) :
     (∑ y : α, pmfToMatrix (κ := κ) x y) = 1 := by
-  classical
-  -- Work with the definitional `Finset.univ` form of the finite sums.
   have h_ne_top : ∀ y : α, κ x y ≠ ∞ := fun y => (κ x).apply_ne_top y
   have h_toReal_finset :
       ENNReal.toReal ((Finset.univ : Finset α).sum (fun y => κ x y))
@@ -42,14 +40,11 @@ lemma pmfToMatrix_row_sum (κ : α → PMF α) (x : α) :
     ENNReal.toReal_sum (s := (Finset.univ : Finset α))
       (f := fun y : α => κ x y) (by intro y _; exact h_ne_top y)
   have hsum_finset : ((Finset.univ : Finset α).sum (fun y => κ x y)) = (1 : ℝ≥0∞) := by
-    -- `tsum = 1` for PMF; on fintype, `tsum = sum`.
     simpa [tsum_fintype] using (PMF.tsum_coe (κ x))
   have hsum_toReal : ENNReal.toReal ((Finset.univ : Finset α).sum (fun y => κ x y)) = 1 := by
     simp [hsum_finset]
   have hrow : (Finset.univ : Finset α).sum (fun y => (κ x y).toReal) = 1 := by
-    -- rewrite the LHS using `h_toReal_finset`.
     simpa [h_toReal_finset] using hsum_toReal
-  -- Convert back to the `∑ y : α` notation and expand `pmfToMatrix`.
   simpa [pmfToMatrix] using hrow
 
 /-- The induced matrix is row-stochastic (in the `MCMC.Finite` sense). -/

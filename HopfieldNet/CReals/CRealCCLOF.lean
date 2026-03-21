@@ -306,6 +306,26 @@ noncomputable instance : Field CReal := by
       toReal ((0 : CReal)⁻¹) = (toReal (0 : CReal))⁻¹ := by simp [toReal_inv]
       _ = toReal (0 : CReal) := by simp
 
+noncomputable def two : CReal := (1 : CReal) + 1
+
+@[simp] theorem toReal_two : toReal two = (2 : ℝ) := by
+  rw [two, toReal_add]
+  norm_num
+
+theorem two_ne_zero : two ≠ 0 := by
+  intro h
+  have hreal := congrArg toReal h
+  rw [toReal_two] at hreal
+  norm_num at hreal
+
+theorem two_mul (x : CReal) : two * x = x + x := by
+  rw [two, add_mul]
+  simp
+
+theorem mul_two (x : CReal) : x * two = x + x := by
+  rw [two, mul_add]
+  simp
+
 /-! ### Conditional completeness (transported from `ℝ`) -/
 
 noncomputable instance : SupSet CReal := ⟨fun s => FromReal.ofReal (sSup (toReal '' s))⟩

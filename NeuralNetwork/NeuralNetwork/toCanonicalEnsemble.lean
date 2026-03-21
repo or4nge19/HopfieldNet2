@@ -80,8 +80,8 @@ We generalize the previous `IsHamiltonian_of_EnergySpecSymmetricBinary` to any
 two–state neural network for which the activation predicate `pact` is *exactly*
 the two distinguished states `σ_pos` and `σ_neg`.  This is captured by the
 `TwoStateExclusive` predicate below.  For such networks, an `EnergySpec'`
-immediately yields an `IsHamiltonian` instance, reusing the generic
-`energy_is_lyapunov_at_site''` lemma (no binary–specialized reproofs). -/
+automatically yields an `IsHamiltonian` instance, reusing the generic
+`energy_is_lyapunov_at_site''` lemma (with no binary–specialized reproofs). -/
 
 namespace TwoState
 
@@ -177,7 +177,6 @@ instance IsHamiltonian_of_EnergySpec'
   energy := spec.E
   energy_measurable := by
     intro p
-    -- finite state space ⇒ every function measurable
     have : Measurable (spec.E p) :=
       measurable_of_fintype_state (NN := NN) (f:=spec.E p)
     simp

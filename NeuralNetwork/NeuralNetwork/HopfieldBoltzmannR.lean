@@ -50,13 +50,12 @@ instance : MeasurableSpace NN.State := ⊤
 
 -- With the trivial σ-algebra, every singleton is measurable.
 instance : MeasurableSingletonClass NN.State := by
-  classical
   refine ⟨?_⟩
   intro s
-  -- `MeasurableSpace = ⊤` makes all sets measurable.
   trivial
 
-@[simp] lemma measurable_of_fintype_state (f : NN.State → ℝ) : Measurable f := by
+@[simp]
+lemma measurable_of_fintype_state (f : NN.State → ℝ) : Measurable f := by
   unfold Measurable; intro s _; simp
 
 /-- Energy as an `ℝ`-valued function, obtained by pushing `spec.E` through `toReal`. -/
@@ -79,18 +78,13 @@ noncomputable def CEparams
   phaseSpaceunit := 1
   energy_measurable := by
     intro _
-    simpa using (measurable_of_fintype_state (NN := NN)
-      (f := energyReal (NN := NN) (spec := spec) p))
+    simp
   μ := Measure.count
   μ_sigmaFinite := by
-    classical
-    -- Mathlib's `Measure.count` is σ-finite on countable types with measurable singletons.
-    -- We derive `Countable` from `Fintype` explicitly (so we don't rely on a global instance).
     letI : Countable NN.State :=
       ⟨⟨fun s => (Fintype.equivFin NN.State s).val, by
         intro a b hab
         apply (Fintype.equivFin NN.State).injective
-        -- `Fin.ext` turns equality of `val` into equality of `Fin`.
         exact Fin.ext hab⟩⟩
     letI : MeasurableSingletonClass NN.State := by infer_instance
     infer_instance
@@ -295,7 +289,6 @@ lemma diffSites_card_zero {s s' : NN.State} :
 
 private lemma uniformOfFintype_pos (u : U) :
     0 < (PMF.uniformOfFintype U) u := by
-  -- uniform probability is (card U)⁻¹, which is positive in ℝ≥0∞
   simpa [PMF.uniformOfFintype_apply] using
     (ENNReal.inv_pos.2 (ENNReal.natCast_ne_top (Fintype.card U)))
 
@@ -304,7 +297,6 @@ private lemma randomScanPMF_apply (s t : NN.State) :
       = ∑ u : U, (PMF.uniformOfFintype U) u *
           (TwoState.gibbsUpdate (NN := NN) f p T s u) t := by
   classical
-  -- `PMF.bind_apply` gives a `tsum`; for `Fintype` it's a finite sum.
   simp [randomScanPMF, PMF.bind_apply, tsum_fintype]
 
 private lemma randomScanPMF_pos_of_term
@@ -313,13 +305,11 @@ private lemma randomScanPMF_pos_of_term
       (TwoState.gibbsUpdate (NN := NN) f p T s u) t) :
     0 < randomScanPMF (NN := NN) p T f s t := by
   classical
-  -- the sum is ≥ the positive `u`-term
   have hsum :
       randomScanPMF (NN := NN) p T f s t
         = ∑ v : U, (PMF.uniformOfFintype U) v *
             (TwoState.gibbsUpdate (NN := NN) f p T s v) t :=
     randomScanPMF_apply (NN := NN) (p := p) (T := T) (f := f) s t
-  -- nonnegativity of all terms
   have hnonneg :
       ∀ v : U, 0 ≤ (PMF.uniformOfFintype U) v *
           (TwoState.gibbsUpdate (NN := NN) f p T s v) t := by
@@ -340,7 +330,6 @@ private lemma randomScanPMF_pos_of_term
 private lemma toReal_pos_of_pmf_pos {s t : NN.State}
     (hpos : 0 < randomScanPMF (NN := NN) p T f s t) :
     0 < (randomScanPMF (NN := NN) p T f s t).toReal := by
-  -- PMF values are ≤ 1, hence < ⊤
   have hle : randomScanPMF (NN := NN) p T f s t ≤ 1 :=
     (randomScanPMF (NN := NN) p T f s).coe_le_one t
   have hlt_top : randomScanPMF (NN := NN) p T f s t < ⊤ :=
@@ -361,7 +350,7 @@ lemma randomScanMatrix_pos_of_diffOnly
     have hs_eq : s = TwoState.updNeg (NN := NN) s' u := by
       ext v
       by_cases hvu : v = u
-      · subst hvu; simpa [TwoState.updNeg, Function.update, hs_neg]
+      · subst hvu; simp [TwoState.updNeg, Function.update, hs_neg]
       · have hoff := h.1 v hvu
         simp [TwoState.updNeg, Function.update, hvu, hoff]
     -- positive contribution from choosing u and taking the `updNeg` branch
@@ -371,7 +360,6 @@ lemma randomScanMatrix_pos_of_diffOnly
       sub_pos.2 (TwoState.probPos_lt_one (NN := NN) f p T s' u)
     have hstep_pos :
         0 < (TwoState.gibbsUpdate (NN := NN) f p T s' u) s := by
-      -- rewrite using `gibbsUpdate_apply_updNeg` and `hs_eq`
       subst hs_eq
       simpa [gibbsUpdate_apply_updNeg (NN:=NN) (p:=p) (T:=T) (f:=f) s' u] using
         (ENNReal.ofReal_pos.2 hprob_pos)
@@ -389,7 +377,6 @@ lemma randomScanMatrix_pos_of_diffOnly
     have hpmf_pos :
         0 < randomScanPMF (NN := NN) p T f s' s :=
       randomScanPMF_pos_of_term (NN:=NN) (p:=p) (T:=T) (f:=f) u hterm
-    -- matrix entry is toReal of the PMF entry
     simpa [randomScanMatrix, PMFMatrix.pmfToMatrix] using
       toReal_pos_of_pmf_pos (NN:=NN) (p:=p) (T:=T) (f:=f) hpmf_pos
   · -- s'.act u = σ_neg, so s.act u = σ_pos, hence s = updPos s' u
@@ -400,7 +387,7 @@ lemma randomScanMatrix_pos_of_diffOnly
     have hs_eq : s = TwoState.updPos (NN := NN) s' u := by
       ext v
       by_cases hvu : v = u
-      · subst hvu; simpa [TwoState.updPos, Function.update, hs_pos]
+      · subst hvu; simp [TwoState.updPos, Function.update, hs_pos]
       · have hoff := h.1 v hvu
         simp [TwoState.updPos, Function.update, hvu, hoff]
     have hsite_pos : 0 < (PMF.uniformOfFintype U) u :=
@@ -444,17 +431,14 @@ lemma randomScanMatrix_diag_pos (s : NN.State) :
       TwoState.probPos_pos (NN := NN) f p T s u0
     have hstep_pos :
         0 < (TwoState.gibbsUpdate (NN := NN) f p T s u0) s := by
-      -- use updPos evaluation
       have : (TwoState.gibbsUpdate (NN := NN) f p T s u0) (TwoState.updPos (NN := NN) s u0)
           = ENNReal.ofReal (TwoState.probPos (NN := NN) f p T s u0) :=
         gibbsUpdate_apply_updPos (NN:=NN) (p:=p) (T:=T) (f:=f) s u0
-      -- rewrite `updPos` to `s`
       have h_ofReal : 0 < ENNReal.ofReal (TwoState.probPos (NN := NN) f p T s u0) :=
         (ENNReal.ofReal_pos.2 hprob_pos)
       have hval : (TwoState.gibbsUpdate (NN := NN) f p T s u0) s
             = ENNReal.ofReal (TwoState.probPos (NN := NN) f p T s u0) := by
         simpa [h_eq] using this
-      -- avoid `simp` rewriting `ENNReal.ofReal_pos`; just rewrite and close
       rw [hval]
       exact h_ofReal
     have hterm :

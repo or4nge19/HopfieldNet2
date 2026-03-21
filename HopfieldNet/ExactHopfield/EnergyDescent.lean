@@ -86,6 +86,15 @@ lemma energy_updPos_sub_updNeg (p : SBParams (U := U)) (s : SBState (U := U)) (u
   dsimp [ExactHopfield.energy, ExactHopfield.updPos, ExactHopfield.updNeg]
   simpa using (HopfieldEnergy.hamiltonian_flip_relation (R := R) (U := U) p s u)
 
+theorem energyDiff_eq_energy_sub (p : SBParams (U := U)) (s : SBState (U := U)) (u : U) :
+    energyDiff p s u = energy p (updPos s u) - energy p (updNeg s u) := rfl
+
+/-- Review-facing form of the flip energy relation, stated using `ExactHopfield.energyDiff`. -/
+theorem energy_update_eq (p : SBParams (U := U)) (s : SBState (U := U)) (u : U) :
+    energyDiff p s u = -(2 : R) * L p s u := by
+  simpa [ExactHopfield.energyDiff, ExactHopfield.L, ExactHopfield.localField, ExactHopfield.θ0]
+    using energy_updPos_sub_updNeg (U := U) p s u
+
 lemma margin_eq_zero_of_energy_updPos_eq_updNeg (p : SBParams (U := U)) (s : SBState (U := U)) (u : U)
     (heq : energy p (updPos s u) = energy p (updNeg s u)) :
     State.net p s u - (p.θ u).get TwoState.fin0 = 0 := by
@@ -106,15 +115,13 @@ lemma energy_updPos_le_updNeg_of_le (p : SBParams (U := U)) (s : SBState (U := U
   have hmargin : (0 : R) ≤ State.net p s u - (p.θ u).get TwoState.fin0 := by
     simpa [ExactHopfield.localField, ExactHopfield.θ0, sub_eq_add_neg] using sub_nonneg.mpr hθ
   have hdiff : energy p (updPos s u) - energy p (updNeg s u) ≤ 0 := by
-    -- unfold to the concrete flip relation, then `nlinarith`
-    dsimp [ExactHopfield.energy, ExactHopfield.updPos, ExactHopfield.updNeg]
-    rw [HopfieldEnergy.hamiltonian_flip_relation (R := R) (U := U) p s u]
-    -- rewrite away the coefficient `2` using `two_mul`
-    -- `-(2:R) * m = -((2:R) * m) = -(m + m)`
-    have hm : (0 : R) ≤ State.net p s u - (p.θ u).get TwoState.fin0 := hmargin
-    -- goal: `-(2:R) * m ≤ 0`
-    -- turn into `0 ≤ m + m`
-    simpa [neg_mul, two_mul, neg_nonpos] using (add_nonneg hm hm)
+    rw [← energyDiff_eq_energy_sub (U := U) p s u, energy_update_eq (U := U) p s u]
+    have hm : (0 : R) ≤ L p s u := by
+      change (0 : R) ≤ State.net p s u - (p.θ u).get TwoState.fin0
+      exact hmargin
+    have htwo : (0 : R) ≤ (2 : R) * L p s u := by
+      simpa [two_mul] using (add_nonneg hm hm)
+    simpa [neg_mul] using (neg_nonpos.mpr htwo)
   exact (sub_nonpos.mp hdiff)
 
 lemma energy_updNeg_le_updPos_of_not_le (p : SBParams (U := U)) (s : SBState (U := U)) (u : U)
@@ -125,13 +132,13 @@ lemma energy_updNeg_le_updPos_of_not_le (p : SBParams (U := U)) (s : SBState (U 
     have : localField p s u - θ0 p u < 0 := sub_neg.mpr this
     simpa [ExactHopfield.localField, ExactHopfield.θ0] using (le_of_lt this)
   have hdiff : 0 ≤ energy p (updPos s u) - energy p (updNeg s u) := by
-    dsimp [ExactHopfield.energy, ExactHopfield.updPos, ExactHopfield.updNeg]
-    rw [HopfieldEnergy.hamiltonian_flip_relation (R := R) (U := U) p s u]
-    have hm : State.net p s u - (p.θ u).get TwoState.fin0 ≤ 0 := hmargin
-    -- goal: `0 ≤ -(2:R) * m`, i.e. `0 ≤ -(m+m)`; equivalently `m+m ≤ 0`
-    have : State.net p s u - (p.θ u).get TwoState.fin0 +
-          (State.net p s u - (p.θ u).get TwoState.fin0) ≤ 0 := add_nonpos hm hm
-    simpa [neg_mul, two_mul, neg_nonneg] using this
+    rw [← energyDiff_eq_energy_sub (U := U) p s u, energy_update_eq (U := U) p s u]
+    have hm : L p s u ≤ 0 := by
+      change State.net p s u - (p.θ u).get TwoState.fin0 ≤ 0
+      exact hmargin
+    have htwo : (2 : R) * L p s u ≤ 0 := by
+      simpa [two_mul] using (add_nonpos hm hm)
+    simpa [neg_mul] using (neg_nonneg.mpr htwo)
   exact (sub_nonneg.mp hdiff)
 
 lemma updPos_eq_self_of_act_eq_one (s : SBState (U := U)) (u : U) (hu : s.act u = (1 : R)) :
@@ -180,6 +187,11 @@ theorem energy_descent_detUpdate (p : SBParams (U := U)) (s : SBState (U := U)) 
     · -- already `-1`: update does nothing
       have : updNeg s u = s := updNeg_eq_self_of_act_eq_neg_one (U := U) s u hu
       simp [hdet, this]
+
+/-- Public theorem name for the deterministic one-step energy descent result. -/
+theorem energy_descent (p : SBParams (U := U)) (s : SBState (U := U)) (u : U) :
+    energy p (detUpdate (U := U) p s u) ≤ energy p s :=
+  energy_descent_detUpdate (U := U) p s u
 
 theorem energy_strict_of_L_apart (p : SBParams (U := U)) (s : SBState (U := U)) (u : U)
     (hchange : detUpdate (U := U) p s u ≠ s)

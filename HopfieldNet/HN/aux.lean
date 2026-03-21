@@ -216,7 +216,11 @@ lemma filter_sum_pos_iff_exists_pos {α β : Type} [Fintype α]
           exact h a ha
         · exact zero_le (p a)
       have sum_zero := Finset.sum_eq_zero all_zero
-      exact not_lt_of_le (by exact nonpos_iff_eq_zero.mpr sum_zero) h_pos
+      have h_pos' : 0 < (∑ a ∈ filter (fun a ↦ f a = y) univ, p a) := by
+        simpa [gt_iff_lt] using h_pos
+      have h_not : ¬ 0 < (∑ a ∈ filter (fun a ↦ f a = y) univ, p a) := by
+        simpa [sum_zero] using (lt_irrefl (0 : ENNReal))
+      exact h_not h_pos'
     rcases exists_pos with ⟨x, hx_mem, hx_pos⟩
     exact ⟨x, filter_mem_iff.mp hx_mem, hx_pos⟩
   · rintro ⟨x, hx_mem, hx_pos⟩
@@ -225,7 +229,7 @@ lemma filter_sum_pos_iff_exists_pos {α β : Type} [Fintype α]
     have x_in_filter : x ∈ filter (fun a ↦ f a = f x) univ := by
       simp only [filter_mem_iff]
     have sum_ge_x : ∑ a ∈ filter (fun a ↦ f a = f x) univ, p a ≥ p x := by
-      exact CanonicallyOrderedAddCommMonoid.single_le_sum x_in_filter
+      exact Finset.single_le_sum_of_canonicallyOrdered (f := fun a => p a) x_in_filter
     exact lt_of_lt_of_le hx_pos sum_ge_x
 
 /-- Main aux lemma:

@@ -8,6 +8,8 @@ import HopfieldNet.CReals.Mobius.VMTraceSoundness
 import HopfieldNet.CReals.Mobius.TraceSoundness
 import HopfieldNet.CReals.Mobius.Eval
 import HopfieldNet.CReals.Mobius.CRealBridge
+import HopfieldNet.CReals.Mobius.AddSoundness
+import HopfieldNet.CReals.Mobius.SubSoundness
 
 /-!
 # Möbius (LFT / tensor) exact reals (experimental)
@@ -15,3 +17,4 @@ import HopfieldNet.CReals.Mobius.CRealBridge
 Umbrella import for the experimental Möbius-stream exact real arithmetic layer.
 -/
 
+set_option autoImplicit false

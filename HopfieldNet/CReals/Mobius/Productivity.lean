@@ -4781,6 +4781,28 @@ theorem halfAddTensor_run_two_digits_sound_mem_baseI (X Y : MobiusReal) :
     _ = LFT.apply (digit_to_LFT d₁)
           (LFT.apply (digit_to_LFT d₂) (GeneralTrace.stateValue X Y s)) := hprefix
 
+theorem halfAddTensor_run_two_digits_error_bound (X Y : MobiusReal) :
+    ∃ fuel d₁ d₂ s,
+      run X Y fuel halfAddInitState = ([d₁, d₂], s) ∧
+      |(X.val + Y.val) / 2 - digitListApprox [d₁, d₂]| ≤ (1 : ℝ) / 4 := by
+  rcases halfAddTensor_run_reaches_two_digits_mem_baseI X Y with ⟨fuel, d₁, d₂, s, hrun, hs⟩
+  refine ⟨fuel, d₁, d₂, s, hrun, ?_⟩
+  have happ :
+      |GeneralTrace.stateValue X Y halfAddInitState -
+          digitListApprox ((run X Y fuel halfAddInitState).1)| ≤
+        (1 : ℝ) / 2 ^ ((run X Y fuel halfAddInitState).1.length) := by
+    exact run_soundness_prefix_digitListApprox_error
+      X Y fuel halfAddInitState (halfAddInit_safe X Y)
+      (by simpa [hrun] using hs)
+  calc
+    |(X.val + Y.val) / 2 - digitListApprox [d₁, d₂]|
+        = |GeneralTrace.stateValue X Y halfAddInitState -
+            digitListApprox ((run X Y fuel halfAddInitState).1)| := by
+              simp [hrun, halfAddInit_stateValue X Y]
+    _ ≤ (1 : ℝ) / 2 ^ ((run X Y fuel halfAddInitState).1.length) := happ
+    _ = (1 : ℝ) / 4 := by
+          norm_num [hrun]
+
 theorem halfAddTensor_run_two_digits_stable (X Y : MobiusReal) :
     ∃ fuel0 d₁ d₂, ∀ fuel, fuel0 ≤ fuel →
       ∃ tail, (run X Y fuel halfAddInitState).1 = d₁ :: d₂ :: tail := by

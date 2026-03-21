@@ -112,7 +112,11 @@ triggering a retry at higher precision.
 
 This replaces the illegal `if x ≥ y then ... else ...` with a monadically
 managed version that automatically handles the LPO-undecidability of real
-comparison. -/
+comparison.
+
+Implementation note: the current `FastReal.compare` returns only `.lt`, `.gt`,
+or `none`; exact equality falls through to `none`. The `.eq` branch below is
+kept as a forward-compatible convention and is treated as the `≥` branch. -/
 def branch (x y : FastReal) (ifGe ifLt : ExactRealM α) : ExactRealM α :=
   fun n =>
     match FastReal.compare x y n with
@@ -123,10 +127,9 @@ def branch (x y : FastReal) (ifGe ifLt : ExactRealM α) : ExactRealM α :=
 
 /-- Three-way branch: distinguish `<`, `=`, and `>`.
 
-Note: exact equality (`Ordering.eq`) is undecidable in general, but `FastReal.compare`
-may return it when the balls overlap completely. The semantics is: if the balls are
-identical, report `eq`; otherwise report strict order or fail. In practice, `eq` is
-only returned for syntactically identical `FastReal` values. -/
+Note: with the current `FastReal.compare`, exact equality is not detected; equal
+inputs return `none`. The `.eq` branch is therefore a reserved hook for future
+comparators that may provide an explicit equality certificate. -/
 def branch3 (x y : FastReal) (ifLt ifEq ifGt : ExactRealM α) : ExactRealM α :=
   fun n =>
     match FastReal.compare x y n with

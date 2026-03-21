@@ -56,6 +56,16 @@ theorem toReal_one : toReal (CReal.Pre.one) = 1 := by
   rw [this]
   rfl
 
+theorem toReal_ofNat (n : ℕ) : toReal (CReal.Pre.ofNat n) = n := by
+  apply Real.ext_cauchy
+  rw [Real.cauchy_natCast]
+  change (CauSeq.Completion.mk (abv := absℚ) (toCauSeq (CReal.Pre.ofNat n))) = n
+  have : toCauSeq (CReal.Pre.ofNat n) = (n : CauSeq ℚ absℚ) := by
+    ext m
+    rfl
+  rw [this]
+  rfl
+
 theorem toReal_congr {x y : CReal.Pre} (hxy : CReal.Pre.Equiv x y) : toReal x = toReal y := by
   -- reduce to equality of the underlying Cauchy completion elements
   apply Real.ext_cauchy
@@ -257,6 +267,10 @@ def toReal : CReal → ℝ :=
 @[simp] theorem toReal_one : toReal (1 : CReal) = (1 : ℝ) := by
   change toReal (⟦CReal.Pre.one⟧ : CReal) = (1 : ℝ)
   simp [Pre.toReal_one]
+
+@[simp] theorem toReal_natCast (n : ℕ) : toReal (n : CReal) = (n : ℝ) := by
+  change toReal (⟦CReal.Pre.ofNat n⟧ : CReal) = (n : ℝ)
+  simp [Pre.toReal_ofNat]
 
 theorem toReal_add (x y : CReal) : toReal (x + y) = toReal x + toReal y := by
   refine Quotient.inductionOn₂ x y (fun a b => ?_)

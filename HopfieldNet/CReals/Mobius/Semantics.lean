@@ -312,5 +312,17 @@ def divTensor : Tensor where
     Tensor.valueAt halfAddTensor x y = (x + y) / 2 := by
   simp [Tensor.valueAt, Tensor.apply, halfAddTensor]
 
+@[simp] theorem mulTensor_valueAt (x y : ℝ) :
+    Tensor.valueAt mulTensor x y = x * y := by
+  simp [Tensor.valueAt, Tensor.apply, mulTensor]
+
+@[simp] theorem subTensor_valueAt (x y : ℝ) :
+    Tensor.valueAt subTensor x y = x - y := by
+  simp [Tensor.valueAt, Tensor.apply, subTensor, sub_eq_add_neg]
+
+@[simp] theorem divTensor_valueAt (x y : ℝ) :
+    Tensor.valueAt divTensor x y = x / y := by
+  simp [Tensor.valueAt, Tensor.apply, divTensor]
+
 end Mobius
 end Computable

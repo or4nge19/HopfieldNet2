@@ -71,6 +71,10 @@ abbrev updPos (s : SBState (U := U)) (u : U) : SBState (U := U) :=
 abbrev updNeg (s : SBState (U := U)) (u : U) : SBState (U := U) :=
   TwoState.updNeg (NN := NN (U := U)) s u
 
+/-- Energy gap between forcing neuron `u` to `+1` and forcing it to `-1`. -/
+abbrev energyDiff (p : SBParams (U := U)) (s : SBState (U := U)) (u : U) : R :=
+  energy p (updPos s u) - energy p (updNeg s u)
+
 /-- Symmetry of the weight matrix (bundled in `SBParams`). -/
 lemma w_isSymm (p : SBParams (U := U)) : p.w.IsSymm :=
   p.hw'.1
