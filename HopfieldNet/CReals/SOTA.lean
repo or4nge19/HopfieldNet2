@@ -227,6 +227,29 @@ representation:
 
 The denotation maps `SDReal.toPre` / `SDReal.toCReal` are fully constructive; choosing a suitable
 exponent for a given real is (as expected) not computable in general.
+
+## Experimental exact Möbius / Analytic execution spine
+
+Beyond the regular-sequence and signed-digit façades above, the repository now also contains an
+experimental **exact-integer Möbius VM** in `HopfieldNet/CReals/Mobius/*` together with a symbolic
+analytic frontend in `HopfieldNet/CReals/Analytic/*`.
+
+- **Execution core**: `Mobius.Tensor` is an integer-only VM state for bilinear fractional maps on
+  `[-1,1]^2`, with a computable corner oracle.
+- **Proved today**:
+  - exact semantic soundness of the VM micro-steps,
+  - a reusable runtime/prefix API,
+  - full productivity for the averaged addition machine `halfAddTensor`,
+  - prefix soundness for bounded multiplication via `mulTensor`.
+- **Implemented roadmap hook**:
+  - the evaluator now exposes a normalization-aware execution path
+    (`Mobius.runNormalized`, `Mobius.normalizedPrefixResult`) which preserves denotation while
+    dividing out common gcd factors after each step.
+- **Still future work**:
+  - generic productivity beyond the proved addition machine,
+  - coefficient-growth theorems and benchmark-driven normalization policy,
+  - analytic remainder/majorant certificates strong enough to drive a general ITA bridge,
+  - nontrivial certified `Analytic -> Mobius` bridges beyond the current constant examples.
 -/
 
 namespace Computable

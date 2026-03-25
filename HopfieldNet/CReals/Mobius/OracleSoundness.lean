@@ -22,6 +22,318 @@ lemma hasNoPole_cases (d1 d2 d3 d4 : ℤ) (h : Tensor.hasNoPole d1 d2 d3 d4 = tr
     simpa [Bool.or_eq_true, decide_eq_true_eq] using h
   exact this
 
+private lemma denAt_corner_11 (T : Tensor) :
+    Tensor.denAt T 1 1 = (T.e + T.f + T.g + T.h : ℝ) := by
+  simp [Tensor.denAt]
+
+private lemma denAt_corner_1m (T : Tensor) :
+    Tensor.denAt T 1 (-1) = (-T.e + T.f - T.g + T.h : ℝ) := by
+  simp [Tensor.denAt]
+  ring_nf
+
+private lemma denAt_corner_m1 (T : Tensor) :
+    Tensor.denAt T (-1) 1 = (-T.e - T.f + T.g + T.h : ℝ) := by
+  simp [Tensor.denAt]
+  ring_nf
+
+private lemma denAt_corner_mm (T : Tensor) :
+    Tensor.denAt T (-1) (-1) = (T.e - T.f - T.g + T.h : ℝ) := by
+  simp [Tensor.denAt]
+  ring_nf
+
+private lemma denAt_right_edge (T : Tensor) (y : ℝ) :
+    Tensor.denAt T 1 y = ((T.e + T.g : ℤ) : ℝ) * y + ((T.f + T.h : ℤ) : ℝ) := by
+  simp [Tensor.denAt]
+  ring_nf
+
+private lemma denAt_top_edge (T : Tensor) (x : ℝ) :
+    Tensor.denAt T x 1 = ((T.e + T.f : ℤ) : ℝ) * x + ((T.g + T.h : ℤ) : ℝ) := by
+  simp [Tensor.denAt]
+  ring_nf
+
+private lemma denAt_left_edge (T : Tensor) (y : ℝ) :
+    Tensor.denAt T (-1) y = ((-T.e + T.g : ℤ) : ℝ) * y + ((-T.f + T.h : ℤ) : ℝ) := by
+  simp [Tensor.denAt]
+  ring_nf
+
+private lemma affine_zero_of_pos_neg (M B : ℝ)
+    (h1 : M * 1 + B > 0) (hm1 : M * (-1) + B < 0) :
+    ∃ t ∈ Set.Icc (-1 : ℝ) 1, M * t + B = 0 := by
+  have hM : 0 < M := by linarith
+  refine ⟨-B / M, ?_, ?_⟩
+  · constructor
+    · have hlow : (-1 : ℝ) < -B / M := by
+        apply (lt_div_iff₀ hM).2
+        linarith
+      linarith
+    · have hhigh : -B / M < (1 : ℝ) := by
+        apply (div_lt_iff₀ hM).2
+        linarith
+      linarith
+  · have hMne : M ≠ 0 := by linarith
+    field_simp [hMne]
+    ring
+
+private lemma affine_zero_of_sign_change (M B : ℝ)
+    (h :
+      (M * 1 + B > 0 ∧ M * (-1) + B < 0) ∨
+        (M * 1 + B < 0 ∧ M * (-1) + B > 0)) :
+    ∃ t ∈ Set.Icc (-1 : ℝ) 1, M * t + B = 0 := by
+  rcases h with ⟨h1, hm1⟩ | ⟨h1, hm1⟩
+  · exact affine_zero_of_pos_neg M B h1 hm1
+  · have h1' : (-M) * 1 + (-B) > 0 := by linarith
+    have hm1' : (-M) * (-1) + (-B) < 0 := by linarith
+    rcases affine_zero_of_pos_neg (-M) (-B) h1' hm1' with ⟨t, ht, hzero⟩
+    refine ⟨t, ht, ?_⟩
+    linarith
+
+private lemma denAt_zero_on_right_edge_of_opposite_corner_signs (T : Tensor)
+    (h :
+      (0 < T.e + T.f + T.g + T.h ∧ -T.e + T.f - T.g + T.h < 0) ∨
+        (T.e + T.f + T.g + T.h < 0 ∧ 0 < -T.e + T.f - T.g + T.h)) :
+    ∃ y ∈ Set.Icc (-1 : ℝ) 1, Tensor.denAt T 1 y = 0 := by
+  have h' :
+      ((((T.e + T.g : ℤ) : ℝ) * 1 + ((T.f + T.h : ℤ) : ℝ) > 0) ∧
+        (((T.e + T.g : ℤ) : ℝ) * (-1) + ((T.f + T.h : ℤ) : ℝ) < 0)) ∨
+      ((((T.e + T.g : ℤ) : ℝ) * 1 + ((T.f + T.h : ℤ) : ℝ) < 0) ∧
+        (((T.e + T.g : ℤ) : ℝ) * (-1) + ((T.f + T.h : ℤ) : ℝ) > 0)) := by
+    rcases h with ⟨h11, h1m⟩ | ⟨h11, h1m⟩
+    · left
+      constructor
+      · have hform :
+            (((T.e + T.g : ℤ) : ℝ) * 1 + ((T.f + T.h : ℤ) : ℝ)) =
+              (T.e + T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast h11
+      · have hform :
+            (((T.e + T.g : ℤ) : ℝ) * (-1) + ((T.f + T.h : ℤ) : ℝ)) =
+              (-T.e + T.f - T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast h1m
+    · right
+      constructor
+      · have hform :
+            (((T.e + T.g : ℤ) : ℝ) * 1 + ((T.f + T.h : ℤ) : ℝ)) =
+              (T.e + T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast h11
+      · have hform :
+            (((T.e + T.g : ℤ) : ℝ) * (-1) + ((T.f + T.h : ℤ) : ℝ)) =
+              (-T.e + T.f - T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast h1m
+  rcases affine_zero_of_sign_change (M := ((T.e + T.g : ℤ) : ℝ))
+      (B := ((T.f + T.h : ℤ) : ℝ)) h' with ⟨y, hy, hzero⟩
+  refine ⟨y, hy, ?_⟩
+  rw [denAt_right_edge]
+  exact hzero
+
+private lemma denAt_zero_on_top_edge_of_opposite_corner_signs (T : Tensor)
+    (h :
+      (0 < T.e + T.f + T.g + T.h ∧ -T.e - T.f + T.g + T.h < 0) ∨
+        (T.e + T.f + T.g + T.h < 0 ∧ 0 < -T.e - T.f + T.g + T.h)) :
+    ∃ x ∈ Set.Icc (-1 : ℝ) 1, Tensor.denAt T x 1 = 0 := by
+  have h' :
+      ((((T.e + T.f : ℤ) : ℝ) * 1 + ((T.g + T.h : ℤ) : ℝ) > 0) ∧
+        (((T.e + T.f : ℤ) : ℝ) * (-1) + ((T.g + T.h : ℤ) : ℝ) < 0)) ∨
+      ((((T.e + T.f : ℤ) : ℝ) * 1 + ((T.g + T.h : ℤ) : ℝ) < 0) ∧
+        (((T.e + T.f : ℤ) : ℝ) * (-1) + ((T.g + T.h : ℤ) : ℝ) > 0)) := by
+    rcases h with ⟨h11, hm1⟩ | ⟨h11, hm1⟩
+    · left
+      constructor
+      · have hform :
+            (((T.e + T.f : ℤ) : ℝ) * 1 + ((T.g + T.h : ℤ) : ℝ)) =
+              (T.e + T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast h11
+      · have hform :
+            (((T.e + T.f : ℤ) : ℝ) * (-1) + ((T.g + T.h : ℤ) : ℝ)) =
+              (-T.e - T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast hm1
+    · right
+      constructor
+      · have hform :
+            (((T.e + T.f : ℤ) : ℝ) * 1 + ((T.g + T.h : ℤ) : ℝ)) =
+              (T.e + T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast h11
+      · have hform :
+            (((T.e + T.f : ℤ) : ℝ) * (-1) + ((T.g + T.h : ℤ) : ℝ)) =
+              (-T.e - T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast hm1
+  rcases affine_zero_of_sign_change (M := ((T.e + T.f : ℤ) : ℝ))
+      (B := ((T.g + T.h : ℤ) : ℝ)) h' with ⟨x, hx, hzero⟩
+  refine ⟨x, hx, ?_⟩
+  rw [denAt_top_edge]
+  exact hzero
+
+private lemma denAt_zero_on_left_edge_of_opposite_corner_signs (T : Tensor)
+    (h :
+      (0 < -T.e - T.f + T.g + T.h ∧ T.e - T.f - T.g + T.h < 0) ∨
+        (-T.e - T.f + T.g + T.h < 0 ∧ 0 < T.e - T.f - T.g + T.h)) :
+    ∃ y ∈ Set.Icc (-1 : ℝ) 1, Tensor.denAt T (-1) y = 0 := by
+  have h' :
+      ((((-T.e + T.g : ℤ) : ℝ) * 1 + ((-T.f + T.h : ℤ) : ℝ) > 0) ∧
+        (((-T.e + T.g : ℤ) : ℝ) * (-1) + ((-T.f + T.h : ℤ) : ℝ) < 0)) ∨
+      ((((-T.e + T.g : ℤ) : ℝ) * 1 + ((-T.f + T.h : ℤ) : ℝ) < 0) ∧
+        (((-T.e + T.g : ℤ) : ℝ) * (-1) + ((-T.f + T.h : ℤ) : ℝ) > 0)) := by
+    rcases h with ⟨hm1, hmm⟩ | ⟨hm1, hmm⟩
+    · left
+      constructor
+      · have hform :
+            (((-T.e + T.g : ℤ) : ℝ) * 1 + ((-T.f + T.h : ℤ) : ℝ)) =
+              (-T.e - T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast hm1
+      · have hform :
+            (((-T.e + T.g : ℤ) : ℝ) * (-1) + ((-T.f + T.h : ℤ) : ℝ)) =
+              (T.e - T.f - T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast hmm
+    · right
+      constructor
+      · have hform :
+            (((-T.e + T.g : ℤ) : ℝ) * 1 + ((-T.f + T.h : ℤ) : ℝ)) =
+              (-T.e - T.f + T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast hm1
+      · have hform :
+            (((-T.e + T.g : ℤ) : ℝ) * (-1) + ((-T.f + T.h : ℤ) : ℝ)) =
+              (T.e - T.f - T.g + T.h : ℝ) := by
+          push_cast
+          ring
+        rw [hform]
+        exact_mod_cast hmm
+  rcases affine_zero_of_sign_change (M := ((-T.e + T.g : ℤ) : ℝ))
+      (B := ((-T.f + T.h : ℤ) : ℝ)) h' with ⟨y, hy, hzero⟩
+  refine ⟨y, hy, ?_⟩
+  rw [denAt_left_edge]
+  exact hzero
+
+theorem corner_denom_sign_cases_of_HasNoPoleOnBase (T : Tensor)
+    (hT : T.HasNoPoleOnBase) :
+    let d1 : ℤ := T.e + T.f + T.g + T.h
+    let d2 : ℤ := -T.e + T.f - T.g + T.h
+    let d3 : ℤ := -T.e - T.f + T.g + T.h
+    let d4 : ℤ := T.e - T.f - T.g + T.h
+    (0 < d1 ∧ 0 < d2 ∧ 0 < d3 ∧ 0 < d4) ∨
+      (d1 < 0 ∧ d2 < 0 ∧ d3 < 0 ∧ d4 < 0) := by
+  let d1 : ℤ := T.e + T.f + T.g + T.h
+  let d2 : ℤ := -T.e + T.f - T.g + T.h
+  let d3 : ℤ := -T.e - T.f + T.g + T.h
+  let d4 : ℤ := T.e - T.f - T.g + T.h
+  have h1 : (1 : ℝ) ∈ Set.Icc (-1 : ℝ) 1 := by constructor <;> norm_num
+  have hm1 : (-1 : ℝ) ∈ Set.Icc (-1 : ℝ) 1 := by constructor <;> norm_num
+  have hd1neR : (d1 : ℝ) ≠ 0 := by
+    have h := hT 1 h1 1 h1
+    rw [denAt_corner_11] at h
+    simpa [d1] using h
+  have hd2neR : (d2 : ℝ) ≠ 0 := by
+    have h := hT 1 h1 (-1) hm1
+    rw [denAt_corner_1m] at h
+    simpa [d2] using h
+  have hd3neR : (d3 : ℝ) ≠ 0 := by
+    have h := hT (-1) hm1 1 h1
+    rw [denAt_corner_m1] at h
+    simpa [d3] using h
+  have hd4neR : (d4 : ℝ) ≠ 0 := by
+    have h := hT (-1) hm1 (-1) hm1
+    rw [denAt_corner_mm] at h
+    simpa [d4] using h
+  have hd1ne : d1 ≠ 0 := by exact_mod_cast hd1neR
+  have hd2ne : d2 ≠ 0 := by exact_mod_cast hd2neR
+  have hd3ne : d3 ≠ 0 := by exact_mod_cast hd3neR
+  have hd4ne : d4 ≠ 0 := by exact_mod_cast hd4neR
+  rcases lt_or_gt_of_ne hd1ne with hd1neg | hd1pos
+  · right
+    have hd2neg : d2 < 0 := by
+      rcases lt_or_gt_of_ne hd2ne with hd2neg | hd2pos
+      · exact hd2neg
+      · exfalso
+        rcases denAt_zero_on_right_edge_of_opposite_corner_signs T
+          (Or.inr ⟨by simpa [d1] using hd1neg, by simpa [d2] using hd2pos⟩) with
+          ⟨y, hy, hzero⟩
+        exact (hT 1 h1 y hy) hzero
+    have hd3neg : d3 < 0 := by
+      rcases lt_or_gt_of_ne hd3ne with hd3neg | hd3pos
+      · exact hd3neg
+      · exfalso
+        rcases denAt_zero_on_top_edge_of_opposite_corner_signs T
+          (Or.inr ⟨by simpa [d1] using hd1neg, by simpa [d3] using hd3pos⟩) with
+          ⟨x, hx, hzero⟩
+        exact (hT x hx 1 h1) hzero
+    have hd4neg : d4 < 0 := by
+      rcases lt_or_gt_of_ne hd4ne with hd4neg | hd4pos
+      · exact hd4neg
+      · exfalso
+        rcases denAt_zero_on_left_edge_of_opposite_corner_signs T
+          (Or.inr ⟨by simpa [d3] using hd3neg, by simpa [d4] using hd4pos⟩) with
+          ⟨y, hy, hzero⟩
+        exact (hT (-1) hm1 y hy) hzero
+    exact ⟨hd1neg, hd2neg, hd3neg, hd4neg⟩
+  · left
+    have hd2pos : 0 < d2 := by
+      rcases lt_or_gt_of_ne hd2ne with hd2neg | hd2pos
+      · exfalso
+        rcases denAt_zero_on_right_edge_of_opposite_corner_signs T
+          (Or.inl ⟨by simpa [d1] using hd1pos, by simpa [d2] using hd2neg⟩) with
+          ⟨y, hy, hzero⟩
+        exact (hT 1 h1 y hy) hzero
+      · exact hd2pos
+    have hd3pos : 0 < d3 := by
+      rcases lt_or_gt_of_ne hd3ne with hd3neg | hd3pos
+      · exfalso
+        rcases denAt_zero_on_top_edge_of_opposite_corner_signs T
+          (Or.inl ⟨by simpa [d1] using hd1pos, by simpa [d3] using hd3neg⟩) with
+          ⟨x, hx, hzero⟩
+        exact (hT x hx 1 h1) hzero
+      · exact hd3pos
+    have hd4pos : 0 < d4 := by
+      rcases lt_or_gt_of_ne hd4ne with hd4neg | hd4pos
+      · exfalso
+        rcases denAt_zero_on_left_edge_of_opposite_corner_signs T
+          (Or.inl ⟨by simpa [d3] using hd3pos, by simpa [d4] using hd4neg⟩) with
+          ⟨y, hy, hzero⟩
+        exact (hT (-1) hm1 y hy) hzero
+      · exact hd4pos
+    exact ⟨hd1pos, hd2pos, hd3pos, hd4pos⟩
+
+theorem hasNoPole_bool_of_HasNoPoleOnBase (T : Tensor) (hT : T.HasNoPoleOnBase) :
+    Tensor.hasNoPole
+      (T.e + T.f + T.g + T.h)
+      (-T.e + T.f - T.g + T.h)
+      (-T.e - T.f + T.g + T.h)
+      (T.e - T.f - T.g + T.h) = true := by
+  rcases corner_denom_sign_cases_of_HasNoPoleOnBase T hT with hpos | hneg
+  · unfold Tensor.hasNoPole
+    simp [hpos.1, hpos.2.1, hpos.2.2.1, hpos.2.2.2]
+  · unfold Tensor.hasNoPole
+    simp [hneg.1, hneg.2.1, hneg.2.2.1, hneg.2.2.2]
+
 lemma inDigitNeg_sound_pos (n d : ℤ) (hd : 0 < d) (h : Tensor.inDigitNeg n d = true) :
     (n : ℝ) ≤ 0 ∧ (n : ℝ) + (d : ℝ) ≥ 0 := by
   unfold Tensor.inDigitNeg at h

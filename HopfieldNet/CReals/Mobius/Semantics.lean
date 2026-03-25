@@ -279,6 +279,41 @@ theorem normalize_valueAt (T : Tensor) (x y : ℝ) :
     Tensor.valueAt T x y = Tensor.valueAt T.normalize x y := by
   simpa [Tensor.valueAt] using normalize_invariant T x y
 
+theorem denAt_ne_zero_normalize_iff (T : Tensor) (x y : ℝ) :
+    Tensor.denAt T x y ≠ 0 ↔ Tensor.denAt T.normalize x y ≠ 0 := by
+  unfold Tensor.normalize
+  by_cases hg : T.normalizeFactor ≤ 1
+  · simp [hg]
+  · have hgNat : T.normalizeFactor ≠ 0 := by
+      intro h0
+      have : T.normalizeFactor ≤ 1 := by simp [h0]
+      exact hg this
+    have hgZ : ((T.normalizeFactor : ℕ) : ℤ) ≠ 0 := by
+      exact_mod_cast hgNat
+    have hgR : (((T.normalizeFactor : ℕ) : ℤ) : ℝ) ≠ 0 := by
+      exact_mod_cast hgZ
+    have hden :
+        Tensor.denAt T x y =
+          (((T.normalizeFactor : ℕ) : ℤ) : ℝ) *
+            Tensor.denAt (T.divideBy (T.normalizeFactor : ℤ)) x y := by
+      simpa [Tensor.divideBy] using
+        denAt_eq_scale_mul_denAt_divideBy T (T.normalizeFactor : ℤ)
+          (normalizeFactor_dvd_e T) (normalizeFactor_dvd_f T)
+          (normalizeFactor_dvd_g T) (normalizeFactor_dvd_h T) x y
+    constructor
+    · intro hT
+      have hdiv : Tensor.denAt (T.divideBy (T.normalizeFactor : ℤ)) x y ≠ 0 := by
+        intro hzero
+        apply hT
+        rw [hden]
+        simp [hzero]
+      simpa [hg] using hdiv
+    · intro hnorm
+      have hdiv : Tensor.denAt (T.divideBy (T.normalizeFactor : ℤ)) x y ≠ 0 := by
+        simpa [hg] using hnorm
+      rw [hden]
+      exact mul_ne_zero hgR hdiv
+
 end Tensor
 
 /-! ## Canonical arithmetic tensors -/

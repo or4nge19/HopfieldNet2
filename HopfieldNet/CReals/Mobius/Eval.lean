@@ -26,6 +26,40 @@ def stepStreams (sx sy : LFTStream) (s : VMState) : Option Digit × VMState :=
 def step (X Y : MobiusReal) (s : VMState) : Option Digit × VMState :=
   stepStreams X.stream Y.stream s
 
+def VMState.normalizeState (s : VMState) : VMState :=
+  { s with T := s.T.normalize }
+
+@[simp] theorem VMState.normalizeState_idx_x (s : VMState) :
+    (s.normalizeState).idx_x = s.idx_x := rfl
+
+@[simp] theorem VMState.normalizeState_idx_y (s : VMState) :
+    (s.normalizeState).idx_y = s.idx_y := rfl
+
+@[simp] theorem VMState.normalizeState_absorb_x_next (s : VMState) :
+    (s.normalizeState).absorb_x_next = s.absorb_x_next := rfl
+
+@[simp] theorem VMState.normalizeState_T (s : VMState) :
+    (s.normalizeState).T = s.T.normalize := rfl
+
+theorem GeneralTrace.stateValue_normalizeState (X Y : MobiusReal) (s : VMState) :
+    GeneralTrace.stateValue X Y s.normalizeState = GeneralTrace.stateValue X Y s := by
+  dsimp [GeneralTrace.stateValue, VMState.normalizeState]
+  simpa using
+    (Tensor.normalize_valueAt s.T (MobiusReal.drop X s.idx_x).val (MobiusReal.drop Y s.idx_y).val).symm
+
+theorem GeneralTrace.safeAt_normalizeState_iff (X Y : MobiusReal) (s : VMState) :
+    GeneralTrace.SafeAt X Y s ↔ GeneralTrace.SafeAt X Y s.normalizeState := by
+  dsimp [GeneralTrace.SafeAt, VMState.normalizeState]
+  exact Tensor.denAt_ne_zero_normalize_iff s.T
+    (MobiusReal.drop X s.idx_x).val (MobiusReal.drop Y s.idx_y).val
+
+def stepStreamsNormalized (sx sy : LFTStream) (s : VMState) : Option Digit × VMState :=
+  let out := stepStreams sx sy s
+  (out.1, out.2.normalizeState)
+
+def stepNormalized (X Y : MobiusReal) (s : VMState) : Option Digit × VMState :=
+  stepStreamsNormalized X.stream Y.stream s
+
 def runSteps (sx sy : LFTStream) : ℕ → VMState → List Digit × VMState
   | 0, s => ([], s)
   | n + 1, s =>
@@ -35,14 +69,32 @@ def runSteps (sx sy : LFTStream) : ℕ → VMState → List Digit × VMState
       | none => tail
       | some d => (d :: tail.1, tail.2)
 
+def runStepsNormalized (sx sy : LFTStream) : ℕ → VMState → List Digit × VMState
+  | 0, s => ([], s)
+  | n + 1, s =>
+      let out := stepStreamsNormalized sx sy s
+      let tail := runStepsNormalized sx sy n out.2
+      match out.1 with
+      | none => tail
+      | some d => (d :: tail.1, tail.2)
+
 def run (X Y : MobiusReal) (fuel : ℕ) (s : VMState) : List Digit × VMState :=
   runSteps X.stream Y.stream fuel s
+
+def runNormalized (X Y : MobiusReal) (fuel : ℕ) (s : VMState) : List Digit × VMState :=
+  runStepsNormalized X.stream Y.stream fuel s
 
 def emittedPrefix (X Y : MobiusReal) (fuel : ℕ) (s : VMState) : List Digit :=
   (run X Y fuel s).1
 
 def finalState (X Y : MobiusReal) (fuel : ℕ) (s : VMState) : VMState :=
   (run X Y fuel s).2
+
+def emittedPrefixNormalized (X Y : MobiusReal) (fuel : ℕ) (s : VMState) : List Digit :=
+  (runNormalized X Y fuel s).1
+
+def finalStateNormalized (X Y : MobiusReal) (fuel : ℕ) (s : VMState) : VMState :=
+  (runNormalized X Y fuel s).2
 
 theorem runSteps_add (sx sy : LFTStream) (n m : ℕ) (s : VMState) :
     runSteps sx sy (n + m) s =
@@ -168,6 +220,94 @@ theorem run_soundness_prefix_digitListApprox_error
   rw [run_soundness_prefix X Y fuel s hs]
   exact emittedValue_map_digit_to_LFT_sub_digitListApprox_abs_le
     ((run X Y fuel s).1) hres
+
+theorem runStepsNormalized_soundness_prefix (X Y : MobiusReal) :
+    ∀ fuel s, GeneralTrace.SafeAt X Y s →
+      GeneralTrace.stateValue X Y s =
+        emittedValue (((runStepsNormalized X.stream Y.stream fuel s).1).map digit_to_LFT)
+          (GeneralTrace.stateValue X Y ((runStepsNormalized X.stream Y.stream fuel s).2))
+  | 0, s, hs => by
+      simp [runStepsNormalized, emittedValue]
+  | fuel + 1, s, hs => by
+      dsimp [runStepsNormalized]
+      let out := stepStreams X.stream Y.stream s
+      let sNorm := out.2.normalizeState
+      have hstep : GeneralTrace.VMStepXY X Y s (Option.map digit_to_LFT out.1) out.2 := by
+        simpa [step, out] using (step_spec X Y s)
+      have hsRaw : GeneralTrace.SafeAt X Y out.2 := by
+        exact safe_step (X := X) (Y := Y) hstep hs
+      have hsNorm : GeneralTrace.SafeAt X Y sNorm := by
+        exact (GeneralTrace.safeAt_normalizeState_iff X Y out.2).1 hsRaw
+      have ih := runStepsNormalized_soundness_prefix X Y fuel sNorm hsNorm
+      cases hout : out.1 with
+      | none =>
+          have hstate :
+              GeneralTrace.stateValue X Y s = GeneralTrace.stateValue X Y sNorm := by
+            calc
+              GeneralTrace.stateValue X Y s = GeneralTrace.stateValue X Y out.2 := by
+                exact GeneralTrace.stateValue_step_none (X := X) (Y := Y)
+                  (by simpa [hout] using hstep) hs hsRaw
+              _ = GeneralTrace.stateValue X Y sNorm := by
+                symm
+                exact GeneralTrace.stateValue_normalizeState X Y out.2
+          simpa [stepStreamsNormalized, out, sNorm, hout, emittedValue] using hstate.trans ih
+      | some d =>
+          have hstate :
+              GeneralTrace.stateValue X Y s =
+                LFT.apply (digit_to_LFT d) (GeneralTrace.stateValue X Y sNorm) := by
+            calc
+              GeneralTrace.stateValue X Y s
+                  = LFT.apply (digit_to_LFT d) (GeneralTrace.stateValue X Y out.2) := by
+                      exact GeneralTrace.stateValue_step_some (X := X) (Y := Y)
+                        (by simpa [hout] using hstep) hs hsRaw
+              _ = LFT.apply (digit_to_LFT d) (GeneralTrace.stateValue X Y sNorm) := by
+                    rw [GeneralTrace.stateValue_normalizeState]
+          calc
+            GeneralTrace.stateValue X Y s
+                = LFT.apply (digit_to_LFT d) (GeneralTrace.stateValue X Y sNorm) := hstate
+            _ = LFT.apply (digit_to_LFT d)
+                  (emittedValue (((runStepsNormalized X.stream Y.stream fuel sNorm).1).map digit_to_LFT)
+                    (GeneralTrace.stateValue X Y ((runStepsNormalized X.stream Y.stream fuel sNorm).2))) := by
+                        rw [ih]
+            _ = emittedValue (((runStepsNormalized X.stream Y.stream (fuel + 1) s).1).map digit_to_LFT)
+                  (GeneralTrace.stateValue X Y ((runStepsNormalized X.stream Y.stream (fuel + 1) s).2)) := by
+                    simp [runStepsNormalized, stepStreamsNormalized, out, sNorm, hout, emittedValue]
+
+theorem runNormalized_soundness_prefix (X Y : MobiusReal) (fuel : ℕ) (s : VMState)
+    (hs : GeneralTrace.SafeAt X Y s) :
+    GeneralTrace.stateValue X Y s =
+      emittedValue ((runNormalized X Y fuel s).1.map digit_to_LFT)
+        (GeneralTrace.stateValue X Y ((runNormalized X Y fuel s).2)) := by
+  simpa [runNormalized] using runStepsNormalized_soundness_prefix X Y fuel s hs
+
+theorem runNormalized_soundness_prefix_digitListApprox
+    (X Y : MobiusReal) (fuel : ℕ) (s : VMState)
+    (hs : GeneralTrace.SafeAt X Y s) :
+    GeneralTrace.stateValue X Y s =
+      digitListApprox ((runNormalized X Y fuel s).1) +
+        GeneralTrace.stateValue X Y ((runNormalized X Y fuel s).2) /
+          2 ^ ((runNormalized X Y fuel s).1.length) := by
+  calc
+    GeneralTrace.stateValue X Y s
+        = emittedValue ((runNormalized X Y fuel s).1.map digit_to_LFT)
+            (GeneralTrace.stateValue X Y ((runNormalized X Y fuel s).2)) :=
+          runNormalized_soundness_prefix X Y fuel s hs
+    _ = digitListApprox ((runNormalized X Y fuel s).1) +
+          GeneralTrace.stateValue X Y ((runNormalized X Y fuel s).2) /
+            2 ^ ((runNormalized X Y fuel s).1.length) :=
+          emittedValue_map_digit_to_LFT_eq_digitListApprox_add_scaled
+            ((runNormalized X Y fuel s).1)
+            (GeneralTrace.stateValue X Y ((runNormalized X Y fuel s).2))
+
+theorem runNormalized_soundness_prefix_digitListApprox_error
+    (X Y : MobiusReal) (fuel : ℕ) (s : VMState)
+    (hs : GeneralTrace.SafeAt X Y s)
+    (hres : GeneralTrace.stateValue X Y ((runNormalized X Y fuel s).2) ∈ baseI) :
+    |GeneralTrace.stateValue X Y s - digitListApprox ((runNormalized X Y fuel s).1)| ≤
+      (1 : ℝ) / 2 ^ ((runNormalized X Y fuel s).1.length) := by
+  rw [runNormalized_soundness_prefix X Y fuel s hs]
+  exact emittedValue_map_digit_to_LFT_sub_digitListApprox_abs_le
+    ((runNormalized X Y fuel s).1) hres
 
 theorem run_add (X Y : MobiusReal) (m n : ℕ) (s : VMState) :
     run X Y (m + n) s =

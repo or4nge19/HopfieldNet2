@@ -26,9 +26,78 @@ def toCRealScaled (k : ℕ) (out : DigitStream) : Computable.CReal :=
 
 namespace DigitStream
 
+/-- Constant zero digit stream. -/
+def zeroDigits : DigitStream := fun _ => .zero
+
+/-- Constant `+1` digit stream. -/
+def oneDigits : DigitStream := fun _ => .pos
+
+/-- Constant `-1` digit stream. -/
+def minusOneDigits : DigitStream := fun _ => .neg
+
 /-- Pointwise digit negation, reusing the signed-digit stream negation. -/
 def negStream (out : DigitStream) : DigitStream :=
   Computable.CReal.SignedDigit.negStream out
+
+@[simp] theorem partialSum_zeroDigits (n : ℕ) :
+    Computable.CReal.SignedDigit.partialSum zeroDigits n = 0 := by
+  simp [zeroDigits, Computable.CReal.SignedDigit.partialSum, Computable.CReal.SignedDigit.coeff]
+
+theorem partialSum_oneDigits (n : ℕ) :
+    Computable.CReal.SignedDigit.partialSum oneDigits n = 1 - (1 / 2 : ℚ) ^ (n + 1) := by
+  induction n with
+  | zero =>
+      norm_num [oneDigits, Computable.CReal.SignedDigit.partialSum, Computable.CReal.SignedDigit.coeff]
+  | succ n ih =>
+      calc
+        Computable.CReal.SignedDigit.partialSum oneDigits (n + 1)
+            = ∑ x ∈ Finset.range (n + 1), Computable.CReal.SignedDigit.coeff oneDigits x +
+                Computable.CReal.SignedDigit.coeff oneDigits (n + 1) := by
+                  rw [Computable.CReal.SignedDigit.partialSum, Finset.sum_range_succ]
+        _ = Computable.CReal.SignedDigit.partialSum oneDigits n +
+              Computable.CReal.SignedDigit.coeff oneDigits (n + 1) := by
+              rfl
+        _ = (1 - (1 / 2 : ℚ) ^ (n + 1)) + (1 / 2 : ℚ) ^ (n + 2) := by
+              rw [ih]
+              simp [Computable.CReal.SignedDigit.coeff, oneDigits, pow_succ]
+        _ = 1 - (1 / 2 : ℚ) ^ (n + 2) := by ring
+
+theorem partialSum_minusOneDigits (n : ℕ) :
+    Computable.CReal.SignedDigit.partialSum minusOneDigits n = -1 + (1 / 2 : ℚ) ^ (n + 1) := by
+  induction n with
+  | zero =>
+      norm_num [minusOneDigits, Computable.CReal.SignedDigit.partialSum, Computable.CReal.SignedDigit.coeff]
+  | succ n ih =>
+      calc
+        Computable.CReal.SignedDigit.partialSum minusOneDigits (n + 1)
+            = ∑ x ∈ Finset.range (n + 1), Computable.CReal.SignedDigit.coeff minusOneDigits x +
+                Computable.CReal.SignedDigit.coeff minusOneDigits (n + 1) := by
+                  rw [Computable.CReal.SignedDigit.partialSum, Finset.sum_range_succ]
+        _ = Computable.CReal.SignedDigit.partialSum minusOneDigits n +
+              Computable.CReal.SignedDigit.coeff minusOneDigits (n + 1) := by
+              rfl
+        _ = (-1 + (1 / 2 : ℚ) ^ (n + 1)) + (-(1 / 2 : ℚ) ^ (n + 2)) := by
+              rw [ih]
+              simp [Computable.CReal.SignedDigit.coeff, minusOneDigits, pow_succ]
+        _ = -1 + (1 / 2 : ℚ) ^ (n + 2) := by ring
+
+theorem partialSum_oneDigits_real (n : ℕ) :
+    (Computable.CReal.SignedDigit.partialSum oneDigits n : ℝ) = 1 - (1 / (2 : ℝ) ^ (n + 1)) := by
+  rw [partialSum_oneDigits]
+  push_cast
+  have hpow : (1 / 2 : ℝ) ^ (n + 1) = 1 / (2 : ℝ) ^ (n + 1) := by
+    rw [one_div]
+    simpa using (inv_pow (2 : ℝ) (n + 1)).symm
+  rw [hpow]
+
+theorem partialSum_minusOneDigits_real (n : ℕ) :
+    (Computable.CReal.SignedDigit.partialSum minusOneDigits n : ℝ) = -1 + (1 / (2 : ℝ) ^ (n + 1)) := by
+  rw [partialSum_minusOneDigits]
+  push_cast
+  have hpow : (1 / 2 : ℝ) ^ (n + 1) = 1 / (2 : ℝ) ^ (n + 1) := by
+    rw [one_div]
+    simpa using (inv_pow (2 : ℝ) (n + 1)).symm
+  rw [hpow]
 
 @[simp] lemma digit_to_LFT_apply (d : Digit) (x : ℝ) :
     LFT.apply (digit_to_LFT d) x = (x + d.toRat) / 2 := by
@@ -156,6 +225,57 @@ theorem fromStream_val_sub_partialSum_le (out : DigitStream) (n : ℕ) :
           gcongr
     _ = (1 : ℝ) / (2 ^ (n + 1)) := by ring
 
+theorem fromStream_val_zeroDigits :
+    (MobiusReal.fromStream zeroDigits).val = 0 := by
+  have h0 : (0 : ℝ) ∈ baseI := by
+    constructor <;> norm_num
+  have hmem : (0 : ℝ) ∈ ⋂ n, imageSet (MobiusReal.fromStream zeroDigits) n := by
+    refine Set.mem_iInter.2 ?_
+    intro n
+    refine ⟨0, h0, ?_⟩
+    simpa [partialSum_zeroDigits] using partialComp_apply_zero_eq_partialSum zeroDigits n
+  symm
+  exact MobiusReal.val_eq_of_mem_iInter_imageSet (MobiusReal.fromStream zeroDigits) hmem
+
+theorem fromStream_val_oneDigits :
+    (MobiusReal.fromStream oneDigits).val = 1 := by
+  have h1 : (1 : ℝ) ∈ baseI := by
+    constructor <;> norm_num
+  have hmem : (1 : ℝ) ∈ ⋂ n, imageSet (MobiusReal.fromStream oneDigits) n := by
+    refine Set.mem_iInter.2 ?_
+    intro n
+    refine ⟨1, h1, ?_⟩
+    have happ := partialComp_apply_prefix oneDigits n 1 h1
+    calc
+      LFT.apply (partialComp (lftStreamOfDigits oneDigits) n) 1
+          = 1 / (2 : ℝ) ^ (n + 1) +
+              (Computable.CReal.SignedDigit.partialSum oneDigits n : ℝ) := happ
+      _ = 1 / (2 : ℝ) ^ (n + 1) + (1 - (1 / (2 : ℝ) ^ (n + 1))) := by
+            rw [partialSum_oneDigits_real]
+      _ = 1 := by ring
+  symm
+  exact MobiusReal.val_eq_of_mem_iInter_imageSet (MobiusReal.fromStream oneDigits) hmem
+
+theorem fromStream_val_minusOneDigits :
+    (MobiusReal.fromStream minusOneDigits).val = -1 := by
+  have hm1 : ((-1 : ℝ)) ∈ baseI := by
+    constructor <;> norm_num
+  have hmem : (-1 : ℝ) ∈ ⋂ n, imageSet (MobiusReal.fromStream minusOneDigits) n := by
+    refine Set.mem_iInter.2 ?_
+    intro n
+    refine ⟨-1, hm1, ?_⟩
+    have happ := partialComp_apply_prefix minusOneDigits n (-1) hm1
+    calc
+      LFT.apply (partialComp (lftStreamOfDigits minusOneDigits) n) (-1)
+          = (-1 : ℝ) / (2 : ℝ) ^ (n + 1) +
+              (Computable.CReal.SignedDigit.partialSum minusOneDigits n : ℝ) := happ
+      _ = -(1 / (2 : ℝ) ^ (n + 1)) + (-1 + (1 / (2 : ℝ) ^ (n + 1))) := by
+            rw [partialSum_minusOneDigits_real]
+            ring_nf
+      _ = -1 := by ring
+  symm
+  exact MobiusReal.val_eq_of_mem_iInter_imageSet (MobiusReal.fromStream minusOneDigits) hmem
+
 private theorem exists_pow_inv_lt {ε : ℝ} (hε : 0 < ε) :
     ∃ N : ℕ, (1 : ℝ) / (2 ^ N) < ε := by
   obtain ⟨δq, hδq0, hδqε⟩ : ∃ δq : ℚ, (0 : ℝ) < (δq : ℝ) ∧ (δq : ℝ) < ε := by
@@ -243,6 +363,35 @@ theorem toReal_toCReal (out : DigitStream) :
     have habs : |A - B| < ε := lt_of_le_of_lt hdist hsmall
     have hBA : -ε < A - B := (abs_lt.mp habs).1
     linarith
+
+@[simp] theorem toReal_toCReal_zeroDigits :
+    Computable.CReal.toReal (toCReal zeroDigits) = 0 := by
+  simpa [fromStream_val_zeroDigits] using toReal_toCReal zeroDigits
+
+@[simp] theorem toReal_toCReal_oneDigits :
+    Computable.CReal.toReal (toCReal oneDigits) = 1 := by
+  simpa [fromStream_val_oneDigits] using toReal_toCReal oneDigits
+
+@[simp] theorem toReal_toCReal_minusOneDigits :
+    Computable.CReal.toReal (toCReal minusOneDigits) = -1 := by
+  simpa [fromStream_val_minusOneDigits] using toReal_toCReal minusOneDigits
+
+@[simp] theorem toCReal_zeroDigits_eq_zero :
+    toCReal zeroDigits = 0 := by
+  apply Computable.CReal.toReal_injective
+  simpa using toReal_toCReal_zeroDigits
+
+@[simp] theorem toCReal_oneDigits_eq_one :
+    toCReal oneDigits = 1 := by
+  apply Computable.CReal.toReal_injective
+  simpa using toReal_toCReal_oneDigits
+
+@[simp] theorem toCReal_minusOneDigits_eq_neg_one :
+    toCReal minusOneDigits = (-1 : Computable.CReal) := by
+  apply Computable.CReal.toReal_injective
+  rw [toReal_toCReal_minusOneDigits]
+  rw [Computable.CReal.toReal_neg]
+  norm_num
 
 @[simp] theorem toCReal_negStream (out : DigitStream) :
     toCReal (negStream out) = - toCReal out := by

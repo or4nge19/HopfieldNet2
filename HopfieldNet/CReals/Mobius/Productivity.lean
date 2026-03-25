@@ -244,6 +244,26 @@ theorem avgTensor_apply (M N : LFT) (x y : ℝ)
     _ = (LFT.apply M x + LFT.apply N y) / 2 := by
           simpa [Tensor.valueAt] using halfAddTensor_valueAt (LFT.apply M x) (LFT.apply N y)
 
+theorem avgTensor_hasNoPoleOnBase (M N : LFT)
+    (hM : M.NoPoleOnBase) (hN : N.NoPoleOnBase) :
+    (avgTensor M N).HasNoPoleOnBase := by
+  intro x hx y hy
+  have hMx := LFT.denom_ne_zero_of_NoPoleOnBase M hx hM
+  have hNy := LFT.denom_ne_zero_of_NoPoleOnBase N hy hN
+  intro h0
+  set AX : ℝ := ((M.c : ℝ) * x + (M.d : ℝ))
+  set AY : ℝ := ((N.c : ℝ) * y + (N.d : ℝ))
+  have h0' : (2 : ℝ) * AX * AY = 0 := by
+    subst AX AY
+    convert h0 using 1
+    simp [Tensor.denAt, avgTensor]
+    ring_nf
+  have hmul : AX * AY = 0 := by
+    nlinarith
+  rcases mul_eq_zero.mp hmul with hX | hY
+  · exact hMx hX
+  · exact hNy hY
+
 theorem halfAddTensorStateAfter_apply (X Y : MobiusReal) (N : ℕ) {x y : ℝ}
     (hx : x ∈ baseI) (hy : y ∈ baseI) :
     Tensor.apply (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N) x y =
@@ -491,132 +511,55 @@ theorem halfAddResidualStateAfter_diff_lt
 theorem halfAddResidualStateAfter_hasNoPoleOnBase
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ) :
     (halfAddResidualStateAfter X Y N d K).T.HasNoPoleOnBase := by
-  intro x hx y hy
   rw [halfAddResidualStateAfter_eq_avgTensor']
-  have hMx : (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K))).c : ℝ) * x +
-      (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K))).d : ℝ) ≠ 0 := by
-    simpa using pairedPrefix_denom_ne_zero X (N + K) hx
-  have hMy : (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).c : ℝ) * y +
-      (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).d : ℝ) ≠ 0 := by
-    simpa using pairedPrefix_denom_ne_zero Y (N + K) hy
-  intro h0
-  have hmul :
-      ((((residualDigitLFT d).comp (pairedPrefix X.stream (N + K))).c : ℝ) * x +
-        (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K))).d : ℝ)) *
-      ((((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).c : ℝ) * y +
-        (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).d : ℝ)) = 0 := by
-    set AX : ℝ :=
-      (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K))).c : ℝ) * x +
-        (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K))).d : ℝ)
-    set AY : ℝ :=
-      (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).c : ℝ) * y +
-        (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).d : ℝ)
-    have h0' : (2 : ℝ) * AX * AY = 0 := by
-      subst AX AY
-      convert h0 using 1
-      simp [Tensor.denAt, avgTensor, residualDigitLFT, LFT.comp]
-      ring_nf
-    nlinarith
-  rcases mul_eq_zero.mp hmul with hX | hY
-  · exact hMx hX
-  · exact hMy hY
+  exact avgTensor_hasNoPoleOnBase
+    ((residualDigitLFT d).comp (pairedPrefix X.stream (N + K)))
+    ((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K)))
+    (by
+      rw [LFT.NoPoleOnBase]
+      cases d <;> simpa [residualDigitLFT, LFT.comp] using pairedPrefix_noPoleOnBase X (N + K))
+    (by
+      rw [LFT.NoPoleOnBase]
+      cases d <;> simpa [residualDigitLFT, LFT.comp] using pairedPrefix_noPoleOnBase Y (N + K))
 
 theorem halfAddResidualXStateAfter_hasNoPoleOnBase
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ) :
     (halfAddResidualXStateAfter X Y N d K).T.HasNoPoleOnBase := by
-  intro x hx y hy
   rw [halfAddResidualXStateAfter_eq_avgTensor]
-  have hMx : (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K + 1))).c : ℝ) * x +
-      (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K + 1))).d : ℝ) ≠ 0 := by
-    simpa using pairedPrefix_denom_ne_zero X (N + K + 1) hx
-  have hMy : (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).c : ℝ) * y +
-      (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).d : ℝ) ≠ 0 := by
-    simpa using pairedPrefix_denom_ne_zero Y (N + K) hy
-  intro h0
-  have hmul :
-      ((((residualDigitLFT d).comp (pairedPrefix X.stream (N + K + 1))).c : ℝ) * x +
-        (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K + 1))).d : ℝ)) *
-      ((((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).c : ℝ) * y +
-        (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).d : ℝ)) = 0 := by
-    set AX : ℝ :=
-      (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K + 1))).c : ℝ) * x +
-        (((residualDigitLFT d).comp (pairedPrefix X.stream (N + K + 1))).d : ℝ)
-    set AY : ℝ :=
-      (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).c : ℝ) * y +
-        (((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K))).d : ℝ)
-    have h0' : (2 : ℝ) * AX * AY = 0 := by
-      subst AX AY
-      convert h0 using 1
-      simp [Tensor.denAt, avgTensor, residualDigitLFT, LFT.comp]
-      ring_nf
-    nlinarith
-  rcases mul_eq_zero.mp hmul with hX | hY
-  · exact hMx hX
-  · exact hMy hY
+  exact avgTensor_hasNoPoleOnBase
+    ((residualDigitLFT d).comp (pairedPrefix X.stream (N + K + 1)))
+    ((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K)))
+    (by
+      rw [LFT.NoPoleOnBase]
+      cases d <;> simpa [residualDigitLFT, LFT.comp] using pairedPrefix_noPoleOnBase X (N + K + 1))
+    (by
+      rw [LFT.NoPoleOnBase]
+      cases d <;> simpa [residualDigitLFT, LFT.comp] using pairedPrefix_noPoleOnBase Y (N + K))
 
 theorem halfAddTensorXStateAfter_hasNoPoleOnBase
     (X Y : MobiusReal) (N : ℕ) :
     (halfAddTensorXStateAfter X Y N).T.HasNoPoleOnBase := by
-  intro x hx y hy
   rw [halfAddTensorXStateAfter_eq_avgTensor]
-  have hMx : ((((pairedPrefix X.stream N).comp (X.stream N)).c : ℝ) * x +
-      (((pairedPrefix X.stream N).comp (X.stream N)).d : ℝ)) ≠ 0 := by
-    simpa [pairedPrefix] using pairedPrefix_denom_ne_zero X (N + 1) hx
-  have hMy : (((pairedPrefix Y.stream N).c : ℝ) * y + ((pairedPrefix Y.stream N).d : ℝ)) ≠ 0 := by
-    simpa using pairedPrefix_denom_ne_zero Y N hy
-  intro h0
-  have hmul :
-      ((((pairedPrefix X.stream N).comp (X.stream N)).c : ℝ) * x +
-        (((pairedPrefix X.stream N).comp (X.stream N)).d : ℝ)) *
-      ((((pairedPrefix Y.stream N).c : ℝ) * y + ((pairedPrefix Y.stream N).d : ℝ))) = 0 := by
-    set AX : ℝ :=
-      (((pairedPrefix X.stream N).comp (X.stream N)).c : ℝ) * x +
-        (((pairedPrefix X.stream N).comp (X.stream N)).d : ℝ)
-    set AY : ℝ :=
-      (((pairedPrefix Y.stream N).c : ℝ) * y + ((pairedPrefix Y.stream N).d : ℝ))
-    have h0' : (2 : ℝ) * AX * AY = 0 := by
-      subst AX AY
-      convert h0 using 1
-      simp [Tensor.denAt, avgTensor, LFT.comp]
-      ring_nf
-    nlinarith
-  rcases mul_eq_zero.mp hmul with hX | hY
-  · exact hMx hX
-  · exact hMy hY
+  exact avgTensor_hasNoPoleOnBase
+    ((pairedPrefix X.stream N).comp (X.stream N))
+    (pairedPrefix Y.stream N)
+    (by simpa [pairedPrefix] using pairedPrefix_noPoleOnBase X (N + 1))
+    (pairedPrefix_noPoleOnBase Y N)
 
 theorem halfAddTensorXStateAfter_emit_hasNoPoleOnBase
     (X Y : MobiusReal) (N : ℕ) (d : Digit) :
     ({ halfAddTensorXStateAfter X Y N with
         T := (halfAddTensorXStateAfter X Y N).T.emit (digit_to_LFT d) }).T.HasNoPoleOnBase := by
-  intro x hx y hy
   rw [halfAddTensorXStateAfter_emit_eq_avgTensor]
-  have hMx : (((residualDigitLFT d).comp (pairedPrefix X.stream (N + 1))).c : ℝ) * x +
-      (((residualDigitLFT d).comp (pairedPrefix X.stream (N + 1))).d : ℝ) ≠ 0 := by
-    simpa using pairedPrefix_denom_ne_zero X (N + 1) hx
-  have hMy : (((residualDigitLFT d).comp (pairedPrefix Y.stream N)).c : ℝ) * y +
-      (((residualDigitLFT d).comp (pairedPrefix Y.stream N)).d : ℝ) ≠ 0 := by
-    simpa using pairedPrefix_denom_ne_zero Y N hy
-  intro h0
-  have hmul :
-      ((((residualDigitLFT d).comp (pairedPrefix X.stream (N + 1))).c : ℝ) * x +
-        (((residualDigitLFT d).comp (pairedPrefix X.stream (N + 1))).d : ℝ)) *
-      ((((residualDigitLFT d).comp (pairedPrefix Y.stream N)).c : ℝ) * y +
-        (((residualDigitLFT d).comp (pairedPrefix Y.stream N)).d : ℝ)) = 0 := by
-    set AX : ℝ :=
-      (((residualDigitLFT d).comp (pairedPrefix X.stream (N + 1))).c : ℝ) * x +
-        (((residualDigitLFT d).comp (pairedPrefix X.stream (N + 1))).d : ℝ)
-    set AY : ℝ :=
-      (((residualDigitLFT d).comp (pairedPrefix Y.stream N)).c : ℝ) * y +
-        (((residualDigitLFT d).comp (pairedPrefix Y.stream N)).d : ℝ)
-    have h0' : (2 : ℝ) * AX * AY = 0 := by
-      subst AX AY
-      convert h0 using 1
-      simp [Tensor.denAt, avgTensor, residualDigitLFT, LFT.comp]
-      ring_nf
-    nlinarith
-  rcases mul_eq_zero.mp hmul with hX | hY
-  · exact hMx hX
-  · exact hMy hY
+  exact avgTensor_hasNoPoleOnBase
+    ((residualDigitLFT d).comp (pairedPrefix X.stream (N + 1)))
+    ((residualDigitLFT d).comp (pairedPrefix Y.stream N))
+    (by
+      rw [LFT.NoPoleOnBase]
+      cases d <;> simpa [residualDigitLFT, LFT.comp] using pairedPrefix_noPoleOnBase X (N + 1))
+    (by
+      rw [LFT.NoPoleOnBase]
+      cases d <;> simpa [residualDigitLFT, LFT.comp] using pairedPrefix_noPoleOnBase Y N)
 
 theorem halfAddTensorXStateAfter_emit_mapsBaseI_of_step
     (X Y : MobiusReal) (N : ℕ) (d : Digit)
@@ -1185,19 +1128,10 @@ theorem halfAddTensorStateAfter_diff_lt
 
 theorem halfAddTensorStateAfter_hasNoPoleOnBase (X Y : MobiusReal) (N : ℕ) :
     (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).HasNoPoleOnBase := by
-  intro x hx y hy
   rw [absorbBoth_n_halfAdd_eq_avgTensor]
-  have hMx := pairedPrefix_denom_ne_zero X N hx
-  have hMy := pairedPrefix_denom_ne_zero Y N hy
-  intro h0
-  have hmul :
-      ((((pairedPrefix X.stream N).c : ℝ) * x + ((pairedPrefix X.stream N).d : ℝ)) *
-        ((((pairedPrefix Y.stream N).c : ℝ) * y + ((pairedPrefix Y.stream N).d : ℝ)))) = 0 := by
-    simp [Tensor.denAt, avgTensor] at h0
-    nlinarith
-  rcases mul_eq_zero.mp hmul with hX | hY
-  · exact hMx hX
-  · exact hMy hY
+  exact avgTensor_hasNoPoleOnBase
+    (pairedPrefix X.stream N) (pairedPrefix Y.stream N)
+    (pairedPrefix_noPoleOnBase X N) (pairedPrefix_noPoleOnBase Y N)
 
 theorem Tensor.widthSet_nonempty (T : Tensor) : (Tensor.widthSet T).Nonempty := by
   refine ⟨0, ?_⟩
@@ -1412,6 +1346,432 @@ theorem Tensor.inDigitPos_of_ratio_neg (n d : ℤ) (hd : d < 0)
     have := (div_le_iff_of_neg hdR).mp hhi
     simpa using this
   exact Tensor.inDigitPos_complete_neg n d hd hlow hhigh
+
+theorem Tensor.emitsDigit_of_hasNoPole_and_inDigitNeg
+    (T : Tensor)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (h1 : Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true)
+    (h2 : Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true)
+    (h3 : Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true)
+    (h4 : Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true) :
+    T.EmitsDigit := by
+  change T.oracle = Tensor.EmitDecision.neg ∨
+    T.oracle = Tensor.EmitDecision.zero ∨
+    T.oracle = Tensor.EmitDecision.pos
+  unfold Tensor.oracle
+  simp [Tensor.cornerValues, hnp, h1, h2, h3, h4]
+
+theorem Tensor.emitsDigit_of_hasNoPole_and_inDigitZero
+    (T : Tensor)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (h1 : Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true)
+    (h2 : Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true)
+    (h3 : Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true)
+    (h4 : Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true) :
+    T.EmitsDigit := by
+  have hzeroAll :
+      ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
+          Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
+        Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
+      Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
+    exact ⟨⟨⟨h1, h2⟩, h3⟩, h4⟩
+  change T.oracle = Tensor.EmitDecision.neg ∨
+    T.oracle = Tensor.EmitDecision.zero ∨
+    T.oracle = Tensor.EmitDecision.pos
+  unfold Tensor.oracle
+  by_cases hnegAll :
+      ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
+          Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
+        Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
+      Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
+  · left
+    simp [Tensor.cornerValues, hnp, hnegAll]
+  · right
+    left
+    simp [Tensor.cornerValues, hnp, hnegAll, hzeroAll]
+
+theorem Tensor.emitsDigit_of_hasNoPole_and_inDigitPos
+    (T : Tensor)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (h1 : Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true)
+    (h2 : Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true)
+    (h3 : Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true)
+    (h4 : Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true) :
+    T.EmitsDigit := by
+  have hposAll :
+      ((Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
+          Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
+        Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
+      Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
+    exact ⟨⟨⟨h1, h2⟩, h3⟩, h4⟩
+  change T.oracle = Tensor.EmitDecision.neg ∨
+    T.oracle = Tensor.EmitDecision.zero ∨
+    T.oracle = Tensor.EmitDecision.pos
+  unfold Tensor.oracle
+  by_cases hnegAll :
+      ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
+          Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
+        Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
+      Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
+  · left
+    simp [Tensor.cornerValues, hnp, hnegAll]
+  · by_cases hzeroAll :
+      ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
+          Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
+        Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
+      Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
+    · right
+      left
+      simp [Tensor.cornerValues, hnp, hnegAll, hzeroAll]
+    · right
+      right
+      simp [Tensor.cornerValues, hnp, hnegAll, hzeroAll, hposAll]
+
+theorem Tensor.emitsDigit_of_corner_nonneg
+    (T : Tensor)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (hr1 : Tensor.apply T 1 1 ∈ baseI)
+    (hr2 : Tensor.apply T 1 (-1) ∈ baseI)
+    (hr3 : Tensor.apply T (-1) 1 ∈ baseI)
+    (hr4 : Tensor.apply T (-1) (-1) ∈ baseI)
+    (hnonneg :
+      0 ≤ Tensor.apply T 1 1 ∧
+        0 ≤ Tensor.apply T 1 (-1) ∧
+        0 ≤ Tensor.apply T (-1) 1 ∧
+        0 ≤ Tensor.apply T (-1) (-1)) :
+    T.EmitsDigit := by
+  let n1 : ℤ := T.a + T.b + T.c + T.d
+  let d1 : ℤ := T.e + T.f + T.g + T.h
+  let n2 : ℤ := -T.a + T.b - T.c + T.d
+  let d2 : ℤ := -T.e + T.f - T.g + T.h
+  let n3 : ℤ := -T.a - T.b + T.c + T.d
+  let d3 : ℤ := -T.e - T.f + T.g + T.h
+  let n4 : ℤ := T.a - T.b - T.c + T.d
+  let d4 : ℤ := T.e - T.f - T.g + T.h
+  have hnp' : Tensor.hasNoPole d1 d2 d3 d4 = true := by
+    simpa [d1, d2, d3, d4] using hnp
+  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
+    dsimp [n1, d1]
+    simp [Tensor.apply]
+  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
+    dsimp [n2, d2]
+    simp [Tensor.apply]
+    ring_nf
+  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
+    dsimp [n3, d3]
+    simp [Tensor.apply]
+    ring_nf
+  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
+    dsimp [n4, d4]
+    simp [Tensor.apply]
+    ring_nf
+  rcases hnonneg with ⟨hr1lo, hr2lo, hr3lo, hr4lo⟩
+  rcases Tensor.hasNoPole_cases d1 d2 d3 d4 hnp' with hden | hden
+  · have h1 : Tensor.inDigitPos n1 d1 = true := by
+      apply Tensor.inDigitPos_of_ratio_pos n1 d1 hden.1
+      · simpa [hratio1] using hr1lo
+      · simpa [hratio1] using hr1.2
+    have h2 : Tensor.inDigitPos n2 d2 = true := by
+      apply Tensor.inDigitPos_of_ratio_pos n2 d2 hden.2.1
+      · simpa [hratio2] using hr2lo
+      · simpa [hratio2] using hr2.2
+    have h3 : Tensor.inDigitPos n3 d3 = true := by
+      apply Tensor.inDigitPos_of_ratio_pos n3 d3 hden.2.2.1
+      · simpa [hratio3] using hr3lo
+      · simpa [hratio3] using hr3.2
+    have h4 : Tensor.inDigitPos n4 d4 = true := by
+      apply Tensor.inDigitPos_of_ratio_pos n4 d4 hden.2.2.2
+      · simpa [hratio4] using hr4lo
+      · simpa [hratio4] using hr4.2
+    exact Tensor.emitsDigit_of_hasNoPole_and_inDigitPos T hnp
+      (by simpa [n1, d1] using h1)
+      (by simpa [n2, d2] using h2)
+      (by simpa [n3, d3] using h3)
+      (by simpa [n4, d4] using h4)
+  · have h1 : Tensor.inDigitPos n1 d1 = true := by
+      apply Tensor.inDigitPos_of_ratio_neg n1 d1 hden.1
+      · simpa [hratio1] using hr1lo
+      · simpa [hratio1] using hr1.2
+    have h2 : Tensor.inDigitPos n2 d2 = true := by
+      apply Tensor.inDigitPos_of_ratio_neg n2 d2 hden.2.1
+      · simpa [hratio2] using hr2lo
+      · simpa [hratio2] using hr2.2
+    have h3 : Tensor.inDigitPos n3 d3 = true := by
+      apply Tensor.inDigitPos_of_ratio_neg n3 d3 hden.2.2.1
+      · simpa [hratio3] using hr3lo
+      · simpa [hratio3] using hr3.2
+    have h4 : Tensor.inDigitPos n4 d4 = true := by
+      apply Tensor.inDigitPos_of_ratio_neg n4 d4 hden.2.2.2
+      · simpa [hratio4] using hr4lo
+      · simpa [hratio4] using hr4.2
+    exact Tensor.emitsDigit_of_hasNoPole_and_inDigitPos T hnp
+      (by simpa [n1, d1] using h1)
+      (by simpa [n2, d2] using h2)
+      (by simpa [n3, d3] using h3)
+      (by simpa [n4, d4] using h4)
+
+theorem Tensor.emitsDigit_of_corner_nonpos
+    (T : Tensor)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (hr1 : Tensor.apply T 1 1 ∈ baseI)
+    (hr2 : Tensor.apply T 1 (-1) ∈ baseI)
+    (hr3 : Tensor.apply T (-1) 1 ∈ baseI)
+    (hr4 : Tensor.apply T (-1) (-1) ∈ baseI)
+    (hnonpos :
+      Tensor.apply T 1 1 ≤ 0 ∧
+        Tensor.apply T 1 (-1) ≤ 0 ∧
+        Tensor.apply T (-1) 1 ≤ 0 ∧
+        Tensor.apply T (-1) (-1) ≤ 0) :
+    T.EmitsDigit := by
+  let n1 : ℤ := T.a + T.b + T.c + T.d
+  let d1 : ℤ := T.e + T.f + T.g + T.h
+  let n2 : ℤ := -T.a + T.b - T.c + T.d
+  let d2 : ℤ := -T.e + T.f - T.g + T.h
+  let n3 : ℤ := -T.a - T.b + T.c + T.d
+  let d3 : ℤ := -T.e - T.f + T.g + T.h
+  let n4 : ℤ := T.a - T.b - T.c + T.d
+  let d4 : ℤ := T.e - T.f - T.g + T.h
+  have hnp' : Tensor.hasNoPole d1 d2 d3 d4 = true := by
+    simpa [d1, d2, d3, d4] using hnp
+  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
+    dsimp [n1, d1]
+    simp [Tensor.apply]
+  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
+    dsimp [n2, d2]
+    simp [Tensor.apply]
+    ring_nf
+  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
+    dsimp [n3, d3]
+    simp [Tensor.apply]
+    ring_nf
+  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
+    dsimp [n4, d4]
+    simp [Tensor.apply]
+    ring_nf
+  rcases hnonpos with ⟨hr1hi, hr2hi, hr3hi, hr4hi⟩
+  rcases Tensor.hasNoPole_cases d1 d2 d3 d4 hnp' with hden | hden
+  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
+      apply Tensor.inDigitNeg_of_ratio_pos n1 d1 hden.1
+      · simpa [hratio1] using hr1.1
+      · simpa [hratio1] using hr1hi
+    have h2 : Tensor.inDigitNeg n2 d2 = true := by
+      apply Tensor.inDigitNeg_of_ratio_pos n2 d2 hden.2.1
+      · simpa [hratio2] using hr2.1
+      · simpa [hratio2] using hr2hi
+    have h3 : Tensor.inDigitNeg n3 d3 = true := by
+      apply Tensor.inDigitNeg_of_ratio_pos n3 d3 hden.2.2.1
+      · simpa [hratio3] using hr3.1
+      · simpa [hratio3] using hr3hi
+    have h4 : Tensor.inDigitNeg n4 d4 = true := by
+      apply Tensor.inDigitNeg_of_ratio_pos n4 d4 hden.2.2.2
+      · simpa [hratio4] using hr4.1
+      · simpa [hratio4] using hr4hi
+    exact Tensor.emitsDigit_of_hasNoPole_and_inDigitNeg T hnp
+      (by simpa [n1, d1] using h1)
+      (by simpa [n2, d2] using h2)
+      (by simpa [n3, d3] using h3)
+      (by simpa [n4, d4] using h4)
+  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
+      apply Tensor.inDigitNeg_of_ratio_neg n1 d1 hden.1
+      · simpa [hratio1] using hr1.1
+      · simpa [hratio1] using hr1hi
+    have h2 : Tensor.inDigitNeg n2 d2 = true := by
+      apply Tensor.inDigitNeg_of_ratio_neg n2 d2 hden.2.1
+      · simpa [hratio2] using hr2.1
+      · simpa [hratio2] using hr2hi
+    have h3 : Tensor.inDigitNeg n3 d3 = true := by
+      apply Tensor.inDigitNeg_of_ratio_neg n3 d3 hden.2.2.1
+      · simpa [hratio3] using hr3.1
+      · simpa [hratio3] using hr3hi
+    have h4 : Tensor.inDigitNeg n4 d4 = true := by
+      apply Tensor.inDigitNeg_of_ratio_neg n4 d4 hden.2.2.2
+      · simpa [hratio4] using hr4.1
+      · simpa [hratio4] using hr4hi
+    exact Tensor.emitsDigit_of_hasNoPole_and_inDigitNeg T hnp
+      (by simpa [n1, d1] using h1)
+      (by simpa [n2, d2] using h2)
+      (by simpa [n3, d3] using h3)
+      (by simpa [n4, d4] using h4)
+
+theorem Tensor.emitsDigit_of_corner_mid
+    (T : Tensor)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (hmid :
+      (-1 / 2 : ℝ) ≤ Tensor.apply T 1 1 ∧
+        Tensor.apply T 1 1 ≤ (1 / 2 : ℝ) ∧
+        (-1 / 2 : ℝ) ≤ Tensor.apply T 1 (-1) ∧
+        Tensor.apply T 1 (-1) ≤ (1 / 2 : ℝ) ∧
+        (-1 / 2 : ℝ) ≤ Tensor.apply T (-1) 1 ∧
+        Tensor.apply T (-1) 1 ≤ (1 / 2 : ℝ) ∧
+        (-1 / 2 : ℝ) ≤ Tensor.apply T (-1) (-1) ∧
+        Tensor.apply T (-1) (-1) ≤ (1 / 2 : ℝ)) :
+    T.EmitsDigit := by
+  let n1 : ℤ := T.a + T.b + T.c + T.d
+  let d1 : ℤ := T.e + T.f + T.g + T.h
+  let n2 : ℤ := -T.a + T.b - T.c + T.d
+  let d2 : ℤ := -T.e + T.f - T.g + T.h
+  let n3 : ℤ := -T.a - T.b + T.c + T.d
+  let d3 : ℤ := -T.e - T.f + T.g + T.h
+  let n4 : ℤ := T.a - T.b - T.c + T.d
+  let d4 : ℤ := T.e - T.f - T.g + T.h
+  have hnp' : Tensor.hasNoPole d1 d2 d3 d4 = true := by
+    simpa [d1, d2, d3, d4] using hnp
+  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
+    dsimp [n1, d1]
+    simp [Tensor.apply]
+  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
+    dsimp [n2, d2]
+    simp [Tensor.apply]
+    ring_nf
+  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
+    dsimp [n3, d3]
+    simp [Tensor.apply]
+    ring_nf
+  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
+    dsimp [n4, d4]
+    simp [Tensor.apply]
+    ring_nf
+  rcases hmid with ⟨hr1lo, hr1hi, hr2lo, hr2hi, hr3lo, hr3hi, hr4lo, hr4hi⟩
+  have hr1lo' : (-(1 / 2 : ℝ)) ≤ (n1 : ℝ) / d1 := by
+    have : (-1 / 2 : ℝ) ≤ (n1 : ℝ) / d1 := by
+      simpa [hratio1] using hr1lo
+    nlinarith
+  have hr2lo' : (-(1 / 2 : ℝ)) ≤ (n2 : ℝ) / d2 := by
+    have : (-1 / 2 : ℝ) ≤ (n2 : ℝ) / d2 := by
+      simpa [hratio2] using hr2lo
+    nlinarith
+  have hr3lo' : (-(1 / 2 : ℝ)) ≤ (n3 : ℝ) / d3 := by
+    have : (-1 / 2 : ℝ) ≤ (n3 : ℝ) / d3 := by
+      simpa [hratio3] using hr3lo
+    nlinarith
+  have hr4lo' : (-(1 / 2 : ℝ)) ≤ (n4 : ℝ) / d4 := by
+    have : (-1 / 2 : ℝ) ≤ (n4 : ℝ) / d4 := by
+      simpa [hratio4] using hr4lo
+    nlinarith
+  rcases Tensor.hasNoPole_cases d1 d2 d3 d4 hnp' with hden | hden
+  · have h1 : Tensor.inDigitZero n1 d1 = true := by
+      apply Tensor.inDigitZero_of_ratio_pos n1 d1 hden.1
+      · exact hr1lo'
+      · simpa [hratio1] using hr1hi
+    have h2 : Tensor.inDigitZero n2 d2 = true := by
+      apply Tensor.inDigitZero_of_ratio_pos n2 d2 hden.2.1
+      · exact hr2lo'
+      · simpa [hratio2] using hr2hi
+    have h3 : Tensor.inDigitZero n3 d3 = true := by
+      apply Tensor.inDigitZero_of_ratio_pos n3 d3 hden.2.2.1
+      · exact hr3lo'
+      · simpa [hratio3] using hr3hi
+    have h4 : Tensor.inDigitZero n4 d4 = true := by
+      apply Tensor.inDigitZero_of_ratio_pos n4 d4 hden.2.2.2
+      · exact hr4lo'
+      · simpa [hratio4] using hr4hi
+    exact Tensor.emitsDigit_of_hasNoPole_and_inDigitZero T hnp
+      (by simpa [n1, d1] using h1)
+      (by simpa [n2, d2] using h2)
+      (by simpa [n3, d3] using h3)
+      (by simpa [n4, d4] using h4)
+  · have h1 : Tensor.inDigitZero n1 d1 = true := by
+      apply Tensor.inDigitZero_of_ratio_neg n1 d1 hden.1
+      · exact hr1lo'
+      · simpa [hratio1] using hr1hi
+    have h2 : Tensor.inDigitZero n2 d2 = true := by
+      apply Tensor.inDigitZero_of_ratio_neg n2 d2 hden.2.1
+      · exact hr2lo'
+      · simpa [hratio2] using hr2hi
+    have h3 : Tensor.inDigitZero n3 d3 = true := by
+      apply Tensor.inDigitZero_of_ratio_neg n3 d3 hden.2.2.1
+      · exact hr3lo'
+      · simpa [hratio3] using hr3hi
+    have h4 : Tensor.inDigitZero n4 d4 = true := by
+      apply Tensor.inDigitZero_of_ratio_neg n4 d4 hden.2.2.2
+      · exact hr4lo'
+      · simpa [hratio4] using hr4hi
+    exact Tensor.emitsDigit_of_hasNoPole_and_inDigitZero T hnp
+      (by simpa [n1, d1] using h1)
+      (by simpa [n2, d2] using h2)
+      (by simpa [n3, d3] using h3)
+      (by simpa [n4, d4] using h4)
+
+theorem Tensor.emitsDigit_of_corner_nonneg_of_hasNoPoleOnBase
+    (T : Tensor)
+    (hsafe : T.HasNoPoleOnBase)
+    (hr1 : Tensor.apply T 1 1 ∈ baseI)
+    (hr2 : Tensor.apply T 1 (-1) ∈ baseI)
+    (hr3 : Tensor.apply T (-1) 1 ∈ baseI)
+    (hr4 : Tensor.apply T (-1) (-1) ∈ baseI)
+    (hnonneg :
+      0 ≤ Tensor.apply T 1 1 ∧
+        0 ≤ Tensor.apply T 1 (-1) ∧
+        0 ≤ Tensor.apply T (-1) 1 ∧
+        0 ≤ Tensor.apply T (-1) (-1)) :
+    T.EmitsDigit := by
+  exact Tensor.emitsDigit_of_corner_nonneg T
+    (Tensor.hasNoPole_bool_of_HasNoPoleOnBase T hsafe)
+    hr1 hr2 hr3 hr4 hnonneg
+
+theorem Tensor.emitsDigit_of_corner_nonpos_of_hasNoPoleOnBase
+    (T : Tensor)
+    (hsafe : T.HasNoPoleOnBase)
+    (hr1 : Tensor.apply T 1 1 ∈ baseI)
+    (hr2 : Tensor.apply T 1 (-1) ∈ baseI)
+    (hr3 : Tensor.apply T (-1) 1 ∈ baseI)
+    (hr4 : Tensor.apply T (-1) (-1) ∈ baseI)
+    (hnonpos :
+      Tensor.apply T 1 1 ≤ 0 ∧
+        Tensor.apply T 1 (-1) ≤ 0 ∧
+        Tensor.apply T (-1) 1 ≤ 0 ∧
+        Tensor.apply T (-1) (-1) ≤ 0) :
+    T.EmitsDigit := by
+  exact Tensor.emitsDigit_of_corner_nonpos T
+    (Tensor.hasNoPole_bool_of_HasNoPoleOnBase T hsafe)
+    hr1 hr2 hr3 hr4 hnonpos
+
+theorem Tensor.emitsDigit_of_corner_mid_of_hasNoPoleOnBase
+    (T : Tensor)
+    (hsafe : T.HasNoPoleOnBase)
+    (hmid :
+      (-1 / 2 : ℝ) ≤ Tensor.apply T 1 1 ∧
+        Tensor.apply T 1 1 ≤ (1 / 2 : ℝ) ∧
+        (-1 / 2 : ℝ) ≤ Tensor.apply T 1 (-1) ∧
+        Tensor.apply T 1 (-1) ≤ (1 / 2 : ℝ) ∧
+        (-1 / 2 : ℝ) ≤ Tensor.apply T (-1) 1 ∧
+        Tensor.apply T (-1) 1 ≤ (1 / 2 : ℝ) ∧
+        (-1 / 2 : ℝ) ≤ Tensor.apply T (-1) (-1) ∧
+        Tensor.apply T (-1) (-1) ≤ (1 / 2 : ℝ)) :
+    T.EmitsDigit := by
+  exact Tensor.emitsDigit_of_corner_mid T
+    (Tensor.hasNoPole_bool_of_HasNoPoleOnBase T hsafe)
+    hmid
 
 theorem four_values_digit_trichotomy
     (r₁ r₂ r₃ r₄ : ℝ)
@@ -1708,9 +2068,147 @@ theorem four_values_digit_trichotomy_of_close
         exact hpos (Or.inr (Or.inr (Or.inr hgt')))
       exact ⟨hr1lo, hr1hi, hr2lo, hr2hi, hr3lo, hr3hi, hr4lo, hr4hi⟩
 
+theorem Tensor.corner_mem_baseI_of_mapsBaseI (T : Tensor) (hMaps : T.MapsBaseI) :
+    Tensor.apply T 1 1 ∈ baseI ∧
+      Tensor.apply T 1 (-1) ∈ baseI ∧
+      Tensor.apply T (-1) 1 ∈ baseI ∧
+      Tensor.apply T (-1) (-1) ∈ baseI := by
+  have h1 : (1 : ℝ) ∈ baseI := by constructor <;> norm_num
+  have hm1 : (-1 : ℝ) ∈ baseI := by constructor <;> norm_num
+  constructor
+  · exact hMaps 1 h1 1 h1
+  constructor
+  · exact hMaps 1 h1 (-1) hm1
+  constructor
+  · exact hMaps (-1) hm1 1 h1
+  · exact hMaps (-1) hm1 (-1) hm1
+
+theorem Tensor.widthSet_bddAbove_of_mapsBaseI (T : Tensor) (hMaps : T.MapsBaseI) :
+    BddAbove (Tensor.widthSet T) := by
+  refine ⟨(2 : ℝ), ?_⟩
+  intro d hd
+  rcases hd with ⟨x, y, w, z, hx, hy, hw, hz, rfl⟩
+  have hx' : x ∈ baseI := by simpa [baseI] using hx
+  have hy' : y ∈ baseI := by simpa [baseI] using hy
+  have hw' : w ∈ baseI := by simpa [baseI] using hw
+  have hz' : z ∈ baseI := by simpa [baseI] using hz
+  have hxy : Tensor.apply T x y ∈ baseI := hMaps x hx' y hy'
+  have hwz : Tensor.apply T w z ∈ baseI := hMaps w hw' z hz'
+  have hlow : (-(2 : ℝ)) ≤ Tensor.apply T x y - Tensor.apply T w z := by
+    linarith [hxy.1, hwz.2]
+  have hhigh : Tensor.apply T x y - Tensor.apply T w z ≤ (2 : ℝ) := by
+    linarith [hxy.2, hwz.1]
+  exact abs_le.mpr ⟨hlow, hhigh⟩
+
+theorem Tensor.diff_le_tensorWidth_of_mapsBaseI
+    (T : Tensor) (hMaps : T.MapsBaseI)
+    {x y w z : ℝ}
+    (hx : x ∈ baseI) (hy : y ∈ baseI) (hw : w ∈ baseI) (hz : z ∈ baseI) :
+    |Tensor.apply T x y - Tensor.apply T w z| ≤ tensorWidth T := by
+  have hmem : |Tensor.apply T x y - Tensor.apply T w z| ∈ Tensor.widthSet T := by
+    refine ⟨x, y, w, z, ?_, ?_, ?_, ?_, rfl⟩
+    · simpa [baseI] using hx
+    · simpa [baseI] using hy
+    · simpa [baseI] using hw
+    · simpa [baseI] using hz
+  unfold tensorWidth
+  exact ConditionallyCompleteLattice.le_csSup
+    (s := Tensor.widthSet T)
+    (a := |Tensor.apply T x y - Tensor.apply T w z|)
+    (Tensor.widthSet_bddAbove_of_mapsBaseI T hMaps) hmem
+
+theorem Tensor.emitsDigit_of_hasNoPole_of_mapsBaseI_of_width_lt_half
+    (T : Tensor)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (hMaps : T.MapsBaseI)
+    (hwidth : tensorWidth T < (1 / 2 : ℝ)) :
+    T.EmitsDigit := by
+  have h1 : (1 : ℝ) ∈ baseI := by constructor <;> norm_num
+  have hm1 : (-1 : ℝ) ∈ baseI := by constructor <;> norm_num
+  rcases Tensor.corner_mem_baseI_of_mapsBaseI T hMaps with ⟨hr1, hr2, hr3, hr4⟩
+  have h12 :
+      |Tensor.apply T 1 1 - Tensor.apply T 1 (-1)| < (1 / 2 : ℝ) := by
+    exact lt_of_le_of_lt
+      (Tensor.diff_le_tensorWidth_of_mapsBaseI T hMaps h1 h1 h1 hm1) hwidth
+  have h13 :
+      |Tensor.apply T 1 1 - Tensor.apply T (-1) 1| < (1 / 2 : ℝ) := by
+    exact lt_of_le_of_lt
+      (Tensor.diff_le_tensorWidth_of_mapsBaseI T hMaps h1 h1 hm1 h1) hwidth
+  have h14 :
+      |Tensor.apply T 1 1 - Tensor.apply T (-1) (-1)| < (1 / 2 : ℝ) := by
+    exact lt_of_le_of_lt
+      (Tensor.diff_le_tensorWidth_of_mapsBaseI T hMaps h1 h1 hm1 hm1) hwidth
+  have h23 :
+      |Tensor.apply T 1 (-1) - Tensor.apply T (-1) 1| < (1 / 2 : ℝ) := by
+    exact lt_of_le_of_lt
+      (Tensor.diff_le_tensorWidth_of_mapsBaseI T hMaps h1 hm1 hm1 h1) hwidth
+  have h24 :
+      |Tensor.apply T 1 (-1) - Tensor.apply T (-1) (-1)| < (1 / 2 : ℝ) := by
+    exact lt_of_le_of_lt
+      (Tensor.diff_le_tensorWidth_of_mapsBaseI T hMaps h1 hm1 hm1 hm1) hwidth
+  have h34 :
+      |Tensor.apply T (-1) 1 - Tensor.apply T (-1) (-1)| < (1 / 2 : ℝ) := by
+    exact lt_of_le_of_lt
+      (Tensor.diff_le_tensorWidth_of_mapsBaseI T hMaps hm1 h1 hm1 hm1) hwidth
+  rcases four_values_digit_trichotomy
+      (Tensor.apply T 1 1)
+      (Tensor.apply T 1 (-1))
+      (Tensor.apply T (-1) 1)
+      (Tensor.apply T (-1) (-1))
+      hr1 hr2 hr3 hr4 h12 h13 h14 h23 h24 h34 with
+    hnonneg | hnonpos | hmid
+  · exact Tensor.emitsDigit_of_corner_nonneg T hnp hr1 hr2 hr3 hr4 hnonneg
+  · exact Tensor.emitsDigit_of_corner_nonpos T hnp hr1 hr2 hr3 hr4 hnonpos
+  · exact Tensor.emitsDigit_of_corner_mid T hnp hmid
+
+theorem Tensor.emitsDigit_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T : Tensor)
+    (hsafe : T.HasNoPoleOnBase)
+    (hMaps : T.MapsBaseI)
+    (hwidth : tensorWidth T < (1 / 2 : ℝ)) :
+    T.EmitsDigit := by
+  exact Tensor.emitsDigit_of_hasNoPole_of_mapsBaseI_of_width_lt_half T
+    (Tensor.hasNoPole_bool_of_HasNoPoleOnBase T hsafe) hMaps hwidth
+
+theorem Tensor.productiveOnBase_of_hasNoPoleOnBase_of_hasNoPole_of_mapsBaseI_of_width_lt_half
+    (T : Tensor)
+    (hsafe : T.HasNoPoleOnBase)
+    (hnp :
+      Tensor.hasNoPole
+        (T.e + T.f + T.g + T.h)
+        (-T.e + T.f - T.g + T.h)
+        (-T.e - T.f + T.g + T.h)
+        (T.e - T.f - T.g + T.h) = true)
+    (hMaps : T.MapsBaseI)
+    (hwidth : tensorWidth T < (1 / 2 : ℝ)) :
+    T.ProductiveOnBase := by
+  exact ⟨hsafe, hwidth,
+    Tensor.emitsDigit_of_hasNoPole_of_mapsBaseI_of_width_lt_half T hnp hMaps hwidth⟩
+
+theorem Tensor.productiveOnBase_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T : Tensor)
+    (hsafe : T.HasNoPoleOnBase)
+    (hMaps : T.MapsBaseI)
+    (hwidth : tensorWidth T < (1 / 2 : ℝ)) :
+    T.ProductiveOnBase := by
+  exact ⟨hsafe, hwidth,
+    Tensor.emitsDigit_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half T hsafe hMaps hwidth⟩
+
 theorem avg_mem_baseI {a b : ℝ} (ha : a ∈ baseI) (hb : b ∈ baseI) :
     (a + b) / 2 ∈ baseI := by
   constructor <;> nlinarith [ha.1, ha.2, hb.1, hb.2]
+
+theorem halfAddTensorStateAfter_mapsBaseI (X Y : MobiusReal) (N : ℕ) :
+    (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).MapsBaseI := by
+  intro x hx y hy
+  have hX := pairedPrefix_maps_base X N hx
+  have hY := pairedPrefix_maps_base Y N hy
+  simpa [halfAddTensorStateAfter_apply X Y N hx hy] using avg_mem_baseI hX hY
 
 theorem halfAddTensorStateAfter_corner_mem_baseI
     (X Y : MobiusReal) (N : ℕ) :
@@ -1739,33 +2237,29 @@ theorem avgTensor_hasNoPole_bool (M N : LFT)
       (2 * (M.c + M.d) * (-N.c + N.d))
       (2 * (-M.c + M.d) * (N.c + N.d))
       (2 * (-M.c + M.d) * (-N.c + N.d)) = true := by
-  rcases LFT.endpoint_sign_cases M hM with hMp | hMn
-  · rcases LFT.endpoint_sign_cases N hN with hNp | hNn
-    · have hd1 : 0 < 2 * (M.c + M.d) * (N.c + N.d) := by nlinarith [hMp.1, hNp.1]
-      have hd2 : 0 < 2 * (M.c + M.d) * (-N.c + N.d) := by nlinarith [hMp.1, hNp.2]
-      have hd3 : 0 < 2 * (-M.c + M.d) * (N.c + N.d) := by nlinarith [hMp.2, hNp.1]
-      have hd4 : 0 < 2 * (-M.c + M.d) * (-N.c + N.d) := by nlinarith [hMp.2, hNp.2]
-      unfold Tensor.hasNoPole
-      simp [hd1, hd2, hd3, hd4]
-    · have hd1 : 2 * (M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMp.1, hNn.1]
-      have hd2 : 2 * (M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMp.1, hNn.2]
-      have hd3 : 2 * (-M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMp.2, hNn.1]
-      have hd4 : 2 * (-M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMp.2, hNn.2]
-      unfold Tensor.hasNoPole
-      simp [hd1, hd2, hd3, hd4]
-  · rcases LFT.endpoint_sign_cases N hN with hNp | hNn
-    · have hd1 : 2 * (M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMn.1, hNp.1]
-      have hd2 : 2 * (M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMn.1, hNp.2]
-      have hd3 : 2 * (-M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMn.2, hNp.1]
-      have hd4 : 2 * (-M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMn.2, hNp.2]
-      unfold Tensor.hasNoPole
-      simp [hd1, hd2, hd3, hd4]
-    · have hd1 : 0 < 2 * (M.c + M.d) * (N.c + N.d) := by nlinarith [hMn.1, hNn.1]
-      have hd2 : 0 < 2 * (M.c + M.d) * (-N.c + N.d) := by nlinarith [hMn.1, hNn.2]
-      have hd3 : 0 < 2 * (-M.c + M.d) * (N.c + N.d) := by nlinarith [hMn.2, hNn.1]
-      have hd4 : 0 < 2 * (-M.c + M.d) * (-N.c + N.d) := by nlinarith [hMn.2, hNn.2]
-      unfold Tensor.hasNoPole
-      simp [hd1, hd2, hd3, hd4]
+  have h11 :
+      2 * (M.c + M.d) * (N.c + N.d) =
+        (avgTensor M N).e + (avgTensor M N).f + (avgTensor M N).g + (avgTensor M N).h := by
+    simp [avgTensor]
+    ring
+  have h1m :
+      2 * (M.c + M.d) * (-N.c + N.d) =
+        -(avgTensor M N).e + (avgTensor M N).f - (avgTensor M N).g + (avgTensor M N).h := by
+    simp [avgTensor]
+    ring
+  have hm1 :
+      2 * (-M.c + M.d) * (N.c + N.d) =
+        -(avgTensor M N).e - (avgTensor M N).f + (avgTensor M N).g + (avgTensor M N).h := by
+    simp [avgTensor]
+    ring
+  have hmm :
+      2 * (-M.c + M.d) * (-N.c + N.d) =
+        (avgTensor M N).e - (avgTensor M N).f - (avgTensor M N).g + (avgTensor M N).h := by
+    simp [avgTensor]
+    ring
+  rw [h11, h1m, hm1, hmm]
+  exact Tensor.hasNoPole_bool_of_HasNoPoleOnBase
+    (T := avgTensor M N) (avgTensor_hasNoPoleOnBase M N hM hN)
 
 theorem avgTensor_corner_denom_sign_cases (M N : LFT)
     (hM : M.NoPoleOnBase) (hN : N.NoPoleOnBase) :
@@ -1776,74 +2270,8 @@ theorem avgTensor_corner_denom_sign_cases (M N : LFT)
     let d4 : ℤ := T.e - T.f - T.g + T.h
     (0 < d1 ∧ 0 < d2 ∧ 0 < d3 ∧ 0 < d4) ∨
       (d1 < 0 ∧ d2 < 0 ∧ d3 < 0 ∧ d4 < 0) := by
-  dsimp [avgTensor]
-  rcases LFT.endpoint_sign_cases M hM with hMp | hMn
-  · rcases LFT.endpoint_sign_cases N hN with hNp | hNn
-    · left
-      constructor
-      · have : 0 < 2 * (M.c + M.d) * (N.c + N.d) := by nlinarith [hMp.1, hNp.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * (M.c + M.d) * (-N.c + N.d) := by nlinarith [hMp.1, hNp.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * (-M.c + M.d) * (N.c + N.d) := by nlinarith [hMp.2, hNp.1]
-        convert this using 1
-        ring_nf
-      · have : 0 < 2 * (-M.c + M.d) * (-N.c + N.d) := by nlinarith [hMp.2, hNp.2]
-        convert this using 1
-        ring_nf
-    · right
-      constructor
-      · have : 2 * (M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMp.1, hNn.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * (M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMp.1, hNn.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * (-M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMp.2, hNn.1]
-        convert this using 1
-        ring_nf
-      · have : 2 * (-M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMp.2, hNn.2]
-        convert this using 1
-        ring_nf
-  · rcases LFT.endpoint_sign_cases N hN with hNp | hNn
-    · right
-      constructor
-      · have : 2 * (M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMn.1, hNp.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * (M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMn.1, hNp.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * (-M.c + M.d) * (N.c + N.d) < 0 := by nlinarith [hMn.2, hNp.1]
-        convert this using 1
-        ring_nf
-      · have : 2 * (-M.c + M.d) * (-N.c + N.d) < 0 := by nlinarith [hMn.2, hNp.2]
-        convert this using 1
-        ring_nf
-    · left
-      constructor
-      · have : 0 < 2 * (M.c + M.d) * (N.c + N.d) := by nlinarith [hMn.1, hNn.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * (M.c + M.d) * (-N.c + N.d) := by nlinarith [hMn.1, hNn.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * (-M.c + M.d) * (N.c + N.d) := by nlinarith [hMn.2, hNn.1]
-        convert this using 1
-        ring_nf
-      · have : 0 < 2 * (-M.c + M.d) * (-N.c + N.d) := by nlinarith [hMn.2, hNn.2]
-        convert this using 1
-        ring_nf
+  simpa using Tensor.corner_denom_sign_cases_of_HasNoPoleOnBase
+    (T := avgTensor M N) (avgTensor_hasNoPoleOnBase M N hM hN)
 
 theorem avgTensor_corner_ratio_11 (M N : LFT) :
     let T := avgTensor M N
@@ -1943,15 +2371,9 @@ theorem halfAddResidualStateAfter_hasNoPole_bool
       (-T.e + T.f - T.g + T.h)
       (-T.e - T.f + T.g + T.h)
       (T.e - T.f - T.g + T.h) = true := by
-  rw [halfAddResidualStateAfter_eq_avgTensor']
-  dsimp [avgTensor]
-  convert
-    avgTensor_hasNoPole_bool
-      ((residualDigitLFT d).comp (pairedPrefix X.stream (N + K)))
-      ((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K)))
-      (residualPairedPrefix_noPoleOnBase X (N + K) d)
-      (residualPairedPrefix_noPoleOnBase Y (N + K) d) using 1
-  ring_nf
+  simpa using Tensor.hasNoPole_bool_of_HasNoPoleOnBase
+    (T := (halfAddResidualStateAfter X Y N d K).T)
+    (halfAddResidualStateAfter_hasNoPoleOnBase X Y N d K)
 
 theorem halfAddResidualStateAfter_corner_denom_sign_cases
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ) :
@@ -1962,12 +2384,9 @@ theorem halfAddResidualStateAfter_corner_denom_sign_cases
     let d4 : ℤ := T.e - T.f - T.g + T.h
     (0 < d1 ∧ 0 < d2 ∧ 0 < d3 ∧ 0 < d4) ∨
       (d1 < 0 ∧ d2 < 0 ∧ d3 < 0 ∧ d4 < 0) := by
-  rw [halfAddResidualStateAfter_eq_avgTensor']
-  exact avgTensor_corner_denom_sign_cases
-    ((residualDigitLFT d).comp (pairedPrefix X.stream (N + K)))
-    ((residualDigitLFT d).comp (pairedPrefix Y.stream (N + K)))
-    (residualPairedPrefix_noPoleOnBase X (N + K) d)
-    (residualPairedPrefix_noPoleOnBase Y (N + K) d)
+  simpa using Tensor.corner_denom_sign_cases_of_HasNoPoleOnBase
+    (T := (halfAddResidualStateAfter X Y N d K).T)
+    (halfAddResidualStateAfter_hasNoPoleOnBase X Y N d K)
 
 theorem halfAddResidualStateAfter_corner_ratio_11
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ) :
@@ -2026,140 +2445,12 @@ theorem halfAddResidualStateAfter_emitsDigit_of_nonneg
       0 ≤ Tensor.apply (halfAddResidualStateAfter X Y N d K).T (-1) 1 ∧
       0 ≤ Tensor.apply (halfAddResidualStateAfter X Y N d K).T (-1) (-1)) :
     (halfAddResidualStateAfter X Y N d K).T.EmitsDigit := by
-  let T := (halfAddResidualStateAfter X Y N d K).T
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddResidualStateAfter_hasNoPole_bool X Y N d K
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
   rcases halfAddResidualStateAfter_corner_mem_baseI_of_step X Y N d hstep K with
     ⟨hr1, hr2, hr3, hr4⟩
-  rcases hnonneg with ⟨hr1lo, hr2lo, hr3lo, hr4lo⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddResidualStateAfter_corner_ratio_11 X Y N d K
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddResidualStateAfter_corner_ratio_1m X Y N d K
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddResidualStateAfter_corner_ratio_m1 X Y N d K
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddResidualStateAfter_corner_ratio_mm X Y N d K
-  rcases halfAddResidualStateAfter_corner_denom_sign_cases X Y N d K with hden | hden
-  · have h1 : Tensor.inDigitPos n1 d1 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n1 d1 hden.1
-      · simpa [T, hratio1] using hr1lo
-      · simpa [T, hratio1] using hr1.2
-    have h2 : Tensor.inDigitPos n2 d2 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2lo
-      · simpa [T, hratio2] using hr2.2
-    have h3 : Tensor.inDigitPos n3 d3 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3lo
-      · simpa [T, hratio3] using hr3.2
-    have h4 : Tensor.inDigitPos n4 d4 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4lo
-      · simpa [T, hratio4] using hr4.2
-    have h1' : Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hposAll :
-        ((Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · by_cases hzeroAll :
-          ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-              Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-            Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-          Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-      · right
-        left
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-      · right
-        right
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll, hposAll]
-  · have h1 : Tensor.inDigitPos n1 d1 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n1 d1 hden.1
-      · simpa [T, hratio1] using hr1lo
-      · simpa [T, hratio1] using hr1.2
-    have h2 : Tensor.inDigitPos n2 d2 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2lo
-      · simpa [T, hratio2] using hr2.2
-    have h3 : Tensor.inDigitPos n3 d3 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3lo
-      · simpa [T, hratio3] using hr3.2
-    have h4 : Tensor.inDigitPos n4 d4 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4lo
-      · simpa [T, hratio4] using hr4.2
-    have h1' : Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hposAll :
-        ((Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · by_cases hzeroAll :
-          ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-              Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-            Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-          Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-      · right
-        left
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-      · right
-        right
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll, hposAll]
+  exact Tensor.emitsDigit_of_corner_nonneg_of_hasNoPoleOnBase
+    (T := (halfAddResidualStateAfter X Y N d K).T)
+    (halfAddResidualStateAfter_hasNoPoleOnBase X Y N d K)
+    hr1 hr2 hr3 hr4 hnonneg
 
 theorem halfAddResidualStateAfter_emitsDigit_of_nonpos
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ)
@@ -2174,106 +2465,12 @@ theorem halfAddResidualStateAfter_emitsDigit_of_nonpos
       Tensor.apply (halfAddResidualStateAfter X Y N d K).T (-1) 1 ≤ 0 ∧
       Tensor.apply (halfAddResidualStateAfter X Y N d K).T (-1) (-1) ≤ 0) :
     (halfAddResidualStateAfter X Y N d K).T.EmitsDigit := by
-  let T := (halfAddResidualStateAfter X Y N d K).T
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddResidualStateAfter_hasNoPole_bool X Y N d K
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
   rcases halfAddResidualStateAfter_corner_mem_baseI_of_step X Y N d hstep K with
     ⟨hr1, hr2, hr3, hr4⟩
-  rcases hnonpos with ⟨hr1hi, hr2hi, hr3hi, hr4hi⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddResidualStateAfter_corner_ratio_11 X Y N d K
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddResidualStateAfter_corner_ratio_1m X Y N d K
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddResidualStateAfter_corner_ratio_m1 X Y N d K
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddResidualStateAfter_corner_ratio_mm X Y N d K
-  rcases halfAddResidualStateAfter_corner_denom_sign_cases X Y N d K with hden | hden
-  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n1 d1 hden.1
-      · simpa [T, hratio1] using hr1.1
-      · simpa [T, hratio1] using hr1hi
-    have h2 : Tensor.inDigitNeg n2 d2 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2.1
-      · simpa [T, hratio2] using hr2hi
-    have h3 : Tensor.inDigitNeg n3 d3 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3.1
-      · simpa [T, hratio3] using hr3hi
-    have h4 : Tensor.inDigitNeg n4 d4 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4.1
-      · simpa [T, hratio4] using hr4hi
-    have h1' : Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    simp [Tensor.cornerValues, hnp', hnegAll]
-  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n1 d1 hden.1
-      · simpa [T, hratio1] using hr1.1
-      · simpa [T, hratio1] using hr1hi
-    have h2 : Tensor.inDigitNeg n2 d2 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2.1
-      · simpa [T, hratio2] using hr2hi
-    have h3 : Tensor.inDigitNeg n3 d3 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3.1
-      · simpa [T, hratio3] using hr3hi
-    have h4 : Tensor.inDigitNeg n4 d4 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4.1
-      · simpa [T, hratio4] using hr4hi
-    have h1' : Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    simp [Tensor.cornerValues, hnp', hnegAll]
+  exact Tensor.emitsDigit_of_corner_nonpos_of_hasNoPoleOnBase
+    (T := (halfAddResidualStateAfter X Y N d K).T)
+    (halfAddResidualStateAfter_hasNoPoleOnBase X Y N d K)
+    hr1 hr2 hr3 hr4 hnonpos
 
 theorem halfAddResidualStateAfter_emitsDigit_of_mid
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ)
@@ -2287,166 +2484,10 @@ theorem halfAddResidualStateAfter_emitsDigit_of_mid
       (-1 / 2 : ℝ) ≤ Tensor.apply (halfAddResidualStateAfter X Y N d K).T (-1) (-1) ∧
       Tensor.apply (halfAddResidualStateAfter X Y N d K).T (-1) (-1) ≤ (1 / 2 : ℝ)) :
     (halfAddResidualStateAfter X Y N d K).T.EmitsDigit := by
-  let T := (halfAddResidualStateAfter X Y N d K).T
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddResidualStateAfter_hasNoPole_bool X Y N d K
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
-  rcases hmid with ⟨hr1lo, hr1hi, hr2lo, hr2hi, hr3lo, hr3hi, hr4lo, hr4hi⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddResidualStateAfter_corner_ratio_11 X Y N d K
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddResidualStateAfter_corner_ratio_1m X Y N d K
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddResidualStateAfter_corner_ratio_m1 X Y N d K
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddResidualStateAfter_corner_ratio_mm X Y N d K
-  have hr1lo' : (-(1 / 2 : ℝ)) ≤ (n1 : ℝ) / d1 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T 1 1 := by
-      have htmp : (-(1 / 2 : ℝ)) ≤ Tensor.apply T 1 1 := by
-        convert hr1lo using 1
-        ring_nf
-      nlinarith
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n1 : ℝ) / d1 := by
-      rw [← hratio1]
-      exact hsrc
-    nlinarith
-  have hr1hi' : (n1 : ℝ) / d1 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio1]
-    exact hr1hi
-  have hr2lo' : (-(1 / 2 : ℝ)) ≤ (n2 : ℝ) / d2 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T 1 (-1) := by
-      have htmp : (-(1 / 2 : ℝ)) ≤ Tensor.apply T 1 (-1) := by
-        convert hr2lo using 1
-        ring_nf
-      nlinarith
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n2 : ℝ) / d2 := by
-      rw [← hratio2]
-      exact hsrc
-    nlinarith
-  have hr2hi' : (n2 : ℝ) / d2 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio2]
-    exact hr2hi
-  have hr3lo' : (-(1 / 2 : ℝ)) ≤ (n3 : ℝ) / d3 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T (-1) 1 := by
-      have htmp : (-(1 / 2 : ℝ)) ≤ Tensor.apply T (-1) 1 := by
-        convert hr3lo using 1
-        ring_nf
-      nlinarith
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n3 : ℝ) / d3 := by
-      rw [← hratio3]
-      exact hsrc
-    nlinarith
-  have hr3hi' : (n3 : ℝ) / d3 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio3]
-    exact hr3hi
-  have hr4lo' : (-(1 / 2 : ℝ)) ≤ (n4 : ℝ) / d4 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T (-1) (-1) := by
-      have htmp : (-(1 / 2 : ℝ)) ≤ Tensor.apply T (-1) (-1) := by
-        convert hr4lo using 1
-        ring_nf
-      nlinarith
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n4 : ℝ) / d4 := by
-      rw [← hratio4]
-      exact hsrc
-    nlinarith
-  have hr4hi' : (n4 : ℝ) / d4 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio4]
-    exact hr4hi
-  rcases halfAddResidualStateAfter_corner_denom_sign_cases X Y N d K with hden | hden
-  · have h1 : Tensor.inDigitZero n1 d1 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n1 d1 hden.1 <;> assumption
-    have h2 : Tensor.inDigitZero n2 d2 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n2 d2 hden.2.1 <;> assumption
-    have h3 : Tensor.inDigitZero n3 d3 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n3 d3 hden.2.2.1 <;> assumption
-    have h4 : Tensor.inDigitZero n4 d4 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n4 d4 hden.2.2.2 <;> assumption
-    have h1' : Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hzeroAll :
-        ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · right
-      left
-      simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-  · have h1 : Tensor.inDigitZero n1 d1 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n1 d1 hden.1
-      · exact hr1lo'
-      · exact hr1hi'
-    have h2 : Tensor.inDigitZero n2 d2 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n2 d2 hden.2.1
-      · exact hr2lo'
-      · exact hr2hi'
-    have h3 : Tensor.inDigitZero n3 d3 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n3 d3 hden.2.2.1
-      · exact hr3lo'
-      · exact hr3hi'
-    have h4 : Tensor.inDigitZero n4 d4 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n4 d4 hden.2.2.2
-      · exact hr4lo'
-      · exact hr4hi'
-    have h1' : Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hzeroAll :
-        ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · right
-      left
-      simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
+  exact Tensor.emitsDigit_of_corner_mid_of_hasNoPoleOnBase
+    (T := (halfAddResidualStateAfter X Y N d K).T)
+    (halfAddResidualStateAfter_hasNoPoleOnBase X Y N d K)
+    (by simpa using hmid)
 
 theorem halfAddResidualStateAfter_emitsDigit_of_nonneg_Xstep
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ)
@@ -2461,140 +2502,12 @@ theorem halfAddResidualStateAfter_emitsDigit_of_nonneg_Xstep
       0 ≤ Tensor.apply (halfAddResidualStateAfter X Y N d (K + 1)).T (-1) 1 ∧
       0 ≤ Tensor.apply (halfAddResidualStateAfter X Y N d (K + 1)).T (-1) (-1)) :
     (halfAddResidualStateAfter X Y N d (K + 1)).T.EmitsDigit := by
-  let T := (halfAddResidualStateAfter X Y N d (K + 1)).T
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddResidualStateAfter_hasNoPole_bool X Y N d (K + 1)
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
   rcases halfAddResidualStateAfter_corner_mem_baseI_of_Xstep X Y N d hstep K with
     ⟨hr1, hr2, hr3, hr4⟩
-  rcases hnonneg with ⟨hr1lo, hr2lo, hr3lo, hr4lo⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddResidualStateAfter_corner_ratio_11 X Y N d (K + 1)
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddResidualStateAfter_corner_ratio_1m X Y N d (K + 1)
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddResidualStateAfter_corner_ratio_m1 X Y N d (K + 1)
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddResidualStateAfter_corner_ratio_mm X Y N d (K + 1)
-  rcases halfAddResidualStateAfter_corner_denom_sign_cases X Y N d (K + 1) with hden | hden
-  · have h1 : Tensor.inDigitPos n1 d1 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n1 d1 hden.1
-      · simpa [T, hratio1] using hr1lo
-      · simpa [T, hratio1] using hr1.2
-    have h2 : Tensor.inDigitPos n2 d2 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2lo
-      · simpa [T, hratio2] using hr2.2
-    have h3 : Tensor.inDigitPos n3 d3 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3lo
-      · simpa [T, hratio3] using hr3.2
-    have h4 : Tensor.inDigitPos n4 d4 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4lo
-      · simpa [T, hratio4] using hr4.2
-    have h1' : Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hposAll :
-        ((Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · by_cases hzeroAll :
-          ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-              Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-            Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-          Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-      · right
-        left
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-      · right
-        right
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll, hposAll]
-  · have h1 : Tensor.inDigitPos n1 d1 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n1 d1 hden.1
-      · simpa [T, hratio1] using hr1lo
-      · simpa [T, hratio1] using hr1.2
-    have h2 : Tensor.inDigitPos n2 d2 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2lo
-      · simpa [T, hratio2] using hr2.2
-    have h3 : Tensor.inDigitPos n3 d3 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3lo
-      · simpa [T, hratio3] using hr3.2
-    have h4 : Tensor.inDigitPos n4 d4 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4lo
-      · simpa [T, hratio4] using hr4.2
-    have h1' : Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hposAll :
-        ((Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · by_cases hzeroAll :
-          ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-              Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-            Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-          Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-      · right
-        left
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-      · right
-        right
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll, hposAll]
+  exact Tensor.emitsDigit_of_corner_nonneg_of_hasNoPoleOnBase
+    (T := (halfAddResidualStateAfter X Y N d (K + 1)).T)
+    (halfAddResidualStateAfter_hasNoPoleOnBase X Y N d (K + 1))
+    hr1 hr2 hr3 hr4 hnonneg
 
 theorem halfAddResidualStateAfter_emitsDigit_of_nonpos_Xstep
     (X Y : MobiusReal) (N : ℕ) (d : Digit) (K : ℕ)
@@ -2609,106 +2522,12 @@ theorem halfAddResidualStateAfter_emitsDigit_of_nonpos_Xstep
       Tensor.apply (halfAddResidualStateAfter X Y N d (K + 1)).T (-1) 1 ≤ 0 ∧
       Tensor.apply (halfAddResidualStateAfter X Y N d (K + 1)).T (-1) (-1) ≤ 0) :
     (halfAddResidualStateAfter X Y N d (K + 1)).T.EmitsDigit := by
-  let T := (halfAddResidualStateAfter X Y N d (K + 1)).T
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddResidualStateAfter_hasNoPole_bool X Y N d (K + 1)
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
   rcases halfAddResidualStateAfter_corner_mem_baseI_of_Xstep X Y N d hstep K with
     ⟨hr1, hr2, hr3, hr4⟩
-  rcases hnonpos with ⟨hr1hi, hr2hi, hr3hi, hr4hi⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddResidualStateAfter_corner_ratio_11 X Y N d (K + 1)
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddResidualStateAfter_corner_ratio_1m X Y N d (K + 1)
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddResidualStateAfter_corner_ratio_m1 X Y N d (K + 1)
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddResidualStateAfter_corner_ratio_mm X Y N d (K + 1)
-  rcases halfAddResidualStateAfter_corner_denom_sign_cases X Y N d (K + 1) with hden | hden
-  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n1 d1 hden.1
-      · simpa [T, hratio1] using hr1.1
-      · simpa [T, hratio1] using hr1hi
-    have h2 : Tensor.inDigitNeg n2 d2 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2.1
-      · simpa [T, hratio2] using hr2hi
-    have h3 : Tensor.inDigitNeg n3 d3 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3.1
-      · simpa [T, hratio3] using hr3hi
-    have h4 : Tensor.inDigitNeg n4 d4 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4.1
-      · simpa [T, hratio4] using hr4hi
-    have h1' : Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    simp [Tensor.cornerValues, hnp', hnegAll]
-  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n1 d1 hden.1
-      · simpa [T, hratio1] using hr1.1
-      · simpa [T, hratio1] using hr1hi
-    have h2 : Tensor.inDigitNeg n2 d2 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2.1
-      · simpa [T, hratio2] using hr2hi
-    have h3 : Tensor.inDigitNeg n3 d3 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3.1
-      · simpa [T, hratio3] using hr3hi
-    have h4 : Tensor.inDigitNeg n4 d4 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4.1
-      · simpa [T, hratio4] using hr4hi
-    have h1' : Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    simp [Tensor.cornerValues, hnp', hnegAll]
+  exact Tensor.emitsDigit_of_corner_nonpos_of_hasNoPoleOnBase
+    (T := (halfAddResidualStateAfter X Y N d (K + 1)).T)
+    (halfAddResidualStateAfter_hasNoPoleOnBase X Y N d (K + 1))
+    hr1 hr2 hr3 hr4 hnonpos
 
 theorem halfAddResidualStateAfter_emitsDigit_eventually_of_Xstep
     (X Y : MobiusReal) (N : ℕ) (d : Digit)
@@ -2718,14 +2537,16 @@ theorem halfAddResidualStateAfter_emitsDigit_eventually_of_Xstep
       { halfAddTensorXStateAfter X Y N with
           T := (halfAddTensorXStateAfter X Y N).T.emit (digit_to_LFT d) }) :
     ∃ K0 : ℕ, ∀ K ≥ K0, (halfAddResidualStateAfter X Y N d (K + 1)).T.EmitsDigit := by
-  rcases halfAddResidualStateAfter_corner_digit_trichotomy_eventually X Y N d with ⟨K0, hK0⟩
+  rcases halfAddResidualStateAfter_safeEventually X Y N d with ⟨K0, hK0⟩
   refine ⟨K0, ?_⟩
   intro K hK
   have hK' : K + 1 ≥ K0 := le_trans hK (Nat.le_succ _)
-  rcases hK0 (K + 1) hK' with hpos | hneg | hmid
-  · exact halfAddResidualStateAfter_emitsDigit_of_nonneg_Xstep X Y N d K hstep hpos
-  · exact halfAddResidualStateAfter_emitsDigit_of_nonpos_Xstep X Y N d K hstep hneg
-  · exact halfAddResidualStateAfter_emitsDigit_of_mid X Y N d (K + 1) hmid
+  have hsafe := hK0 (K + 1) hK'
+  exact Tensor.emitsDigit_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T := (halfAddResidualStateAfter X Y N d (K + 1)).T)
+    hsafe.1
+    ((halfAddResidualStateAfter_mapsBaseI_pair_of_Xstep X Y N d hstep K).1)
+    hsafe.2
 
 theorem halfAddResidualStateAfter_productivity_spec_of_Xstep
     (X Y : MobiusReal) (N : ℕ) (d : Digit)
@@ -2736,12 +2557,13 @@ theorem halfAddResidualStateAfter_productivity_spec_of_Xstep
           T := (halfAddTensorXStateAfter X Y N).T.emit (digit_to_LFT d) }) :
     ∃ K : ℕ, (halfAddResidualStateAfter X Y N d (K + 1)).T.ProductiveOnBase := by
   rcases halfAddResidualStateAfter_safeEventually X Y N d with ⟨Ksafe, hsafe⟩
-  rcases halfAddResidualStateAfter_emitsDigit_eventually_of_Xstep X Y N d hstep with
-    ⟨Kemit, hemit⟩
-  refine ⟨max Ksafe Kemit, ?_⟩
-  refine ⟨(hsafe (max Ksafe Kemit + 1) (le_trans (Nat.le_max_left _ _) (Nat.le_succ _))).1,
-    (hsafe (max Ksafe Kemit + 1) (le_trans (Nat.le_max_left _ _) (Nat.le_succ _))).2, ?_⟩
-  exact hemit (max Ksafe Kemit) (Nat.le_max_right _ _)
+  refine ⟨Ksafe, ?_⟩
+  have hsafe' := hsafe (Ksafe + 1) (Nat.le_succ _)
+  exact Tensor.productiveOnBase_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T := (halfAddResidualStateAfter X Y N d (Ksafe + 1)).T)
+    hsafe'.1
+    ((halfAddResidualStateAfter_mapsBaseI_pair_of_Xstep X Y N d hstep Ksafe).1)
+    hsafe'.2
 
 theorem halfAddResidualStateAfter_emitsDigit_eventually_of_step
     (X Y : MobiusReal) (N : ℕ) (d : Digit)
@@ -2751,13 +2573,15 @@ theorem halfAddResidualStateAfter_emitsDigit_eventually_of_step
       { halfAddTensorStateAfter X Y N with
           T := (halfAddTensorStateAfter X Y N).T.emit (digit_to_LFT d) }) :
     ∃ K0 : ℕ, ∀ K ≥ K0, (halfAddResidualStateAfter X Y N d K).T.EmitsDigit := by
-  rcases halfAddResidualStateAfter_corner_digit_trichotomy_eventually X Y N d with ⟨K0, hK0⟩
+  rcases halfAddResidualStateAfter_safeEventually X Y N d with ⟨K0, hK0⟩
   refine ⟨K0, ?_⟩
   intro K hK
-  rcases hK0 K hK with hpos | hneg | hmid
-  · exact halfAddResidualStateAfter_emitsDigit_of_nonneg X Y N d K hstep hpos
-  · exact halfAddResidualStateAfter_emitsDigit_of_nonpos X Y N d K hstep hneg
-  · exact halfAddResidualStateAfter_emitsDigit_of_mid X Y N d K hmid
+  have hsafe := hK0 K hK
+  exact Tensor.emitsDigit_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T := (halfAddResidualStateAfter X Y N d K).T)
+    hsafe.1
+    (halfAddResidualStateAfter_mapsBaseI_of_step X Y N d hstep K)
+    hsafe.2
 
 theorem halfAddResidualStateAfter_productivity_spec_of_step
     (X Y : MobiusReal) (N : ℕ) (d : Digit)
@@ -2768,12 +2592,13 @@ theorem halfAddResidualStateAfter_productivity_spec_of_step
           T := (halfAddTensorStateAfter X Y N).T.emit (digit_to_LFT d) }) :
     ∃ K : ℕ, (halfAddResidualStateAfter X Y N d K).T.ProductiveOnBase := by
   rcases halfAddResidualStateAfter_safeEventually X Y N d with ⟨Ksafe, hsafe⟩
-  rcases halfAddResidualStateAfter_emitsDigit_eventually_of_step X Y N d hstep with
-    ⟨Kemit, hemit⟩
-  refine ⟨max Ksafe Kemit, ?_⟩
-  refine ⟨(hsafe (max Ksafe Kemit) (Nat.le_max_left _ _)).1,
-    (hsafe (max Ksafe Kemit) (Nat.le_max_left _ _)).2, ?_⟩
-  exact hemit (max Ksafe Kemit) (Nat.le_max_right _ _)
+  refine ⟨Ksafe, ?_⟩
+  have hsafe' := hsafe Ksafe le_rfl
+  exact Tensor.productiveOnBase_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T := (halfAddResidualStateAfter X Y N d Ksafe).T)
+    hsafe'.1
+    (halfAddResidualStateAfter_mapsBaseI_of_step X Y N d hstep Ksafe)
+    hsafe'.2
 
 theorem halfAddTensorStateAfter_hasNoPole_bool (X Y : MobiusReal) (N : ℕ) :
     let T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N
@@ -2782,12 +2607,9 @@ theorem halfAddTensorStateAfter_hasNoPole_bool (X Y : MobiusReal) (N : ℕ) :
       (-T.e + T.f - T.g + T.h)
       (-T.e - T.f + T.g + T.h)
       (T.e - T.f - T.g + T.h) = true := by
-  rw [absorbBoth_n_halfAdd_eq_avgTensor]
-  dsimp [avgTensor]
-  convert
-    avgTensor_hasNoPole_bool (pairedPrefix X.stream N) (pairedPrefix Y.stream N)
-      (pairedPrefix_noPoleOnBase X N) (pairedPrefix_noPoleOnBase Y N) using 1
-  ring_nf
+  simpa using Tensor.hasNoPole_bool_of_HasNoPoleOnBase
+    (T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N)
+    (halfAddTensorStateAfter_hasNoPoleOnBase X Y N)
 
 theorem halfAddTensorStateAfter_corner_denom_sign_cases (X Y : MobiusReal) (N : ℕ) :
     let T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N
@@ -2797,107 +2619,9 @@ theorem halfAddTensorStateAfter_corner_denom_sign_cases (X Y : MobiusReal) (N : 
     let d4 : ℤ := T.e - T.f - T.g + T.h
     (0 < d1 ∧ 0 < d2 ∧ 0 < d3 ∧ 0 < d4) ∨
       (d1 < 0 ∧ d2 < 0 ∧ d3 < 0 ∧ d4 < 0) := by
-  rw [absorbBoth_n_halfAdd_eq_avgTensor]
-  dsimp [avgTensor]
-  rcases LFT.endpoint_sign_cases (pairedPrefix X.stream N) (pairedPrefix_noPoleOnBase X N) with hX | hX
-  · rcases LFT.endpoint_sign_cases (pairedPrefix Y.stream N) (pairedPrefix_noPoleOnBase Y N) with hY | hY
-    · left
-      constructor
-      · have : 0 < 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.1, hY.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.1, hY.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.2, hY.1]
-        convert this using 1
-        ring_nf
-      · have : 0 < 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.2, hY.2]
-        convert this using 1
-        ring_nf
-    · right
-      constructor
-      · have : 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.1, hY.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.1, hY.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.2, hY.1]
-        convert this using 1
-        ring_nf
-      · have : 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.2, hY.2]
-        convert this using 1
-        ring_nf
-  · rcases LFT.endpoint_sign_cases (pairedPrefix Y.stream N) (pairedPrefix_noPoleOnBase Y N) with hY | hY
-    · right
-      constructor
-      · have : 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.1, hY.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.1, hY.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.2, hY.1]
-        convert this using 1
-        ring_nf
-      · have : 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) < 0 := by
-          nlinarith [hX.2, hY.2]
-        convert this using 1
-        ring_nf
-    · left
-      constructor
-      · have : 0 < 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.1, hY.1]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * ((pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.1, hY.2]
-        convert this using 1
-        ring_nf
-      constructor
-      · have : 0 < 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            ((pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.2, hY.1]
-        convert this using 1
-        ring_nf
-      · have : 0 < 2 * (-(pairedPrefix X.stream N).c + (pairedPrefix X.stream N).d) *
-            (-(pairedPrefix Y.stream N).c + (pairedPrefix Y.stream N).d) := by
-          nlinarith [hX.2, hY.2]
-        convert this using 1
-        ring_nf
+  simpa using Tensor.corner_denom_sign_cases_of_HasNoPoleOnBase
+    (T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N)
+    (halfAddTensorStateAfter_hasNoPoleOnBase X Y N)
 
 theorem halfAddTensorStateAfter_corner_ratio_11 (X Y : MobiusReal) (N : ℕ) :
     let T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N
@@ -3796,139 +3520,11 @@ theorem halfAddTensorStateAfter_emitsDigit_of_nonneg
       0 ≤ Tensor.apply (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N) (-1) 1 ∧
       0 ≤ Tensor.apply (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N) (-1) (-1)) :
     (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).EmitsDigit := by
-  let T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddTensorStateAfter_hasNoPole_bool X Y N
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
   rcases halfAddTensorStateAfter_corner_mem_baseI X Y N with ⟨hr1, hr2, hr3, hr4⟩
-  rcases hnonneg with ⟨hr1lo, hr2lo, hr3lo, hr4lo⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddTensorStateAfter_corner_ratio_11 X Y N
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddTensorStateAfter_corner_ratio_1m X Y N
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddTensorStateAfter_corner_ratio_m1 X Y N
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddTensorStateAfter_corner_ratio_mm X Y N
-  rcases halfAddTensorStateAfter_corner_denom_sign_cases X Y N with hden | hden
-  · have h1 : Tensor.inDigitPos n1 d1 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n1 d1 hden.1
-      · simpa [T, hratio1] using hr1lo
-      · simpa [T, hratio1] using hr1.2
-    have h2 : Tensor.inDigitPos n2 d2 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2lo
-      · simpa [T, hratio2] using hr2.2
-    have h3 : Tensor.inDigitPos n3 d3 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3lo
-      · simpa [T, hratio3] using hr3.2
-    have h4 : Tensor.inDigitPos n4 d4 = true := by
-      apply Tensor.inDigitPos_of_ratio_pos n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4lo
-      · simpa [T, hratio4] using hr4.2
-    have h1' : Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hposAll :
-        ((Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · by_cases hzeroAll :
-          ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-              Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-            Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-          Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-      · right
-        left
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-      · right
-        right
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll, hposAll]
-  · have h1 : Tensor.inDigitPos n1 d1 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n1 d1 hden.1
-      · simpa [T, hratio1] using hr1lo
-      · simpa [T, hratio1] using hr1.2
-    have h2 : Tensor.inDigitPos n2 d2 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2lo
-      · simpa [T, hratio2] using hr2.2
-    have h3 : Tensor.inDigitPos n3 d3 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3lo
-      · simpa [T, hratio3] using hr3.2
-    have h4 : Tensor.inDigitPos n4 d4 = true := by
-      apply Tensor.inDigitPos_of_ratio_neg n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4lo
-      · simpa [T, hratio4] using hr4.2
-    have h1' : Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hposAll :
-        ((Tensor.inDigitPos (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitPos (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitPos (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitPos (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · by_cases hzeroAll :
-          ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-              Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-            Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-          Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-      · right
-        left
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-      · right
-        right
-        simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll, hposAll]
+  exact Tensor.emitsDigit_of_corner_nonneg_of_hasNoPoleOnBase
+    (T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N)
+    (halfAddTensorStateAfter_hasNoPoleOnBase X Y N)
+    hr1 hr2 hr3 hr4 hnonneg
 
 theorem halfAddTensorStateAfter_emitsDigit_of_nonpos
     (X Y : MobiusReal) (N : ℕ)
@@ -3938,93 +3534,11 @@ theorem halfAddTensorStateAfter_emitsDigit_of_nonpos
       Tensor.apply (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N) (-1) 1 ≤ 0 ∧
       Tensor.apply (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N) (-1) (-1) ≤ 0) :
     (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).EmitsDigit := by
-  let T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddTensorStateAfter_hasNoPole_bool X Y N
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
   rcases halfAddTensorStateAfter_corner_mem_baseI X Y N with ⟨hr1, hr2, hr3, hr4⟩
-  rcases hnonpos with ⟨hr1hi, hr2hi, hr3hi, hr4hi⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddTensorStateAfter_corner_ratio_11 X Y N
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddTensorStateAfter_corner_ratio_1m X Y N
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddTensorStateAfter_corner_ratio_m1 X Y N
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddTensorStateAfter_corner_ratio_mm X Y N
-  rcases halfAddTensorStateAfter_corner_denom_sign_cases X Y N with hden | hden
-  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n1 d1 hden.1
-      · simpa [T, hratio1] using hr1.1
-      · simpa [T, hratio1] using hr1hi
-    have h2 : Tensor.inDigitNeg n2 d2 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2.1
-      · simpa [T, hratio2] using hr2hi
-    have h3 : Tensor.inDigitNeg n3 d3 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3.1
-      · simpa [T, hratio3] using hr3hi
-    have h4 : Tensor.inDigitNeg n4 d4 = true := by
-      apply Tensor.inDigitNeg_of_ratio_pos n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4.1
-      · simpa [T, hratio4] using hr4hi
-    have h1' : Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    simp [Tensor.cornerValues, hnp', h1', h2', h3', h4']
-  · have h1 : Tensor.inDigitNeg n1 d1 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n1 d1 hden.1
-      · simpa [T, hratio1] using hr1.1
-      · simpa [T, hratio1] using hr1hi
-    have h2 : Tensor.inDigitNeg n2 d2 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n2 d2 hden.2.1
-      · simpa [T, hratio2] using hr2.1
-      · simpa [T, hratio2] using hr2hi
-    have h3 : Tensor.inDigitNeg n3 d3 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n3 d3 hden.2.2.1
-      · simpa [T, hratio3] using hr3.1
-      · simpa [T, hratio3] using hr3hi
-    have h4 : Tensor.inDigitNeg n4 d4 = true := by
-      apply Tensor.inDigitNeg_of_ratio_neg n4 d4 hden.2.2.2
-      · simpa [T, hratio4] using hr4.1
-      · simpa [T, hratio4] using hr4hi
-    have h1' : Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    simp [Tensor.cornerValues, hnp', h1', h2', h3', h4']
+  exact Tensor.emitsDigit_of_corner_nonpos_of_hasNoPoleOnBase
+    (T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N)
+    (halfAddTensorStateAfter_hasNoPoleOnBase X Y N)
+    hr1 hr2 hr3 hr4 hnonpos
 
 theorem halfAddTensorStateAfter_emitsDigit_of_mid
     (X Y : MobiusReal) (N : ℕ)
@@ -4038,210 +3552,34 @@ theorem halfAddTensorStateAfter_emitsDigit_of_mid
         (-1 / 2 : ℝ) ≤ Tensor.apply (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N) (-1) (-1) ∧
         Tensor.apply (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N) (-1) (-1) ≤ (1 / 2 : ℝ)) :
     (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).EmitsDigit := by
-  let T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N
-  let n1 : ℤ := T.a + T.b + T.c + T.d
-  let d1 : ℤ := T.e + T.f + T.g + T.h
-  let n2 : ℤ := -T.a + T.b - T.c + T.d
-  let d2 : ℤ := -T.e + T.f - T.g + T.h
-  let n3 : ℤ := -T.a - T.b + T.c + T.d
-  let d3 : ℤ := -T.e - T.f + T.g + T.h
-  let n4 : ℤ := T.a - T.b - T.c + T.d
-  let d4 : ℤ := T.e - T.f - T.g + T.h
-  have hnp : Tensor.hasNoPole d1 d2 d3 d4 = true := by
-    simpa [T, d1, d2, d3, d4] using halfAddTensorStateAfter_hasNoPole_bool X Y N
-  have hnp' :
-      Tensor.hasNoPole
-        (T.e + T.f + T.g + T.h)
-        (-T.e + T.f - T.g + T.h)
-        (-T.e - T.f + T.g + T.h)
-        (T.e - T.f - T.g + T.h) = true := by
-    simpa [d1, d2, d3, d4] using hnp
-  rcases hmid with ⟨hr1lo, hr1hi, hr2lo, hr2hi, hr3lo, hr3hi, hr4lo, hr4hi⟩
-  have hratio1 : Tensor.apply T 1 1 = (n1 : ℝ) / d1 := by
-    simpa [T, n1, d1] using halfAddTensorStateAfter_corner_ratio_11 X Y N
-  have hratio2 : Tensor.apply T 1 (-1) = (n2 : ℝ) / d2 := by
-    simpa [T, n2, d2] using halfAddTensorStateAfter_corner_ratio_1m X Y N
-  have hratio3 : Tensor.apply T (-1) 1 = (n3 : ℝ) / d3 := by
-    simpa [T, n3, d3] using halfAddTensorStateAfter_corner_ratio_m1 X Y N
-  have hratio4 : Tensor.apply T (-1) (-1) = (n4 : ℝ) / d4 := by
-    simpa [T, n4, d4] using halfAddTensorStateAfter_corner_ratio_mm X Y N
-  have hr1lo' : (-(1 / 2 : ℝ)) ≤ (n1 : ℝ) / d1 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T 1 1 := by
-      have : (-(1 / 2 : ℝ)) ≤ Tensor.apply T 1 1 := by
-        have h : ((-1 : ℝ) / 2) ≤ Tensor.apply T 1 1 := by
-          dsimp [T]
-          exact hr1lo
-        nlinarith
-      norm_num at this ⊢
-      exact this
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n1 : ℝ) / d1 := by
-      rw [← hratio1]
-      exact hsrc
-    norm_num at htmp ⊢
-    exact htmp
-  have hr1hi' : (n1 : ℝ) / d1 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio1]
-    simpa [T] using hr1hi
-  have hr2lo' : (-(1 / 2 : ℝ)) ≤ (n2 : ℝ) / d2 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T 1 (-1) := by
-      have : (-(1 / 2 : ℝ)) ≤ Tensor.apply T 1 (-1) := by
-        have h : ((-1 : ℝ) / 2) ≤ Tensor.apply T 1 (-1) := by
-          dsimp [T]
-          exact hr2lo
-        nlinarith
-      norm_num at this ⊢
-      exact this
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n2 : ℝ) / d2 := by
-      rw [← hratio2]
-      exact hsrc
-    norm_num at htmp ⊢
-    exact htmp
-  have hr2hi' : (n2 : ℝ) / d2 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio2]
-    simpa [T] using hr2hi
-  have hr3lo' : (-(1 / 2 : ℝ)) ≤ (n3 : ℝ) / d3 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T (-1) 1 := by
-      have : (-(1 / 2 : ℝ)) ≤ Tensor.apply T (-1) 1 := by
-        have h : ((-1 : ℝ) / 2) ≤ Tensor.apply T (-1) 1 := by
-          dsimp [T]
-          exact hr3lo
-        nlinarith
-      norm_num at this ⊢
-      exact this
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n3 : ℝ) / d3 := by
-      rw [← hratio3]
-      exact hsrc
-    norm_num at htmp ⊢
-    exact htmp
-  have hr3hi' : (n3 : ℝ) / d3 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio3]
-    simpa [T] using hr3hi
-  have hr4lo' : (-(1 / 2 : ℝ)) ≤ (n4 : ℝ) / d4 := by
-    have hsrc : (-((2 : ℝ)⁻¹)) ≤ Tensor.apply T (-1) (-1) := by
-      have : (-(1 / 2 : ℝ)) ≤ Tensor.apply T (-1) (-1) := by
-        have h : ((-1 : ℝ) / 2) ≤ Tensor.apply T (-1) (-1) := by
-          dsimp [T]
-          exact hr4lo
-        nlinarith
-      norm_num at this ⊢
-      exact this
-    have htmp : (-((2 : ℝ)⁻¹)) ≤ (n4 : ℝ) / d4 := by
-      rw [← hratio4]
-      exact hsrc
-    norm_num at htmp ⊢
-    exact htmp
-  have hr4hi' : (n4 : ℝ) / d4 ≤ (1 / 2 : ℝ) := by
-    rw [← hratio4]
-    simpa [T] using hr4hi
-  rcases halfAddTensorStateAfter_corner_denom_sign_cases X Y N with hden | hden
-  · have h1 : Tensor.inDigitZero n1 d1 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n1 d1 hden.1
-      · exact hr1lo'
-      · exact hr1hi'
-    have h2 : Tensor.inDigitZero n2 d2 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n2 d2 hden.2.1
-      · exact hr2lo'
-      · exact hr2hi'
-    have h3 : Tensor.inDigitZero n3 d3 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n3 d3 hden.2.2.1
-      · exact hr3lo'
-      · exact hr3hi'
-    have h4 : Tensor.inDigitZero n4 d4 = true := by
-      apply Tensor.inDigitZero_of_ratio_pos n4 d4 hden.2.2.2
-      · exact hr4lo'
-      · exact hr4hi'
-    have h1' : Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hzeroAll :
-        ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · right
-      left
-      simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
-  · have h1 : Tensor.inDigitZero n1 d1 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n1 d1 hden.1
-      · exact hr1lo'
-      · exact hr1hi'
-    have h2 : Tensor.inDigitZero n2 d2 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n2 d2 hden.2.1
-      · exact hr2lo'
-      · exact hr2hi'
-    have h3 : Tensor.inDigitZero n3 d3 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n3 d3 hden.2.2.1
-      · exact hr3lo'
-      · exact hr3hi'
-    have h4 : Tensor.inDigitZero n4 d4 = true := by
-      apply Tensor.inDigitZero_of_ratio_neg n4 d4 hden.2.2.2
-      · exact hr4lo'
-      · exact hr4hi'
-    have h1' : Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true := by
-      simpa [n1, d1] using h1
-    have h2' : Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true := by
-      simpa [n2, d2] using h2
-    have h3' : Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true := by
-      simpa [n3, d3] using h3
-    have h4' : Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      simpa [n4, d4] using h4
-    have hzeroAll :
-        ((Tensor.inDigitZero (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitZero (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitZero (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitZero (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true := by
-      exact ⟨⟨⟨h1', h2'⟩, h3'⟩, h4'⟩
-    change T.oracle = Tensor.EmitDecision.neg ∨
-      T.oracle = Tensor.EmitDecision.zero ∨
-      T.oracle = Tensor.EmitDecision.pos
-    unfold Tensor.oracle
-    by_cases hnegAll :
-        ((Tensor.inDigitNeg (T.a + T.b + T.c + T.d) (T.e + T.f + T.g + T.h) = true ∧
-            Tensor.inDigitNeg (-T.a + T.b - T.c + T.d) (-T.e + T.f - T.g + T.h) = true) ∧
-          Tensor.inDigitNeg (-T.a - T.b + T.c + T.d) (-T.e - T.f + T.g + T.h) = true) ∧
-        Tensor.inDigitNeg (T.a - T.b - T.c + T.d) (T.e - T.f - T.g + T.h) = true
-    · left
-      simp [Tensor.cornerValues, hnp', hnegAll]
-    · right
-      left
-      simp [Tensor.cornerValues, hnp', hnegAll, hzeroAll]
+  exact Tensor.emitsDigit_of_corner_mid_of_hasNoPoleOnBase
+    (T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N)
+    (halfAddTensorStateAfter_hasNoPoleOnBase X Y N)
+    (by simpa using hmid)
 
 theorem halfAddTensorStateAfter_emitsDigit_eventually (X Y : MobiusReal) :
     ∃ N0 : ℕ, ∀ N ≥ N0,
       (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).EmitsDigit := by
-  rcases halfAddTensorStateAfter_corner_digit_trichotomy_eventually X Y with ⟨N0, hN0⟩
+  rcases halfAddTensorStateAfter_safeEventually X Y with ⟨N0, hN0⟩
   refine ⟨N0, ?_⟩
   intro N hN
-  rcases hN0 N hN with hpos | hneg | hmid
-  · exact halfAddTensorStateAfter_emitsDigit_of_nonneg X Y N hpos
-  · exact halfAddTensorStateAfter_emitsDigit_of_nonpos X Y N hneg
-  · exact halfAddTensorStateAfter_emitsDigit_of_mid X Y N hmid
+  have hsafe := hN0 N hN
+  exact Tensor.emitsDigit_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N)
+    hsafe.1
+    (halfAddTensorStateAfter_mapsBaseI X Y N)
+    hsafe.2
 
 theorem halfAddTensor_productivity_spec (X Y : MobiusReal) :
     ∃ N : ℕ, (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).ProductiveOnBase := by
   rcases halfAddTensorStateAfter_safeEventually X Y with ⟨Nsafe, hsafe⟩
-  rcases halfAddTensorStateAfter_emitsDigit_eventually X Y with ⟨Nemit, hemit⟩
-  refine ⟨max Nsafe Nemit, ?_⟩
-  refine ⟨(hsafe (max Nsafe Nemit) (Nat.le_max_left _ _)).1,
-    (hsafe (max Nsafe Nemit) (Nat.le_max_left _ _)).2, ?_⟩
-  exact hemit (max Nsafe Nemit) (Nat.le_max_right _ _)
+  refine ⟨Nsafe, ?_⟩
+  have hsafe' := hsafe Nsafe le_rfl
+  exact Tensor.productiveOnBase_of_hasNoPoleOnBase_of_mapsBaseI_of_width_lt_half
+    (T := Tensor.absorbBoth_n halfAddTensor X.stream Y.stream Nsafe)
+    hsafe'.1
+    (halfAddTensorStateAfter_mapsBaseI X Y Nsafe)
+    hsafe'.2
 
 theorem halfAddTensor_eventually_emitsDigit (X Y : MobiusReal) :
     ∃ N : ℕ, (Tensor.absorbBoth_n halfAddTensor X.stream Y.stream N).EmitsDigit := by
