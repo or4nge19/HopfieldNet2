@@ -1,5 +1,6 @@
 import Rebuild.Models.BoltzmannMachine.Basic
 import Rebuild.Bridges.TwoStateToBoltzmannLearning
+import Rebuild.Probability.MCMC.Finite.RandomScanBridge
 import Rebuild.StatMech.FiniteGibbs.Core
 import Rebuild.Learning.Boltzmann.Core
 import Rebuild.Learning.Boltzmann.Gradient
@@ -13,11 +14,14 @@ shared finite pairwise/two-state corridor.
 
 set_option autoImplicit false
 
+open scoped BigOperators ENNReal
+
 namespace Rebuild.Bridges
 
 open Rebuild.Core
 open Rebuild.Models.BoltzmannMachine
 open Rebuild.Learning.Boltzmann
+open Rebuild.Probability.MCMC.Finite
 open Rebuild.StatMech.FiniteGibbs
 
 abbrev BoltzmannParameterIndex (Site : Type*) := ParameterIndex Site
@@ -30,9 +34,11 @@ noncomputable def boltzmannMachineFiniteGibbsModel (encoding : TwoStateEncoding 
     (p : Parameters Site) : FiniteGibbsModel (State σ Site) :=
   Rebuild.Models.BinarySpin.Pairwise.finiteGibbsModel encoding p
 
+omit [MeasurableSpace (State σ Site)] [MeasurableSingletonClass (State σ Site)] in
 @[simp] theorem boltzmannMachineFiniteGibbsModel_energy (encoding : TwoStateEncoding σ)
     (p : Parameters Site) :
-    (boltzmannMachineFiniteGibbsModel encoding p).energy = Rebuild.Models.BinarySpin.Pairwise.energy encoding p := rfl
+    (boltzmannMachineFiniteGibbsModel encoding p).energy =
+      Rebuild.Models.BinarySpin.Pairwise.energy encoding p := rfl
 
 noncomputable def boltzmannMachineGibbsProbability (encoding : TwoStateEncoding σ)
     (β : ℝ) (p : Parameters Site) (τ : State σ Site) : ℝ :=
@@ -42,6 +48,21 @@ noncomputable def boltzmannMachineGibbsMeasure (encoding : TwoStateEncoding σ)
     (β : ℝ) (p : Parameters Site)  :
     MeasureTheory.Measure (State σ Site) :=
   gibbsMeasure β (boltzmannMachineFiniteGibbsModel encoding p)
+
+noncomputable def boltzmannMachineGibbsSimplex (encoding : TwoStateEncoding σ)
+    (β : ℝ) (p : Parameters Site) :
+    stdSimplex ℝ (State σ Site) :=
+  ⟨boltzmannMachineGibbsProbability encoding β p, by
+    constructor
+    · intro τ
+      exact gibbsProbability_nonneg β (boltzmannMachineFiniteGibbsModel encoding p) τ
+    · exact sum_gibbsProbability β (boltzmannMachineFiniteGibbsModel encoding p)⟩
+
+omit [MeasurableSpace (State σ Site)] [MeasurableSingletonClass (State σ Site)] in
+@[simp] theorem boltzmannMachineGibbsSimplex_val
+    (encoding : TwoStateEncoding σ) (β : ℝ) (p : Parameters Site) (τ : State σ Site) :
+    (boltzmannMachineGibbsSimplex encoding β p).val τ =
+      boltzmannMachineGibbsProbability encoding β p τ := rfl
 
 noncomputable def boltzmannMachineModelExpectation (encoding : TwoStateEncoding σ)
     (β : ℝ) (p : Parameters Site)  (f : State σ Site → ℝ) : ℝ :=
@@ -63,6 +84,7 @@ end GeneralTwoState
 section BoolSigned
 
 variable {Site : Type*} [Fintype Site] [DecidableEq Site]
+    [Nonempty Site]
     [MeasurableSpace (SignedState Site)] [MeasurableSingletonClass (SignedState Site)]
 
 noncomputable abbrev signedBoltzmannMachineGibbsProbability (β : ℝ) (p : Parameters Site)
@@ -72,6 +94,10 @@ noncomputable abbrev signedBoltzmannMachineGibbsProbability (β : ℝ) (p : Para
 noncomputable abbrev signedBoltzmannMachineGibbsMeasure (β : ℝ) (p : Parameters Site) :
     MeasureTheory.Measure (SignedState Site) :=
   boltzmannMachineGibbsMeasure TwoStateEncoding.boolSigned β p
+
+noncomputable abbrev signedBoltzmannMachineGibbsSimplex (β : ℝ) (p : Parameters Site) :
+    stdSimplex ℝ (SignedState Site) :=
+  boltzmannMachineGibbsSimplex TwoStateEncoding.boolSigned β p
 
 noncomputable abbrev signedBoltzmannMachineModelPhasePair
     (data : MeasureTheory.Measure (SignedState Site)) (β : ℝ) (p : Parameters Site) :
@@ -99,6 +125,37 @@ noncomputable def signedSiteGibbsKernel (β : ℝ) (p : Parameters Site) (i : Si
         ⟩
     measurability
 
+instance signedSiteGibbsKernel_isMarkov (β : ℝ) (p : Parameters Site) (i : Site) :
+    ProbabilityTheory.IsMarkovKernel (signedSiteGibbsKernel β p i) where
+  isProbabilityMeasure τ := by
+    exact ⟨by
+      change
+        (((ENNReal.ofReal (signedSiteConditionalProbability β p i τ true)) •
+            MeasureTheory.Measure.dirac
+              (Rebuild.Models.BinarySpin.Pairwise.overwrite τ i true) +
+          (ENNReal.ofReal (signedSiteConditionalProbability β p i τ false)) •
+            MeasureTheory.Measure.dirac
+              (Rebuild.Models.BinarySpin.Pairwise.overwrite τ i false)) Set.univ) = 1
+      rw [MeasureTheory.Measure.add_apply, MeasureTheory.Measure.smul_apply,
+        MeasureTheory.Measure.smul_apply]
+      rw [MeasureTheory.Measure.dirac_apply' _ MeasurableSet.univ]
+      rw [MeasureTheory.Measure.dirac_apply' _ MeasurableSet.univ]
+      simp only [smul_eq_mul, Set.indicator_univ, Pi.one_apply, mul_one]
+      have htrue_nonneg : 0 ≤ signedSiteConditionalProbability β p i τ true :=
+        signedSiteConditionalProbability_nonneg β p i τ true
+      have hfalse_nonneg : 0 ≤ signedSiteConditionalProbability β p i τ false :=
+        signedSiteConditionalProbability_nonneg β p i τ false
+      calc
+        ENNReal.ofReal (signedSiteConditionalProbability β p i τ true) +
+            ENNReal.ofReal (signedSiteConditionalProbability β p i τ false)
+            =
+              ENNReal.ofReal
+                (signedSiteConditionalProbability β p i τ true +
+                  signedSiteConditionalProbability β p i τ false) := by
+                rw [← ENNReal.ofReal_add htrue_nonneg hfalse_nonneg]
+        _ = 1 := by simp [signedSiteConditionalProbability_sum]⟩
+
+omit [Nonempty Site] in
 lemma signedSiteGibbsKernel_apply_singleton
     (β : ℝ) (p : Parameters Site) (u : Site) (s s' : SignedState Site) :
     (signedSiteGibbsKernel β p u) s {s'} =
@@ -131,6 +188,25 @@ lemma signedSiteGibbsKernel_apply_singleton
     · have h2_rev : Rebuild.Models.BinarySpin.Pairwise.overwrite s u false ≠ s' := fun h => h2 h.symm
       rw [if_neg h1, if_neg h1_rev, if_neg h2, if_neg h2_rev]
       simp only [mul_zero, add_zero]
+
+noncomputable def signedRandomScanKernel (β : ℝ) (p : Parameters Site) :
+    ProbabilityTheory.Kernel (SignedState Site) (SignedState Site) :=
+  randomScanKernel (fun u : Site => signedSiteGibbsKernel β p u)
+
+instance signedRandomScanKernel_isMarkov (β : ℝ) (p : Parameters Site) :
+    ProbabilityTheory.IsMarkovKernel (signedRandomScanKernel β p) := by
+  unfold signedRandomScanKernel
+  infer_instance
+
+lemma signedRandomScanKernel_apply_singleton
+    (β : ℝ) (p : Parameters Site) (s s' : SignedState Site) :
+    (signedRandomScanKernel β p) s {s'} =
+      (∑ u : Site, (signedSiteGibbsKernel β p u) s {s'}) / (Fintype.card Site : ℝ≥0∞) := by
+  change
+    (randomScanKernel (fun u : Site => signedSiteGibbsKernel β p u)) s {s'} =
+      (∑ u : Site, (signedSiteGibbsKernel β p u) s {s'}) / (Fintype.card Site : ℝ≥0∞)
+  exact randomScanKernel_apply_singleton
+    (K := fun u : Site => signedSiteGibbsKernel β p u) s s'
 
 end BoolSigned
 

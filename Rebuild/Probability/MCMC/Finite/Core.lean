@@ -11,7 +11,7 @@ audited finite-MCMC corridor behind rebuild-facing names and a small bundled cha
 
 set_option autoImplicit false
 
-open Matrix
+open Matrix Finset
 
 namespace Rebuild.Probability.MCMC.Finite
 
@@ -26,6 +26,27 @@ def IsStochastic {State : Type*} [Fintype State]
 def IsStationary {State : Type*} [Fintype State]
   (P : TransitionMatrix State) (π : stdSimplex ℝ State) : Prop :=
   _root_.MCMC.Finite.IsStationary P π
+
+/-- Detailed balance for a finite transition matrix with respect to a target distribution. -/
+def IsReversible {State : Type*} [Fintype State]
+  (P : TransitionMatrix State) (π : stdSimplex ℝ State) : Prop :=
+  ∀ i j, π.val i * P i j = π.val j * P j i
+
+theorem IsReversible.isStationary {State : Type*} [Fintype State]
+    {P : TransitionMatrix State} {π : stdSimplex ℝ State}
+    (hP : IsStochastic P) (h_rev : IsReversible P π) :
+    IsStationary P π := by
+  ext i
+  dsimp [IsStationary, transpose_apply]
+  calc
+    ∑ j, P j i * π.val j = ∑ j, π.val i * P i j := by
+      refine Finset.sum_congr rfl ?_
+      intro j _
+      rw [mul_comm, h_rev j i, mul_comm]
+    _ = π.val i * ∑ j, P i j := by
+      rw [Finset.mul_sum]
+    _ = π.val i := by
+      rw [hP.2 i, mul_one]
 
 /-- A bundled finite verified Markov chain. -/
 structure FiniteChain (State : Type*) [Fintype State] [DecidableEq State] [Nonempty State] where

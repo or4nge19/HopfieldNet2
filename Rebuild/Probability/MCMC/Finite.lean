@@ -1,5 +1,8 @@
 import Rebuild.Probability.MCMC.Finite.Core
+import Rebuild.Probability.MCMC.Finite.RandomScan
 import Rebuild.Probability.MCMC.Finite.KernelBridge
+import Rebuild.Probability.MCMC.Finite.PMFBridge
+import Rebuild.Probability.MCMC.Finite.RandomScanBridge
 import Rebuild.Probability.MCMC.Finite.Convergence
 import Rebuild.Probability.MCMC.Finite.MetropolisHastings
 
